@@ -1,97 +1,48 @@
-# -*- coding: utf-8 -*-
-# Always prefer setuptools over distutils
-from setuptools import setup, find_packages
+from os.path import dirname, realpath, exists
+from setuptools import setup, find_packages  # Always prefer setuptools over distutils
 from codecs import open  # To use a consistent encoding
-from os import path
+import sys
 
-here = path.abspath(path.dirname(__file__))
+author = u"Paul Müller"
+authors = [author]
+description = 'CKAN extension that introduces or lifts restrictions (authorization) for managing data and metadata'
+name = 'ckanext-dcor_schemas'
+year = "2020"
 
-# Get the long description from the relevant file
-with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
-    long_description = f.read()
+sys.path.insert(0, realpath(dirname(__file__))+"/" + "/".join(name.split("-")))
+from _version import version
+
 
 setup(
-    name='''ckanext-dcor_schemas''',
-
-    # Versions should comply with PEP440.  For a discussion on single-sourcing
-    # the version across setup.py and the project code, see
-    # http://packaging.python.org/en/latest/tutorial.html#version
-    version='0.0.1',
-
-    description='''CKAN extension that introduces or lifts restrictions (authorization) for managing data and metadata''',
-    long_description=long_description,
-    long_description_content_type='text/x-rst',
-
-    # The project's main homepage.
-    url='https://github.com/DCOR-dev/'\
-            'ckanext-dcor_schemas',
-
-    # Author details
-    author='''Paul Müller''',
-    author_email='''dev@craban.de''',
-
-    # Choose your license
+    name=name,
+    version=version,
+    description=description,
+    long_description=open('README.rst').read() if exists('README.rst') else '',
+    url='https://github.com/DCOR-dev/ckanext-dcor_schemas',
+    author=author,
+    author_email='dev@craban.de',
     license='AGPL',
-
-    # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
-    classifiers=[
-        # How mature is this project? Common values are
-        # 3 - Alpha
-        # 4 - Beta
-        # 5 - Production/Stable
-        'Development Status :: 4 - Beta',
-
-        # Pick your license as you wish (should match "license" above)
-        'License :: OSI Approved :: GNU Affero General Public License v3 or'\
-        'later (AGPLv3+)',
-
-        # Specify the Python versions you support here. In particular, ensure
-        # that you indicate whether you support Python 2, Python 3 or both.
-        'Programming Language :: Python :: 2.7',
-    ],
-
-
-    # What does your project relate to?
-    keywords='''CKAN DCOR''',
-
-    # You can just specify the packages manually here if your project is
-    # simple. Or you can use find_packages().
+    keywords=["CKAN", "DCOR", "RT-DC"],
     packages=find_packages(exclude=['contrib', 'docs', 'tests*']),
-        namespace_packages=['ckanext'],
-
+    package_dir={name: name},
+    namespace_packages=['ckanext'],
     install_requires=[
       # CKAN extensions should not list dependencies here, but in a separate
       # ``requirements.txt`` file.
       #
-      # http://docs.ckan.org/en/latest/extensions/best-practices.html
-      # add-third-party-libraries-to-requirements-txt
+      # http://docs.ckan.org/en/latest/extensions/best-practices.html#add-third-party-libraries-to-requirements-txt
     ],
-
-    # If there are data files included in your packages that need to be
-    # installed, specify them here.  If using Python 2.6 or less, then these
-    # have to be included in MANIFEST.in as well.
     include_package_data=True,
-    package_data={
-    },
-
-    # Although 'package_data' is the preferred approach, in some case you may
-    # need to place data files outside of your packages.
-    # see http://docs.python.org/3.4/distutils/setupscript.html
-    # installing-additional-files
-    # In this case, 'data_file' will be installed into '<sys.prefix>/my_data'
-    data_files=[],
-
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # pip to create the appropriate form of executable for the target platform.
     entry_points='''
         [ckan.plugins]
-        dcor_schemas=ckanext.dcor_schemas.plugin:DcorSchemasPlugin
+        dcor_schemas=ckanext.dcor_schemas.plugin:DCORDatasetFormPlugin
 
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan
     ''',
-
     # If you are changing from the default layout of your extension, you may
     # have to change the message extractors, you can read more about babel
     # message extraction at
@@ -102,5 +53,14 @@ setup(
             ('**.js', 'javascript', None),
             ('**/templates/**.html', 'ckan', None),
         ],
-    }
+    },
+    # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
+    classifiers=[
+        # Pick your license as you wish (should match "license" above)
+        'License :: OSI Approved :: GNU Affero General Public License v3 or'\
+        'later (AGPLv3+)',
+        # Specify the Python versions you support here. In particular, ensure
+        # that you indicate whether you support Python 2, Python 3 or both.
+        'Programming Language :: Python :: 3',
+    ],
 )

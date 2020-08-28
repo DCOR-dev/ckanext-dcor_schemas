@@ -1,146 +1,92 @@
-.. You should enable this project on travis-ci.org and coveralls.io to make
-   these badges work. The necessary Travis and Coverage config files have been
-   generated for you.
-
-.. image:: https://travis-ci.org/DCOR-dev/ckanext-dcor_schemas.svg?branch=master
-    :target: https://travis-ci.org/DCOR-dev/ckanext-dcor_schemas
-
-.. image:: https://coveralls.io/repos/DCOR-dev/ckanext-dcor_schemas/badge.svg
-  :target: https://coveralls.io/r/DCOR-dev/ckanext-dcor_schemas
-
-.. image:: https://img.shields.io/pypi/v/ckanext-dcor_schemas.svg
-    :target: https://pypi.org/project/ckanext-dcor_schemas/
-    :alt: Latest Version
-
-.. image:: https://img.shields.io/pypi/pyversions/ckanext-dcor_schemas.svg
-    :target: https://pypi.org/project/ckanext-dcor_schemas/
-    :alt: Supported Python versions
-
-.. image:: https://img.shields.io/pypi/status/ckanext-dcor_schemas.svg
-    :target: https://pypi.org/project/ckanext-dcor_schemas/
-    :alt: Development Status
-
-.. image:: https://img.shields.io/pypi/l/ckanext-dcor_schemas.svg
-    :target: https://pypi.org/project/ckanext-dcor_schemas/
-    :alt: License
-
-=============
 ckanext-dcor_schemas
-=============
+====================
 
-.. Put a description of your extension here:
-   What does it do? What features does it have?
-   Consider including some screenshots or embedding a video!
+This module introduces/lifts restrictions (authorization) for the management
+of data metadata on DCOR. The corresponding UI elements are modified
+accordingly:
+
+- Authorization (auth.py)
+
+  - allow all logged-in users to create datasets, labs, and collections
+  - do not allow deleting datasets or resources unless they are drafts
+  - allow purging of deleted datasets
+  - do not allow adding resources to active datasets
+  - do not allow bulk_update_delete (e.g. datasets by organization admins)
+  - dataset: do not allow switching to a more restrictive license
+  - dataset: do not allow changing the name (slug)
+  - resource: only allow changing the "description"
+  - Do not allow uploading resources with the same name (ckanext-dcor_depot)
+  - Allow adding resources up to 3h after creating dataset
+  - Do not allow setting a resource id when uploading
+
+- Permissions (plugin.py)
+
+  - Allow a user A to see user B's private dataset if the private dataset
+    is in a group that user A is a member of.
+
+- Validation (validate.py)
+
+  - Do not allow setting a different resource name when uploading
+  - Do not allow weird characters in resource names
+  - Restrict to basic CC licenses
+  - Author list "authors" is CSV
+  - Parse DOI field (remove URL part)
+  - Automatically generate dataset name (slug) using random characters
+    if necessary (does not apply to admins)
+  - restrict upload data extensions to .rtdc, .csv, .tsv, .pdf, .txt, .png,
+    .jpg, .tif, .py, .ipynb
+  - Force user to select a license
+  - Do not allow non-admins to set the visibility of a public dataset to private
+  - Configuration metadata (using `dclab.dfn.config_funcs`)
+  - A dataset is considered to be a draft when it does not contain resources
+    (validate.state)
+  - Allow to delete draft datasets
+
+- UI Dataset:
+
+  - hide "add new resource" button in ``templates/package/resources.html``
+  - remove ``url``, ``version``, ``author``, ``author_email``, ``maintainer``,
+    ``maintainer_email`` (``templates/package/snippets/package_metadata_fields.html``)
+  - add field ``authors`` (csv list)
+  - add field ``doi`` (validator parses URLs)
+  - add field ``references`` (parses arxiv, bioRxiv, DOI, links)
+  - add CC license file ``licenses.json`` (only show less restrictive licenses
+    when editing the dataset)
+  - hide name (slug) editing form
+  - dataset visibility is public by default
+
+- UI Organization:
+
+  - remove "Delete" button in bulk view
+
+- UI Resource:
+
+  - Resource: remove "URL" button when creating a resource (only upload makes sense)
+    (``fanstatic/dcor_schemas_data_upload.js``
+    and ``templates/package/snippets/resource_form.html``)
+  - Add metadata key ``sha256`` (and protect it with
+    ``IResourceController.before_update``)
+  - Do not show variables these variables (because they are redundant):
+    ['last modified', 'revision id', 'url type', 'state', 'on same domain']
+    (``templates/package/resource_read.html``)
+  - Show DC config data via "toggle-more"
+
+- Background jobs:
+
+  - generates sha256 hash upon resource creation
+  - populate "dc:sec:key" metadata for each DC dataset
 
 
-------------
-Requirements
-------------
-
-For example, you might want to mention here which versions of CKAN this
-extension works with.
-
-
-------------
 Installation
 ------------
+Simply run
 
-.. Add any additional install steps to the list below.
-   For example installing any non-Python dependencies or adding any required
-   config settings.
+::
 
-To install ckanext-dcor_schemas:
+    pip install ckanext-dcor_schemas
 
-1. Activate your CKAN virtual environment, for example::
+In the configuration file:
 
-     . /usr/lib/ckan/default/bin/activate
-
-2. Install the ckanext-dcor_schemas Python package into your virtual environment::
-
-     pip install ckanext-dcor_schemas
-
-3. Add ``dcor_schemas`` to the ``ckan.plugins`` setting in your CKAN
-   config file (by default the config file is located at
-   ``/etc/ckan/default/ckan.ini``).
-
-4. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu::
-
-     sudo service apache2 reload
-
-
----------------
-Config settings
----------------
-
-None at present
-
-.. Document any optional config settings here. For example::
-
-.. # The minimum number of hours to wait before re-checking a resource
-   # (optional, default: 24).
-   ckanext.dcor_schemas.some_setting = some_default_value
-
-
-----------------------
-Developer installation
-----------------------
-
-To install ckanext-dcor_schemas for development, activate your CKAN virtualenv and
-do::
-
-    git clone https://github.com/DCOR-dev/ckanext-dcor_schemas.git
-    cd ckanext-dcor_schemas
-    python setup.py develop
-    pip install -r dev-requirements.txt
-
-
------
-Tests
------
-
-To run the tests, do::
-
-    pytest --ckan-ini=test.ini
-
-To run the tests and produce a coverage report, first make sure you have
-``pytest-cov`` installed in your virtualenv (``pip install pytest-cov``) then run::
-
-    pytest --ckan-ini=test.ini  --cov=ckanext.dcor_schemas
-
-
-----------------------------------------
-Releasing a new version of ckanext-dcor_schemas
-----------------------------------------
-
-ckanext-dcor_schemas should be available on PyPI as https://pypi.org/project/ckanext-dcor_schemas.
-To publish a new version to PyPI follow these steps:
-
-1. Update the version number in the ``setup.py`` file.
-   See `PEP 440 <http://legacy.python.org/dev/peps/pep-0440/#public-version-identifiers>`_
-   for how to choose version numbers.
-
-2. Make sure you have the latest version of necessary packages::
-
-    pip install --upgrade setuptools wheel twine
-
-3. Create a source and binary distributions of the new version::
-
-       python setup.py sdist bdist_wheel && twine check dist/*
-
-   Fix any errors you get.
-
-4. Upload the source distribution to PyPI::
-
-       twine upload dist/*
-
-5. Commit any outstanding changes::
-
-       git commit -a
-       git push
-
-6. Tag the new release of the project on GitHub with the version number from
-   the ``setup.py`` file. For example if the version number in ``setup.py`` is
-   0.0.1 then do::
-
-       git tag 0.0.1
-       git push --tags
+- Add ``dcor_schemas`` to ``ckan.plugins``
+- update the license template by modifying ``licenses_group_url = file:///path/to/repos/ckanext-dcor_schemas/ckanext/dcor_schemas/licenses.json``.
+- Make sure ``ckan.extra_resource_fields = sha256``
