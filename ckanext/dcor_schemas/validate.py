@@ -240,8 +240,6 @@ def resource_name(key, data, errors, context):
 
 def state(key, data, errors, context):
     data_dict = df.unflatten(data)
-    with open("/tmp/ckan_error3.txt", "a") as fd:
-        fd.write("\n\n{}\n{}\nEND".format(data_dict, key))
 
     if "resources" not in data_dict or len(data_dict["resources"]) == 0:
         data[key] = "draft"

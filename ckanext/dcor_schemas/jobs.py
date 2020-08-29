@@ -10,14 +10,6 @@ import dclab
 from dcor_shared import DC_MIME_TYPES, wait_for_resource
 
 
-def get_dataset_path(context, resource):
-    resource_id = resource["id"]
-    rsc = toolkit.get_action('resource_show')(context, {'id': resource_id})
-    upload = uploader.ResourceUpload(rsc)
-    filepath = upload.get_path(rsc['id'])
-    return filepath
-
-
 def patch_resource_noauth(data_dict):
     """Patch a resource and make sure that the patch was applied"""
     resource_patch = logic.get_action("resource_patch")

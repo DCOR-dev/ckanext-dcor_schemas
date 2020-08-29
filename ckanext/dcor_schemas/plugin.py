@@ -7,7 +7,7 @@ import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 
 import dclab
-from dcor_shared import DC_MIME_TYPES
+from dcor_shared import DC_MIME_TYPES, get_dataset_path
 
 from . import auth as dcor_auth
 from . import jobs
@@ -217,7 +217,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
     # IResourceController
     def after_create(self, context, resource):
         """Generate sha256 hash"""
-        path = jobs.get_dataset_path(context, resource)
+        path = get_dataset_path(context, resource)
         # set_dc_config_job depends on set_format_job
         mimeid = str(uuid.uuid4())
         toolkit.enqueue_job(jobs.set_format_job,
