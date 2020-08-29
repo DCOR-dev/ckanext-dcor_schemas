@@ -73,8 +73,9 @@ accordingly:
 
 - Background jobs:
 
-  - generates sha256 hash upon resource creation
+  - set the mimetype for each dataset
   - populate "dc:sec:key" metadata for each DC dataset
+  - generates sha256 hash upon resource creation
 
 
 Installation

@@ -1,20 +1,18 @@
-import hashlib
-import pathlib
-import time
+import mimetypes
+import uuid
 
 from ckan.lib.plugins import DefaultPermissionLabels
-import ckan.lib.uploader as uploader
 from ckan import logic
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 
 import dclab
-from dcor_shared import DC_MIME_TYPES, wait_for_resource
-
+from dcor_shared import DC_MIME_TYPES
 
 from . import auth as dcor_auth
-from . import validate as dcor_validate
+from . import jobs
 from . import helpers as dcor_helpers
+from . import validate as dcor_validate
 
 
 #: ignored schema fields (see default_create_package_schema in
@@ -27,65 +25,6 @@ REMOVE_PACKAGE_FIELDS = [
     "url",
     "version",
 ]
-
-
-def get_dataset_path(context, resource):
-    resource_id = resource["id"]
-    rsc = toolkit.get_action('resource_show')(context, {'id': resource_id})
-    upload = uploader.ResourceUpload(rsc)
-    filepath = upload.get_path(rsc['id'])
-    return filepath
-
-
-def patch_resource(data_dict):
-    resource_patch = logic.get_action("resource_patch")
-    resource_show = logic.get_action("resource_show")
-
-    while True:
-        # https://github.com/ckan/ckan/issues/2017
-        resource_patch(context={}, data_dict=data_dict)
-        rs = resource_show({}, {"id": data_dict["id"]})
-        for key in data_dict:
-            # do it again
-            if data_dict[key] != rs[key]:
-                time.sleep(0.01)
-                break
-        else:
-            # everything matches up
-            break
-
-
-def set_dc_config_job(path, resource):
-    """Store all DC config metadata"""
-    path = pathlib.Path(path)
-    wait_for_resource(path)
-    mtype = resource.get('mimetype', '')
-    if mtype in DC_MIME_TYPES:
-        data_dict = {"id": resource["id"]}
-        with dclab.new_dataset(path) as ds:
-            for sec in dclab.dfn.CFG_METADATA:
-                if sec in ds.config:
-                    for key in dclab.dfn.config_keys[sec]:
-                        if key in ds.config[sec]:
-                            dckey = 'dc:{}:{}'.format(sec, key)
-                            value = ds.config[sec][key]
-                            data_dict[dckey] = value
-        patch_resource(data_dict=data_dict)
-
-
-def set_sha256_job(path, resource):
-    """Computes the sha256 hash and writes it to the resource metadata"""
-    if not resource.get("sha256", "").strip():  # only compute if necessary
-        file_hash = hashlib.sha256()
-        with open(path, "rb") as fd:
-            while True:
-                data = fd.read(2**20)
-                if not data:
-                    break
-                file_hash.update(data)
-        sha256sum = file_hash.hexdigest()
-        patch_resource(data_dict={"id": resource["id"],
-                                  "sha256": sha256sum})
 
 
 class DCORDatasetFormPlugin(plugins.SingletonPlugin,
@@ -122,6 +61,9 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         toolkit.add_template_directory(config, 'templates')
         toolkit.add_resource('assets', 'dcor_schemas')
         toolkit.add_public_directory(config, 'public')
+        # Add RT-DC mime types
+        for key in DC_MIME_TYPES:
+            mimetypes.add_type(key, DC_MIME_TYPES[key])
 
     # IDatasetForm
     def _modify_package_schema(self, schema):
@@ -275,9 +217,23 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
     # IResourceController
     def after_create(self, context, resource):
         """Generate sha256 hash"""
-        path = get_dataset_path(context, resource)
-        toolkit.enqueue_job(set_sha256_job, [path, resource])
-        toolkit.enqueue_job(set_dc_config_job, [path, resource])
+        path = jobs.get_dataset_path(context, resource)
+        # set_dc_config_job depends on set_format_job
+        mimeid = str(uuid.uuid4())
+        toolkit.enqueue_job(jobs.set_format_job,
+                            [path, resource],
+                            title="Set mimetype for resource",
+                            rq_kwargs={"timeout": 60,
+                                       "job_id": mimeid})
+        toolkit.enqueue_job(jobs.set_dc_config_job,
+                            [path, resource],
+                            title="Set DC parameters for resource",
+                            rq_kwargs={"timeout": 60,
+                                       "depends_on": mimeid})
+        toolkit.enqueue_job(jobs.set_sha256_job,
+                            [path, resource],
+                            title="Set SHA256 hash for resource",
+                            rq_kwargs={"timeout": 3600})
 
     def before_create(self, context, resource):
         # set the filename
