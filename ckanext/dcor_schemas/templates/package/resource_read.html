@@ -1,0 +1,50 @@
+{% ckan_extends %}
+
+
+{# Note: ckanext-dcor_theme also extends this page #}
+
+
+{# Don't use the standard fields (they are confusing) and expand all
+other fields by default #}
+
+	{% block resource_additional_information_inner %}
+	<div class="module-content">
+	  <h2>{{ _('Additional Information') }}</h2>
+	  <table class="table table-striped table-bordered table-condensed" data-module="table-toggle-more">
+	    <thead>
+	      <tr>
+	        <th scope="col">{{ _('Field') }}</th>
+	        <th scope="col">{{ _('Value') }}</th>
+	      </tr>
+	    </thead>
+	    <tbody>
+	      <tr>
+	        <th scope="row">{{ _('license') }}</th>
+	        <td>{% snippet "snippets/license.html", pkg_dict=pkg, text_only=True %}</td>
+	      </tr>
+
+	      {# Do not use redundant fields #}
+
+	      {% set hidden_keys = ['last modified', 'revision id', 'url type', 'state', 'on same domain', 'has views'] %}
+	      {% for key, value in h.format_resource_items(res.items()) %}
+	        {# remove keys that make not sense with dcor_schema #}
+	        {% if key not in hidden_keys and ":" not in key%}
+	          <tr>
+	            <th scope="row">{{ key }}</th>
+	            <td>{{ value }}</td>
+	          </tr>
+	        {% endif %}
+	      {% endfor %}
+
+            {# DC metadata #}
+
+              {% for key, value in h.format_resource_items(res.items()) %}
+                {% if ':' in key %}
+                <tr class="toggle-more"><th scope="row">{{ key }}</th><td>{{ value }}</td></tr>
+                {% endif %}
+              {% endfor %}
+
+	    </tbody>
+	  </table>
+	</div>
+	{% endblock %}

@@ -1,0 +1,7 @@
+{% ckan_extends %}
+
+{# Hide File editing form (still needs to be there or the API will fail) #}
+
+	{% block basic_fields_url %}
+	    <input name="url" value="{{ data.url }}" type="hidden"/>
+	{% endblock %}

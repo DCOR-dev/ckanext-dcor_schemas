@@ -1,0 +1,16 @@
+/*
+Hide the slug preview (we override it anyway).
+*/
+.slug-preview {
+ display:none;
+ visibility: hidden;
+}
+
+
+/*
+Hide the "Link" button when creating a new resource (Only uploads are supported).
+*/
+.btn-default[title='Link to a URL on the internet (you can also link to an API)'] {
+ display:none;
+ visibility: hidden;
+}

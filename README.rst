@@ -2,7 +2,7 @@ ckanext-dcor_schemas
 ====================
 
 This module introduces/lifts restrictions (authorization) for the management
-of data metadata on DCOR. The corresponding UI elements are modified
+of data and meta data on DCOR. The corresponding UI elements are modified
 accordingly:
 
 - Authorization (auth.py)

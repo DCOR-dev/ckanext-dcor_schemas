@@ -1,0 +1,53 @@
+{% ckan_extends %}
+
+{% block extras %}
+  {% if pkg_dict.authors %}
+    <tr>
+      <th scope="row" class="dataset-label">{{ _("Authors") }}</th>
+      <td class="dataset-details">{{ pkg_dict.authors }}</td>
+    </tr>
+  {% endif %}
+  {% if pkg_dict.doi %}
+    <tr>
+      <th scope="row" class="dataset-label">{{ _("DOI") }}</th>
+      <td class="dataset-details">
+        <a href="https://doi.org/{{ pkg_dict.doi }}">{{ pkg_dict.doi }}</a>
+      </td>
+    </tr>
+  {% endif %}
+  {% if pkg_dict.references %}
+    <tr>
+      <th scope="row" class="dataset-label">{{ _("References") }}</th>
+      <td class="dataset-details">
+        {% set rdict = h.dcor_schemas_get_reference_dict(pkg_dict.references) %}
+        {% for item in rdict.dois %}
+            <a href="https://doi.org/{{ item }}">doi:{{ item }}</a>
+        {% endfor %}
+        {% for item in rdict.biorxiv %}
+            <a href="https://biorxiv.org/content/{{ item }}">bioRxiv:{{ item }}</a>
+        {% endfor %}
+        {% for item in rdict.arxiv %}
+            <a href="https://arxiv.org/abs/{{ item }}">arxiv:{{ item }}</a>
+        {% endfor %}
+        {% for item in rdict.links %}
+            <a href="{{ item }}">{{ item }}</a>
+        {% endfor %}
+      </td>
+    </tr>
+  {% endif %}
+  <tr>
+    <th scope="row" class="dataset-label">{{ _("License") }}</th>
+    <td class="dataset-details">{% snippet "snippets/license.html", pkg_dict=pkg_dict, text_only=True %}</td>
+  </tr>
+  <tr>
+    <th scope="row" class="dataset-label">{{ _("Package ID") }}</th>
+    <td class="dataset-details">{{ pkg_dict.id }}</td>
+  </tr>
+  <tr>
+    <th scope="row" class="dataset-label">{{ _("Owner") }}</th>
+    {% set user, user_display = h.dcor_schemas_get_user_name(pkg_dict.creator_user_id) %}
+    <td class="dataset-details"><a href="{{ g.site_url }}/user/{{ user }}">{{ user_display }}</a></td>
+  </tr>
+
+
+{% endblock %}

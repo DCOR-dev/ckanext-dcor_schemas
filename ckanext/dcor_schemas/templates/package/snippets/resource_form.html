@@ -1,0 +1,14 @@
+{% ckan_extends %}
+
+
+{# Remove Name editing form #}
+
+	{% block basic_fields_name %}
+	   <input name="name" value="{{ data.name }}" type="hidden"/>
+	{% endblock %}
+
+
+{# Remove file format editing form #}
+
+	{% block basic_fields_format %}
+	{% endblock %}
