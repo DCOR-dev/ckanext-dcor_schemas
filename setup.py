@@ -1,11 +1,11 @@
 from os.path import dirname, realpath, exists
-from setuptools import setup, find_packages  # Always prefer setuptools over distutils
+from setuptools import setup, find_packages
 from codecs import open  # To use a consistent encoding
 import sys
 
 author = u"Paul Müller"
 authors = [author]
-description = 'CKAN extension that introduces or lifts restrictions (authorization) for managing data and metadata'
+description = 'Introduces or lifts restrictions (authorization) for managing data and metadata on DCOR'
 name = 'ckanext-dcor_schemas'
 year = "2020"
 
@@ -21,7 +21,7 @@ setup(
     url='https://github.com/DCOR-dev/ckanext-dcor_schemas',
     author=author,
     author_email='dev@craban.de',
-    license='AGPL',
+    license='AGPLv3+',
     keywords=["CKAN", "DCOR", "RT-DC"],
     packages=find_packages(exclude=['contrib', 'docs', 'tests*']),
     package_dir={name: name},
