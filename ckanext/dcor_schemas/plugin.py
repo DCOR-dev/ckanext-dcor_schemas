@@ -1,4 +1,5 @@
 import mimetypes
+import pathlib
 import uuid
 
 from ckan.lib.plugins import DefaultPermissionLabels
@@ -238,7 +239,11 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
     def before_create(self, context, resource):
         # set the filename
         if "upload" in resource:
-            filename = resource["upload"].filename
+            upload = resource["upload"]
+            if hasattr(upload, "filename"):
+                filename = upload.filename
+            elif hasattr(upload, "name"):
+                filename = pathlib.Path(upload.name).name
             resource["name"] = filename
 
     def before_update(self, context, current, resource):
