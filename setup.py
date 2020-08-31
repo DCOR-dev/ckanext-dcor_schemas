@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 from codecs import open  # To use a consistent encoding
 import sys
 
-author = u"Paul Müller"
+author = "Paul Müller"
 authors = [author]
 description = 'Introduces or lifts restrictions (authorization) for managing data and metadata on DCOR'
 name = 'ckanext-dcor_schemas'

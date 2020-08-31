@@ -229,7 +229,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         toolkit.enqueue_job(jobs.set_sha256_job,
                             [path, resource],
                             title="Set SHA256 hash for resource",
-                            rq_kwargs={"timeout": 3600})
+                            rq_kwargs={"timeout": 500})
 
     def before_create(self, context, resource):
         # set the filename
