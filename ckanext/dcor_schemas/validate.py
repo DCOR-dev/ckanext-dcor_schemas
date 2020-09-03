@@ -203,7 +203,10 @@ def resource_name(key, data, errors, context):
     filename = data[key]
 
     # check suffix
-    suffix = "." + filename.rsplit(".", 1)[1]
+    if filename.count("."):
+        suffix = "." + filename.rsplit(".", 1)[1]
+    else:
+        suffix = None
     if suffix not in RESOURCE_EXTS:
         raise toolkit.Invalid(
             "Unsupported file extension '{}'. ".format(suffix)

@@ -2,9 +2,7 @@ import hashlib
 import pathlib
 import time
 
-import ckan.lib.uploader as uploader
 from ckan import logic
-import ckan.plugins.toolkit as toolkit
 
 import dclab
 from dcor_shared import DC_MIME_TYPES, wait_for_resource
