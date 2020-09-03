@@ -64,6 +64,23 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         # Add RT-DC mime types
         for key in DC_MIME_TYPES:
             mimetypes.add_type(key, DC_MIME_TYPES[key])
+        # Set licenses path
+        here = pathlib.Path(__file__).parent
+        license_loc = "file://{}".format(here / "licenses.json")
+        toolkit.get_action('config_option_update')(
+            context={'ignore_auth': True, 'user': None},
+            data_dict={'licenses_group_url': license_loc}
+            )
+
+    def update_config_schema(self, schema):
+        ignore_missing = toolkit.get_validator('ignore_missing')
+        schema.update({
+            # This is an existing CKAN core configuration option, we are just
+            # making it available to be editable at runtime
+            'licenses_group_url': [ignore_missing],
+        })
+
+        return schema
 
     # IDatasetForm
     def _modify_package_schema(self, schema):

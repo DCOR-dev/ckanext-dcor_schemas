@@ -86,8 +86,9 @@ Simply run
 
     pip install ckanext-dcor_schemas
 
-In the configuration file:
+In the configuration file ckan.ini:
 
-- Add ``dcor_schemas`` to ``ckan.plugins``
-- update the license template by modifying ``licenses_group_url = file:///path/to/repos/ckanext-dcor_schemas/ckanext/dcor_schemas/licenses.json``.
-- Make sure ``ckan.extra_resource_fields = sha256``
+```
+ckan.plugins = [...] dcor_schemas
+ckan.extra_resource_fields = sha256
+```
