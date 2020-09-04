@@ -1,5 +1,6 @@
 import mimetypes
 import pathlib
+import sys
 
 from ckan.lib.plugins import DefaultPermissionLabels
 from ckan import logic
@@ -67,10 +68,13 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         # Set licenses path
         here = pathlib.Path(__file__).parent
         license_loc = "file://{}".format(here / "licenses.json")
-        toolkit.get_action('config_option_update')(
-            context={'ignore_auth': True, 'user': None},
-            data_dict={'licenses_group_url': license_loc}
-            )
+
+        if not sys.argv.count("db"):
+            # workaround for https://github.com/ckan/ckan/issues/5580
+            toolkit.get_action('config_option_update')(
+                context={'ignore_auth': True, 'user': None},
+                data_dict={'licenses_group_url': license_loc}
+                )
 
     def update_config_schema(self, schema):
         ignore_missing = toolkit.get_validator('ignore_missing')
