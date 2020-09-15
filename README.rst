@@ -88,7 +88,7 @@ Simply run
 
 In the configuration file ckan.ini:
 
-```
-ckan.plugins = [...] dcor_schemas
-ckan.extra_resource_fields = sha256
-```
+::
+    
+    ckan.plugins = [...] dcor_schemas
+    ckan.extra_resource_fields = sha256
