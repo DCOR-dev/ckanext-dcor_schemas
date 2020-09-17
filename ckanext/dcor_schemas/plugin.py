@@ -238,18 +238,27 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
     # IResourceController
     def after_create(self, context, resource):
         """Generate sha256 hash"""
+        jidm = "-".join([resource["id"], resource["name"], "mimetype"])
         toolkit.enqueue_job(jobs.set_format_job,
                             [resource],
                             title="Set mimetype for resource",
-                            rq_kwargs={"timeout": 60})
+                            queue="dcor-short",
+                            rq_kwargs={"timeout": 60,
+                                       "job_id": jidm})
+        jidp = "-".join([resource["id"], resource["name"], "dcparms"])
         toolkit.enqueue_job(jobs.set_dc_config_job,
                             [resource],
                             title="Set DC parameters for resource",
-                            rq_kwargs={"timeout": 60})
+                            queue="dcor-normal",
+                            rq_kwargs={"timeout": 60,
+                                       "job_id": jidp})
+        jids = "-".join([resource["id"], resource["name"], "sha256"])
         toolkit.enqueue_job(jobs.set_sha256_job,
                             [resource],
                             title="Set SHA256 hash for resource",
-                            rq_kwargs={"timeout": 500})
+                            queue="dcor-normal",
+                            rq_kwargs={"timeout": 500,
+                                       "job_id": jids})
 
     def before_create(self, context, resource):
         # set the filename
