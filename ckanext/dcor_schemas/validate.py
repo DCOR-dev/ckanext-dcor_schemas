@@ -94,27 +94,34 @@ def name_create(key, data, errors, context):
         rand = uuid.uuid4().hex
 
     # convert title to slug
-    slug = slugify(package_title)
+    title_slug = slugify(package_title)
+    slug = title_slug
 
     for ii in range(len(rand)):
         # Update slug
-        if ii == 1:  # first iteration: add an underscore
-            slug += "_"
-        if ii != 0:  # not initial iteration: add random character
+        if ii == 0:
+            if len(slug) == 0:  # start with a random character
+                slug += rand[:model.PACKAGE_NAME_MIN_LENGTH]
+            elif len(slug) < model.PACKAGE_NAME_MIN_LENGTH:
+                slug += "-" + rand[ii]
+        elif ii == 1:
+            if len(title_slug) != 0:  # add a dash if a title was given
+                slug += "-" + rand[ii]
+        else:  # add random character
             slug += rand[ii]
 
         # Do not allow any of those slugs
         if slug in ["edit", "new", "search"]:
             if ii == 0:
-                slug += "_"
+                slug += "-"
             slug += rand[ii]
 
         # Honor model restrictions
         if len(slug) < model.PACKAGE_NAME_MIN_LENGTH:
-            slug += "_" + rand[:(model.PACKAGE_NAME_MIN_LENGTH - len(slug))]
+            slug += rand[:(model.PACKAGE_NAME_MIN_LENGTH - len(slug))]
         elif len(slug) > model.PACKAGE_NAME_MAX_LENGTH:
             # change the last character to have more options
-            slug = slug[:model.PACKAGE_NAME_MAX_LENGTH-10] + "_" + rand[ii]
+            slug = slug[:model.PACKAGE_NAME_MAX_LENGTH-10] + "-" + rand[ii]
 
         # Check if the slug/name exists
         query = session.query(model.Package.state).filter_by(name=slug)

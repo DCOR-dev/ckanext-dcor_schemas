@@ -1,6 +1,8 @@
 0.9.3
  - enh: add a ``job_id`` for all background jobs and put them
    in different queues
+ - ref: reworked dataset slug validation (dashes instead of
+   underscores)
 0.9.2
  - fix: manifest did not include .yml
 0.9.1
