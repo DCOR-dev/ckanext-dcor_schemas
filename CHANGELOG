@@ -1,3 +1,5 @@
+0.9.5
+ - enh: only create relevant jobs for DC mimetype data
 0.9.4
  - fix: permissions issue when patching resources in jobs
 0.9.3
