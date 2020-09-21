@@ -1,3 +1,5 @@
+0.9.4
+ - fix: permissions issue when patching resources in jobs
 0.9.3
  - enh: add a ``job_id`` for all background jobs and put them
    in different queues

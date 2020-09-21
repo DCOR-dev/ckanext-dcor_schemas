@@ -1,11 +1,14 @@
 import hashlib
-import pathlib
 import time
 
 from ckan import logic
 
 import dclab
 from dcor_shared import DC_MIME_TYPES, get_resource_path, wait_for_resource
+
+
+def admin_context():
+    return {'ignore_auth': True, 'user': 'default'}
 
 
 def patch_resource_noauth(data_dict):
@@ -15,10 +18,9 @@ def patch_resource_noauth(data_dict):
 
     # https://github.com/ckan/ckan/issues/2017
     while True:
-        resource_patch(context={'ignore_auth': True,
-                                'user': None},
+        resource_patch(context=admin_context(),
                        data_dict=data_dict)
-        rs = resource_show(context={'ignore_auth': True},
+        rs = resource_show(context=admin_context(),
                            data_dict={"id": data_dict["id"]})
         for key in data_dict:
             # do it again
@@ -32,10 +34,9 @@ def patch_resource_noauth(data_dict):
 
 def set_dc_config_job(resource):
     """Store all DC config metadata"""
-    path = pathlib.Path(get_resource_path(resource["id"]))
-    wait_for_resource(path)
-    mtype = resource.get('mimetype')
-    if mtype in DC_MIME_TYPES:
+    if resource.get('mimetype') in DC_MIME_TYPES:
+        path = get_resource_path(resource["id"])
+        wait_for_resource(path)
         data_dict = {"id": resource["id"]}
         with dclab.new_dataset(path) as ds:
             for sec in dclab.dfn.CFG_METADATA:
@@ -51,7 +52,7 @@ def set_dc_config_job(resource):
 def set_format_job(resource):
     """Writes the correct format to the resource metadata"""
     if resource.get('mimetype') in DC_MIME_TYPES:
-        path = pathlib.Path(get_resource_path(resource["id"]))
+        path = get_resource_path(resource["id"])
         wait_for_resource(path)
         with dclab.rtdc_dataset.check.IntegrityChecker(path) as ic:
             if ic.has_fluorescence:
@@ -65,7 +66,8 @@ def set_format_job(resource):
 def set_sha256_job(resource):
     """Computes the sha256 hash and writes it to the resource metadata"""
     if not resource.get("sha256", "").strip():  # only compute if necessary
-        path = pathlib.Path(get_resource_path(resource["id"]))
+        path = get_resource_path(resource["id"])
+        wait_for_resource(path)
         file_hash = hashlib.sha256()
         with open(path, "rb") as fd:
             while True:
