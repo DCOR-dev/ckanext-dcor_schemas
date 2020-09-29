@@ -31,6 +31,8 @@ RESOURCE_EXTS = [
     # analysis
     ".py",
     ".ipynb",
+    # sessions
+    ".so2",
 ]
 
 
