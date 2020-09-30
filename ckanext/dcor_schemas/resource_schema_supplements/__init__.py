@@ -25,14 +25,6 @@ class SupplementItem(object):
         if value is not None:
             self.set_value(value)
 
-    @staticmethod
-    def from_composite(composite_key, composite_value):
-        _, section, key = composite_key.strip().split(":")
-        si = SupplementItem(section=section, key=key)
-        if len(composite_value) != 0:
-            si.set_value(PARSERS[si["type"]][0](composite_value))
-        return si
-
     def __getitem__(self, key):
         if key in self._item:
             return self._item[key]
@@ -42,6 +34,14 @@ class SupplementItem(object):
             return ""
         else:
             raise KeyError("Property not found: '{}'!".format(key))
+
+    @staticmethod
+    def from_composite(composite_key, composite_value=None):
+        _, section, key = composite_key.strip().split(":")
+        si = SupplementItem(section=section, key=key)
+        if not (composite_value is None or len(composite_value) == 0):
+            si.set_value(PARSERS[si["type"]][0](composite_value))
+        return si
 
     def to_composite(self):
         composite_key = "sp:{}:{}".format(self.section, self.key)

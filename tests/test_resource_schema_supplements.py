@@ -5,6 +5,15 @@ def test_load():
     rss.load_schema_supplements()
 
 
+def test_composite_loop():
+    cil = rss.get_composite_item_list()
+    for ci in cil:
+        si = rss.SupplementItem.from_composite(composite_key=ci)
+        ci2, val = si.to_composite()
+        assert val is None
+        assert ci == ci2
+
+
 def test_get_composite_list():
     cil = rss.get_composite_item_list()
     for ci in cil:
