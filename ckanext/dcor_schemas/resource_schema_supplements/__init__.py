@@ -2,7 +2,10 @@ from collections import OrderedDict
 import functools
 import json
 import numbers
+import os
 from pkg_resources import resource_listdir, resource_filename
+
+from ckan.common import config
 
 
 #: Parses from and to composite values
@@ -25,8 +28,12 @@ CLASSES = {
 
 class SupplementItem(object):
     def __init__(self, section, key, value=None):
-        # TODO:
-        # - do some verification
+        """Represents a supplementary resource schema item
+
+        Supplementray resource schemas are defined via
+        .json files. They are loaded with `load_schema_supplements`.
+        This is a convenience class for handling them.
+        """
         self.section = section
         self.key = key
         self._item = get_item(section, key)
@@ -88,6 +95,7 @@ class SupplementItem(object):
         return composite_key, composite_value
 
     def set_value(self, value):
+        """Set a value of the key, perform checks"""
         # Check for type
         if not isinstance(value, CLASSES[self["type"]]):
             raise ValueError(
@@ -141,9 +149,14 @@ def get_item(section, key):
 
 @functools.lru_cache(maxsize=32)
 def load_schema_supplements():
-    module = "ckanext.dcor_schemas"
-    submod = "resource_schema_supplements"
-    filelist = resource_listdir(module, submod)
+    # determine the directory from which to load json files
+    jd = config.get("ckanext.dcor_schemas.json_resource_schema_dir", "package")
+    if jd == "package":  # use package json files (in this directory here)
+        module = "ckanext.dcor_schemas"
+        submod = "resource_schema_supplements"
+        filelist = resource_listdir(module, submod)
+    else:  # use user-defined json files
+        filelist = os.listdir(jd)
     jsons = sorted([fi for fi in filelist if fi.endswith(".json")])
     schemas = OrderedDict()
     for js in jsons:

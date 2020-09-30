@@ -36,6 +36,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
     """This plugin makes views of DC data"""
     plugins.implements(plugins.IActions)
     plugins.implements(plugins.IAuthFunctions)
+    plugins.implements(plugins.IClick)
     plugins.implements(plugins.IConfigurer, inherit=True)
     plugins.implements(plugins.IDatasetForm)
     plugins.implements(plugins.IPermissionLabels)

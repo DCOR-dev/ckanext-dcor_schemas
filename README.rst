@@ -80,6 +80,14 @@ accordingly:
   - populate "dc:sec:key" metadata for each DC dataset
   - generates sha256 hash upon resource creation
 
+- Configuration keywords:
+
+  - the ``ckanext.dcor_schemas.json_resource_schema_dir`` parameter
+    can be used to specify a directory containing .json files that
+    define the supplementary resource schema. The default is
+    ``package`` which means that the supplementary resource schema of
+    this extension is used.
+
 
 Installation
 ------------
