@@ -37,7 +37,7 @@ class SupplementItem(object):
     def __contains__(self, key):
         value = self[key]
         if (value is None
-            or (isinstance(value, str) and len(value) == 0)):
+                or (isinstance(value, str) and len(value) == 0)):
             return False
         else:
             return True
