@@ -26,7 +26,7 @@
    "name": "fluorophores",
    "hint": "Comma-separated list of fluorophores used",
    "type": "list",
-   "example": "mCherry, eGFP"
+   "example": ["mCherry", "eGFP"]
    },
   {"key": "catalog numbers",
    "name": "catalog numbers",

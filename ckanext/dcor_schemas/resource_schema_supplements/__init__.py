@@ -1,6 +1,7 @@
 from collections import OrderedDict
 import functools
 import json
+import numbers
 from pkg_resources import resource_listdir, resource_filename
 
 
@@ -9,8 +10,16 @@ PARSERS = {
     "float": (float, float),
     "integer": (int, int),
     "list": (lambda x: [y.strip() for y in x.split(",")],
-             lambda x: ", ".join(x)),
+             lambda x: ",".join(x)),
     "string": (str, str),
+}
+
+#: Data types of supplements
+CLASSES = {
+    "float": numbers.Real,
+    "integer": numbers.Integral,
+    "list": list,
+    "string": str,
 }
 
 
@@ -25,6 +34,14 @@ class SupplementItem(object):
         if value is not None:
             self.set_value(value)
 
+    def __contains__(self, key):
+        value = self[key]
+        if (value is None
+            or (isinstance(value, str) and len(value) == 0)):
+            return False
+        else:
+            return True
+
     def __getitem__(self, key):
         if key in self._item:
             return self._item[key]
@@ -37,21 +54,47 @@ class SupplementItem(object):
 
     @staticmethod
     def from_composite(composite_key, composite_value=None):
+        """Load an instance from a composite key-value pair
+
+        Parameters
+        ----------
+        composite_key: str
+            e.g. "sp:cells:organism"
+        composite_value: str, int, float, None
+            e.g. "eGFP, mCherry" (not ["eGFP", "mCherry"]), 123, or 5.24
+
+        Returns
+        -------
+        si: SupplementItem
+        """
         _, section, key = composite_key.strip().split(":")
         si = SupplementItem(section=section, key=key)
-        if not (composite_value is None or len(composite_value) == 0):
+        if not (composite_value is None
+                or (isinstance(composite_value, str) and
+                    len(composite_value) == 0)):
             si.set_value(PARSERS[si["type"]][0](composite_value))
         return si
 
     def to_composite(self):
+        """Export the current instance to a composite key-value pair
+
+        This implies converting lists to comma-separated strings
+        """
         composite_key = "sp:{}:{}".format(self.section, self.key)
-        if self.value is not None:
-            composite_value = PARSERS[self["type"]][1](self.value)
-        else:
+        if self.value is None:
             composite_value = None
+        else:
+            composite_value = PARSERS[self["type"]][1](self.value)
         return composite_key, composite_value
 
     def set_value(self, value):
+        # Check for type
+        if not isinstance(value, CLASSES[self["type"]]):
+            raise ValueError(
+                "Class type for '{}', should be ".format(self.key)
+                + "'{}', but got '{}' ('{}')!".format(CLASSES[self["type"]],
+                                                      type(value),
+                                                      value))
         self.value = value
 
 

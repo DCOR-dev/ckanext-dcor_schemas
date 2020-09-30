@@ -14,6 +14,20 @@ def test_composite_loop():
         assert ci == ci2
 
 
+def test_composite_loop_with_example():
+    cil = rss.get_composite_item_list()
+    for ci in cil:
+        si = rss.SupplementItem.from_composite(composite_key=ci)
+        if "example" in si:
+            si.set_value(si["example"])
+            ci2, cval = si.to_composite()
+            assert cval is not None
+            # and one more back
+            si2 = rss.SupplementItem.from_composite(composite_key=ci2,
+                                                    composite_value=cval)
+            assert si2.value == si["example"]
+
+
 def test_get_composite_list():
     cil = rss.get_composite_item_list()
     for ci in cil:
