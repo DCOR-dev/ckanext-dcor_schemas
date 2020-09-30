@@ -47,6 +47,7 @@ accordingly:
   - hide "add new resource" button in ``templates/package/resources.html``
   - remove ``url``, ``version``, ``author``, ``author_email``, ``maintainer``,
     ``maintainer_email`` (``templates/package/snippets/package_metadata_fields.html``)
+  - remove custom extras (user should use resource schema supplements instead)
   - add field ``authors`` (csv list)
   - add field ``doi`` (validator parses URLs)
   - add field ``references`` (parses arxiv, bioRxiv, DOI, links)
@@ -70,6 +71,8 @@ accordingly:
     ['last modified', 'revision id', 'url type', 'state', 'on same domain']
     (``templates/package/resource_read.html``)
   - Show DC config data via "toggle-more"
+  - Add supplementary resource schema via json files located in
+    `dcor_schemas/resource_schema_supplements`
 
 - Background jobs:
 
