@@ -1,5 +1,6 @@
 0.10.0
  - enh: implement supplementary resource json files (#6)
+ - fix: TemplateSyntaxError in bulk_process.html
  - ref: remove custom form fileds in favor of
    supplementary resource data
 0.9.5
