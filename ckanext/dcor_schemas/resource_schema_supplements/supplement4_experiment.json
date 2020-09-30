@@ -1,0 +1,13 @@
+{
+"key": "experiment",
+"name": "experiment",
+"requires": {},
+"items": [
+  {"key": "tubing",
+   "name": "tubing",
+   "hint": "Describe the type of tubing used",
+   "type": "string"
+   }
+  ]
+}
+

@@ -1,0 +1,20 @@
+{
+"key": "general",
+"name": "general",
+"requires": {},
+"items": [
+  {"key": "sample type",
+   "name": "sample type",
+   "hint": "Most general type of the sample",
+   "type": "string",
+   "options": ["choices fixed"],
+   "example": "artificial",
+   "choices": [
+     "primary cells",
+     "cell line",
+     "artificial"
+     ]
+   }
+  ]
+}
+

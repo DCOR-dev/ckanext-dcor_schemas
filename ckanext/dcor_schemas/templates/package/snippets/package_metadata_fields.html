@@ -3,7 +3,7 @@
 {# Remove unused fields
 see https://github.com/ckan/ckan/blob/master/ckan/templates/package/snippets/package_metadata_fields.html
 #}
-	
+
 	{% block package_metadata_fields_url %}
 	{% endblock %}
 	
@@ -15,3 +15,9 @@ see https://github.com/ckan/ckan/blob/master/ckan/templates/package/snippets/pac
 	
 	{% block package_metadata_fields_maintainer %}
 	{% endblock %}
+
+
+{# Remove custom form fields (we use resource_schema_supplements instead) #}
+
+    {% block package_metadata_fields_custom %}
+    {% endblock %}

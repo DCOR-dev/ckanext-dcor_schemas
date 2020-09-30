@@ -1,0 +1,48 @@
+{
+"key": "preparation",
+"name": "preparation",
+"requires": {},
+"items": [
+  {"key": "interim time",
+   "name": "interim time",
+   "hint": "Time between sample preparation/extraction and measurement in minutes",
+   "unit": "min",
+   "type": "float",
+   "example": 7.5
+   },
+  {"key": "concentration",
+   "name": "concentration",
+   "hint": "Concentration of cells or beads per mL",
+   "unit": "1/mL",
+   "type": "float",
+   "example": 8472
+   },
+  {"key": "antibodies",
+   "name": "antibodies",
+   "hint": "Comma-separated list of antibodies used",
+   "type": "list"
+   },
+  {"key": "fluorophores",
+   "name": "fluorophores",
+   "hint": "Comma-separated list of fluorophores used",
+   "type": "list",
+   "example": "mCherry, eGFP"
+   },
+  {"key": "catalog numbers",
+   "name": "catalog numbers",
+   "hint": "Comma-separated list of catalog numbers of any chemicals used",
+   "type": "list"
+   },
+  {"key": "markers",
+   "name": "markers",
+   "hint": "Comma-separated list of markers used",
+   "type": "list"
+   },
+  {"key": "details",
+   "name": "details",
+   "hint": "Details about the preparation procedure",
+   "type": "list"
+   }
+  ]
+}
+

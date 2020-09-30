@@ -1,3 +1,7 @@
+0.10.0
+ - enh: implement supplementary resource json files (#6)
+ - ref: remove custom form fileds in favor of
+   supplementary resource data
 0.9.5
  - enh: only create relevant jobs for DC mimetype data
 0.9.4

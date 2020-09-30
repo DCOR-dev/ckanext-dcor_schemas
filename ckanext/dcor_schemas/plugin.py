@@ -13,6 +13,7 @@ from dcor_shared import DC_MIME_TYPES
 from . import auth as dcor_auth
 from . import jobs
 from . import helpers as dcor_helpers
+from . import resource_schema_supplements as rss
 from . import validate as dcor_validate
 
 
@@ -138,6 +139,14 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                         toolkit.get_validator('ignore_missing'),
                         dcor_validate.resource_dc_config,
                     ]})
+        # Add supplementary resource schemas
+        for composite_key in rss.get_composite_item_list():
+            schema['resources'].update({
+                composite_key: [
+                    toolkit.get_validator('ignore_missing'),
+                    dcor_validate.resource_dc_supplement,
+                ]})
+
         return schema
 
     def create_package_schema(self):
@@ -199,6 +208,12 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                     'dc:{}:{}'.format(sec, key): [
                         toolkit.get_validator('ignore_missing'),
                     ]})
+        # Add supplementary resource schemas
+        for composite_key in rss.get_composite_item_list():
+            schema['resources'].update({
+                composite_key: [
+                    toolkit.get_validator('ignore_missing'),
+                ]})
         return schema
 
     def is_fallback(self):
@@ -288,5 +303,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             'dcor_schemas_get_user_name': dcor_helpers.get_user_name,
             'dcor_schemas_get_reference_dict': dcor_helpers.get_reference_dict,
             'dcor_schemas_license_options': dcor_helpers.license_options,
+            'dcor_schemas_get_composite_section_item_list':
+            rss.get_composite_section_item_list
         }
         return hlps

@@ -9,6 +9,8 @@ import ckan.plugins.toolkit as toolkit
 import dclab
 from slugify import slugify
 
+from . import resource_schema_supplements as rss
+
 
 RESOURCE_CHARS = "abcdefghijklmnopqrstuvwxyz" \
                  + "ABCDEFGHIJKLMNOPQRSTUVWXYZ" \
@@ -191,10 +193,26 @@ def resource_dc_config(key, data, errors, context):
     value = data[key]
     _, sec, val = key[-1].split(":")
     func = dclab.dfn.config_funcs[sec][val]
-    if func is str:
-        func = dclab.compat.hdf5_str
-    value = func(value)
+    try:
+        value = func(value)
+    except BaseException:
+        raise toolkit.Invalid("Invalid value for '{}': '{}'!".format(key[-1],
+                                                                     value))
     data[key] = value
+
+
+def resource_dc_supplement(key, data, errors, context):
+    """Parse user-defined supplementary parameters"""
+    value = data[key]
+    # send them through the loop
+    try:
+        si = rss.SupplementItem.from_composite(composite_key=key[-1],
+                                               composite_value=value)
+        _, composite_value = si.to_composite()
+    except BaseException:
+        raise toolkit.Invalid("Invalid value for '{}': '{}'!".format(key[-1],
+                                                                     value))
+    data[key] = composite_value
 
 
 def resource_name(key, data, errors, context):

@@ -1,0 +1,55 @@
+{
+"key": "cells",
+"name": "cells",
+"requires": {"general": {"sample type": ["primary cells", "cell line"]}},
+"items": [
+  {"key": "organism",
+   "name": "organism",
+   "hint": "The (model) organism",
+   "type": "string",
+   "example": "human",
+   "choices": [
+     "C. elegans",
+     "zebrafish",
+     "human",
+     "mouse"
+     ]
+   },
+  {"key": "cell type",
+   "name": "cell type",
+   "hint": "Tissue type, bodily fluid, cell line, etc.",
+   "type": "string",
+   "example": "endothelial",
+   "choices": [
+     "blood",
+     "endothelial",
+     "HL60/S4",
+     "macrophage"
+     ]
+   },
+  {"key": "derivation",
+   "name": "derivation",
+   "hint": "State retrieval location and method, dissociation procedure, and/or cell culture protocol",
+   "type": "string",
+   "options": ["text"]
+   },
+  {"key": "condition",
+   "name": "condition",
+   "requires": {"general": {"sample type": ["primary cells"]}},
+   "hint": "Disease specification",
+   "type": "string",
+   "example": "healthy",
+   "choices": [
+     "acute lymphoblastic leukemia",
+     "healthy"
+     ]
+   },
+  {"key": "passage number",
+   "name": "passage number",
+   "requires": {"general": {"sample type": ["cell line"]}},
+   "hint": "Passage number of cell culture",
+   "type": "integer",
+   "example": 42
+   }
+  ]
+}
