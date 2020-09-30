@@ -10,6 +10,7 @@ import ckan.plugins.toolkit as toolkit
 import dclab
 from dcor_shared import DC_MIME_TYPES
 
+from . import actions
 from . import auth as dcor_auth
 from . import jobs
 from . import helpers as dcor_helpers
@@ -32,13 +33,21 @@ REMOVE_PACKAGE_FIELDS = [
 class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                             toolkit.DefaultDatasetForm,
                             DefaultPermissionLabels):
-    '''This plugin makes views of DC data'''
+    """This plugin makes views of DC data"""
+    plugins.implements(plugins.IActions)
     plugins.implements(plugins.IAuthFunctions)
     plugins.implements(plugins.IConfigurer, inherit=True)
     plugins.implements(plugins.IDatasetForm)
     plugins.implements(plugins.IPermissionLabels)
     plugins.implements(plugins.IResourceController, inherit=True)
     plugins.implements(plugins.ITemplateHelpers)
+
+    # IActions
+    def get_actions(self):
+        return {
+            "resource_schema_supplements":
+                actions.get_resource_schema_supplements,
+        }
 
     # IAuthfunctions
     def get_auth_functions(self):
