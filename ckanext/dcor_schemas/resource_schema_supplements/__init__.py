@@ -6,10 +6,11 @@ from pkg_resources import resource_listdir, resource_filename
 
 #: Parses from and to composite values
 PARSERS = {
-    "string": (str, str),
+    "float": (float, float),
     "integer": (int, int),
     "list": (lambda x: [y.strip() for y in x.split(",")],
              lambda x: ", ".join(x)),
+    "string": (str, str),
 }
 
 
@@ -28,7 +29,8 @@ class SupplementItem(object):
     def from_composite(composite_key, composite_value):
         _, section, key = composite_key.strip().split(":")
         si = SupplementItem(section=section, key=key)
-        si.set_value(PARSERS[si["type"]][0](composite_value))
+        if len(composite_value) != 0:
+            si.set_value(PARSERS[si["type"]][0](composite_value))
         return si
 
     def __getitem__(self, key):
@@ -50,8 +52,6 @@ class SupplementItem(object):
         return composite_key, composite_value
 
     def set_value(self, value):
-        # TODO:
-        # - do some verification?
         self.value = value
 
 

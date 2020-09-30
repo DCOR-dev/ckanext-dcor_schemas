@@ -1,3 +1,6 @@
 hide_unused_elements:
   contents:
     - hide_unused_elements.css
+collapsible_resource_schema_supplements:
+  contents:
+    - collapsible_resource_schema_supplements.css

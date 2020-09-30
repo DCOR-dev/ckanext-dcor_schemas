@@ -204,17 +204,16 @@ def resource_dc_config(key, data, errors, context):
 def resource_dc_supplement(key, data, errors, context):
     """Parse user-defined supplementary parameters"""
     value = data[key]
-    if value:
-        # send them through the loop
-        try:
-            si = rss.SupplementItem.from_composite(composite_key=key[-1],
-                                                   composite_value=value)
-            _, composite_value = si.to_composite()
-        except BaseException:
-            raise toolkit.Invalid(
-                "Invalid value for '{}': '{}'!".format(key[-1], value)
-                )
-        data[key] = composite_value
+    # send them through the loop
+    try:
+        si = rss.SupplementItem.from_composite(composite_key=key[-1],
+                                               composite_value=value)
+        _, composite_value = si.to_composite()
+    except BaseException:
+        raise toolkit.Invalid(
+            "Invalid value for '{}': '{}'!".format(key[-1], value)
+        )
+    data[key] = composite_value
 
 
 def resource_name(key, data, errors, context):

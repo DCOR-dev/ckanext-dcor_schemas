@@ -1,6 +1,5 @@
 {% ckan_extends %}
 
-
 {# Remove Name editing form #}
 
 	{% block basic_fields_name %}
@@ -16,10 +15,21 @@
 {# Hijack metadata_fields for resource schema supplements #}
 
 	{% block metadata_fields %}
+	{% asset 'dcor_schemas/collapsible_resource_schema_supplements' %}
+
     {% for sd in h.dcor_schemas_get_composite_section_item_list()  %}
-        <b>{{ sd["name"] }}</b>
-        {% for ck, ti, ph in sd["items"] %}
-            {{ form.input(ck, id=ck, label=_(ti), placeholder=_(ph), classes=[]) }}
-	    {% endfor %}
+      <div class="wrap-collabsible">
+        <input id="{{ sd["name"] }}" class="toggle" type="checkbox">
+        <label for="{{ sd["name"] }}" class="lbl-toggle">{{ sd["name"] }}</label>
+        <div class="collapsible-content">
+          <div class="content-inner">
+            <p>
+            {% for ck, ti, ph in sd["items"] %}
+                {{ form.input(ck, id=ck, label=_(ti), placeholder=_(ph), classes=[]) }}
+    	    {% endfor %}
+    	    </p>
+    	  </div>
+    	</div>
+      </div>
 	{% endfor %}
 	{% endblock %}
