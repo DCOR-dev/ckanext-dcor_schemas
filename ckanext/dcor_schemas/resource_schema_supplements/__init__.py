@@ -139,6 +139,7 @@ def get_composite_section_item_list():
 
 
 def get_item(section, key):
+    """Return the schema dictionary item for a section-key pair"""
     schemas = load_schema_supplements()
     for item in schemas[section]["items"]:
         if item["key"] == key:
@@ -149,6 +150,13 @@ def get_item(section, key):
 
 @functools.lru_cache(maxsize=32)
 def load_schema_supplements():
+    """Load and merge the entire supplementary resource schema
+
+    If "ckanext.dcor_schemas.json_resource_schema_dir" in ckan.ini
+    is set to a directory on disk, then json files will be loaded from
+    there. Otherwise (or if it is set to "package"), the schema shipped
+    with this extension is loaded.
+    """
     # determine the directory from which to load json files
     jd = config.get("ckanext.dcor_schemas.json_resource_schema_dir", "package")
     if jd == "package":  # use package json files (in this directory here)
