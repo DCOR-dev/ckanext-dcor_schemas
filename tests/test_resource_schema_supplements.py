@@ -16,6 +16,13 @@ def test_get_composite_section_item_list():
     rss.get_composite_section_item_list()
 
 
+def test_supplement_item():
+    si = rss.SupplementItem.from_composite(composite_key="sp:cells:organism",
+                                           composite_value="human")
+    assert si["type"] == "string"
+    assert si["key"] == "organism"
+
+
 if __name__ == "__main__":
     # Run all tests
     loc = locals()

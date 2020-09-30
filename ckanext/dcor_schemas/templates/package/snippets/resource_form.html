@@ -12,3 +12,14 @@
 
 	{% block basic_fields_format %}
 	{% endblock %}
+
+{# Hijack metadata_fields for resource schema supplements #}
+
+	{% block metadata_fields %}
+    {% for sd in h.dcor_schemas_get_composite_section_item_list()  %}
+        <b>{{ sd["name"] }}</b>
+        {% for ck, ti, ph in sd["items"] %}
+            {{ form.input(ck, id=ck, label=_(ti), placeholder=_(ph), classes=[]) }}
+	    {% endfor %}
+	{% endfor %}
+	{% endblock %}

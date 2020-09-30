@@ -14,28 +14,39 @@ PARSERS = {
 
 
 class SupplementItem(object):
-    def __init__(self, section, item, value=None):
+    def __init__(self, section, key, value=None):
         # TODO:
         # - do some verification
         self.section = section
-        self.item = item
+        self.key = key
+        self._item = get_item(section, key)
         self.value = None
         if value is not None:
             self.set_value(value)
 
     @staticmethod
     def from_composite(composite_key, composite_value):
-        _, section, item = composite_key.strip().split(":")
-        si = SupplementItem(section=section, item=item)
-        schemas = load_schema_supplements()
-        stype = schemas[si.section, si.item].get("type", "string")
-        si.set_value(PARSERS[stype][0](composite_value))
+        _, section, key = composite_key.strip().split(":")
+        si = SupplementItem(section=section, key=key)
+        si.set_value(PARSERS[si["type"]][0](composite_value))
+        return si
+
+    def __getitem__(self, key):
+        if key in self._item:
+            return self._item[key]
+        elif key == "type":
+            return "string"
+        elif key in ["example", "hint"]:
+            return ""
+        else:
+            raise KeyError("Property not found: '{}'!".format(key))
 
     def to_composite(self):
-        composite_key = "sp:{}:{}".format(self.section, self.item)
-        schemas = load_schema_supplements()
-        stype = schemas[self.section, self.item].get("type", "string")
-        composite_value = PARSERS[stype][1](self.value)
+        composite_key = "sp:{}:{}".format(self.section, self.key)
+        if self.value is not None:
+            composite_value = PARSERS[self["type"]][1](self.value)
+        else:
+            composite_value = None
         return composite_key, composite_value
 
     def set_value(self, value):
@@ -61,13 +72,28 @@ def get_composite_section_item_list():
     for sec in schemas:
         il = []
         for item in schemas[sec]["items"]:
-            il.append("sp:{}:{}".format(sec, item["key"]))
+            si = SupplementItem(section=sec, key=item["key"])
+            ck, _ = si.to_composite()
+            ph = "e.g. {}".format(si["example"]) if si["example"] else "text"
+            ti = si["name"].capitalize()
+            if si["hint"]:
+                ti += " ({})".format(si["hint"])
+            il.append([ck, ti, ph])
         sd = {"name": schemas[sec]["name"].capitalize(),
               "hint": schemas[sec].get("hint", ""),
               "items": il,
               }
         csil.append(sd)
     return csil
+
+
+def get_item(section, key):
+    schemas = load_schema_supplements()
+    for item in schemas[section]["items"]:
+        if item["key"] == key:
+            return item
+    else:
+        raise KeyError("Supplement [{}]: '{}' not found!".format(section, key))
 
 
 @functools.lru_cache(maxsize=32)
@@ -83,6 +109,7 @@ def load_schema_supplements():
         with open(pp, "r") as fp:
             try:
                 schemas[key] = json.load(fp)
+                assert key == schemas[key]["key"]
             except json.decoder.JSONDecodeError as e:
                 if not e.args:
                     e.args = ('',)
