@@ -300,7 +300,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
     def before_update(self, context, current, resource):
         """We have to do this to protect our resource metadata"""
         for key in ["sha256"]:
-            if key in current:
+            if current.get(key, False):
                 resource[key] = current[key]
 
     # ITemaplateHelpers

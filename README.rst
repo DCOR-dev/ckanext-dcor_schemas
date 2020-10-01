@@ -88,6 +88,11 @@ accordingly:
     ``package`` which means that the supplementary resource schema of
     this extension is used.
 
+- API extensions:
+
+  - ``resource_schema_supplements`` returns a dictionary of the
+    current supplementary resource schema
+
 
 Installation
 ------------
