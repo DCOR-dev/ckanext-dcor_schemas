@@ -20,6 +20,7 @@ def patch_resource_noauth(package_id, data_dict):
                    "update__resources__{}".format(data_dict["id"]): data_dict}
     while True:
         package_revise(context=admin_context(), data_dict=revise_dict)
+        time.sleep(1)
         rs = resource_show(context=admin_context(),
                            data_dict={"id": data_dict["id"]})
         for key in data_dict:
