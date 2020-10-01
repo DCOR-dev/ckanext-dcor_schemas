@@ -22,9 +22,10 @@ def patch_resource_noauth(package_id, data_dict):
                    "update__resources__{}".format(res_id): data_dict}
     while True:
         package_revise(context=admin_context(), data_dict=revise_dict)
+        # waiting a random time really helps if there are concurrent jobs
         time.sleep(random.randint(1, 100)/100)
         rs = resource_show(context=admin_context(),
-                           data_dict={"id": data_dict["id"]})
+                           data_dict={"id": res_id})
         for key in data_dict:
             if data_dict[key] != rs.get(key):
                 break
