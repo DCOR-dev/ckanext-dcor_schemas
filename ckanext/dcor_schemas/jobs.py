@@ -18,19 +18,15 @@ def patch_resource_noauth(package_id, data_dict):
 
     revise_dict = {"match": {"id": package_id},
                    "update__resources__{}".format(data_dict["id"]): data_dict}
-    while True:
-        package_revise(context=admin_context(), data_dict=revise_dict)
-        time.sleep(1)
-        rs = resource_show(context=admin_context(),
-                           data_dict={"id": data_dict["id"]})
-        for key in data_dict:
-            # do it again
-            if data_dict[key] != rs[key]:
-                time.sleep(1)
-                break
-        else:
-            # everything matches up
-            break
+    package_revise(context=admin_context(), data_dict=revise_dict)
+    time.sleep(1)
+    rs = resource_show(context=admin_context(),
+                       data_dict={"id": data_dict["id"]})
+    for key in data_dict:
+        if data_dict[key] != rs[key]:
+            raise ValueError(
+                "Could not update resource {} key '{}'".format(data_dict["id"],
+                                                               key))
 
 
 def set_dc_config_job(resource):
