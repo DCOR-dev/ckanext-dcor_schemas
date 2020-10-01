@@ -65,7 +65,8 @@ def set_format_job(resource):
 
 def set_sha256_job(resource):
     """Computes the sha256 hash and writes it to the resource metadata"""
-    if len(resource.get("sha256", "").strip() == 0):  # only compute if necessary
+    sha = str(resource.get("sha256", ""))  # can be bool sometimes
+    if len(sha) != 64:  # only compute if necessary
         path = get_resource_path(resource["id"])
         wait_for_resource(path)
         file_hash = hashlib.sha256()

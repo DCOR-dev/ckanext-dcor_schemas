@@ -277,8 +277,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                                 title="Set mimetype for resource",
                                 queue="dcor-short",
                                 rq_kwargs={"timeout": 60,
-                                           "job_id": jidm,
-                                           "depends_on": jids})
+                                           "job_id": jidm})
 
             jidp = "-".join([resource["id"], resource["name"], "dcparms"])
             toolkit.enqueue_job(jobs.set_dc_config_job,
@@ -286,8 +285,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                                 title="Set DC parameters for resource",
                                 queue="dcor-normal",
                                 rq_kwargs={"timeout": 60,
-                                           "job_id": jidp,
-                                           "depends_on": jidm})
+                                           "job_id": jidp})
 
     def before_create(self, context, resource):
         # set the filename
