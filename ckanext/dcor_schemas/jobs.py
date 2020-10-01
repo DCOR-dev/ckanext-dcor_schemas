@@ -1,4 +1,5 @@
 import hashlib
+import time
 
 from ckan import logic
 
@@ -11,12 +12,24 @@ def admin_context():
 
 
 def patch_resource_noauth(package_id, data_dict):
-    """Patch a resource using concurrent-safe package_revise"""
+    """Patch a resource and make sure that the patch was applied"""
     package_revise = logic.get_action("package_revise")
-    package_revise(context=admin_context(),
-                   data_dict={"match": {"id": package_id},
-                              "update": {"resources": [data_dict]},
-                              })
+    resource_show = logic.get_action("resource_show")
+
+    revise_dict = {"match": {"id": package_id},
+                   "update__resources__{}".format(data_dict["id"]): data_dict}
+    while True:
+        package_revise(context=admin_context(), data_dict=revise_dict)
+        rs = resource_show(context=admin_context(),
+                           data_dict={"id": data_dict["id"]})
+        for key in data_dict:
+            # do it again
+            if data_dict[key] != rs[key]:
+                time.sleep(0.1)
+                break
+        else:
+            # everything matches up
+            break
 
 
 def set_dc_config_job(resource):
