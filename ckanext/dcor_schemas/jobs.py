@@ -25,7 +25,7 @@ def patch_resource_noauth(data_dict):
         for key in data_dict:
             # do it again
             if data_dict[key] != rs[key]:
-                time.sleep(0.01)
+                time.sleep(0.1)
                 break
         else:
             # everything matches up
