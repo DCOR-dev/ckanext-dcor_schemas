@@ -299,6 +299,12 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                 filename = pathlib.Path(upload.name).name
             resource["name"] = filename
 
+    def before_update(self, context, current, resource):
+        """We have to do this to protect our resource metadata"""
+        for key in ["sha256"]:
+            if current.get(key, False):
+                resource[key] = current[key]
+
     # ITemaplateHelpers
     def get_helpers(self):
         # Template helper function names should begin with the name of the
