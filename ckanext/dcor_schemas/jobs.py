@@ -1,5 +1,4 @@
 import hashlib
-import time
 
 from ckan import logic
 
@@ -11,25 +10,13 @@ def admin_context():
     return {'ignore_auth': True, 'user': 'default'}
 
 
-def patch_resource_noauth(data_dict):
-    """Patch a resource and make sure that the patch was applied"""
-    resource_patch = logic.get_action("resource_patch")
-    resource_show = logic.get_action("resource_show")
-
-    # https://github.com/ckan/ckan/issues/2017
-    while True:
-        resource_patch(context=admin_context(),
-                       data_dict=data_dict)
-        rs = resource_show(context=admin_context(),
-                           data_dict={"id": data_dict["id"]})
-        for key in data_dict:
-            # do it again
-            if data_dict[key] != rs[key]:
-                time.sleep(0.1)
-                break
-        else:
-            # everything matches up
-            break
+def patch_resource_noauth(package_id, data_dict):
+    """Patch a resource using concurrent-safe package_revise"""
+    package_revise = logic.get_action("package_revise")
+    package_revise(context=admin_context(),
+                   data_dict={"match": {"id": package_id},
+                              "update": {"resources": [data_dict]},
+                              })
 
 
 def set_dc_config_job(resource):
@@ -46,7 +33,9 @@ def set_dc_config_job(resource):
                             dckey = 'dc:{}:{}'.format(sec, key)
                             value = ds.config[sec][key]
                             data_dict[dckey] = value
-        patch_resource_noauth(data_dict=data_dict)
+        patch_resource_noauth(
+            package_id=resource["package_id"],
+            data_dict=data_dict)
 
 
 def set_format_job(resource):
@@ -59,8 +48,9 @@ def set_format_job(resource):
                 fmt = "RT-FDC"
             else:
                 fmt = "RT-DC"
-        patch_resource_noauth(data_dict={"id": resource["id"],
-                                         "format": fmt})
+        patch_resource_noauth(
+            package_id=resource["package_id"],
+            data_dict={"id": resource["id"], "format": fmt})
 
 
 def set_sha256_job(resource):
@@ -77,5 +67,6 @@ def set_sha256_job(resource):
                     break
                 file_hash.update(data)
         sha256sum = file_hash.hexdigest()
-        patch_resource_noauth(data_dict={"id": resource["id"],
-                                         "sha256": sha256sum})
+        patch_resource_noauth(
+            package_id=resource["package_id"],
+            data_dict={"id": resource["id"], "sha256": sha256sum})
