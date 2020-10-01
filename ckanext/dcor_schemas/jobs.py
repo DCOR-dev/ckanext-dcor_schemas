@@ -1,6 +1,4 @@
 import hashlib
-import random
-import time
 
 from ckan import logic
 
@@ -12,15 +10,12 @@ def admin_context():
     return {'ignore_auth': True, 'user': 'default'}
 
 
-def patch_resource_noauth(package_id, data_dict):
-    """Patch a resource and make sure that the patch was applied"""
+def patch_resource_noauth(package_id, resource_id, data_dict):
+    """Patch a resource using package_revise"""
     package_revise = logic.get_action("package_revise")
-    res_id = data_dict.pop("id")
     revise_dict = {"match": {"id": package_id},
-                   "update__resources__{}".format(res_id): data_dict}
+                   "update__resources__{}".format(resource_id): data_dict}
     package_revise(context=admin_context(), data_dict=revise_dict)
-    # waiting a random time really helps if there are concurrent jobs
-    time.sleep(random.randint(1, 100)/100)
 
 
 def set_dc_config_job(resource):
@@ -28,7 +23,7 @@ def set_dc_config_job(resource):
     if resource.get('mimetype') in DC_MIME_TYPES:
         path = get_resource_path(resource["id"])
         wait_for_resource(path)
-        data_dict = {"id": resource["id"]}
+        data_dict = {}
         with dclab.new_dataset(path) as ds:
             for sec in dclab.dfn.CFG_METADATA:
                 if sec in ds.config:
@@ -39,6 +34,7 @@ def set_dc_config_job(resource):
                             data_dict[dckey] = value
         patch_resource_noauth(
             package_id=resource["package_id"],
+            resource_id=resource["id"],
             data_dict=data_dict)
 
 
@@ -54,7 +50,8 @@ def set_format_job(resource):
                 fmt = "RT-DC"
         patch_resource_noauth(
             package_id=resource["package_id"],
-            data_dict={"id": resource["id"], "format": fmt})
+            resource_id=resource["id"],
+            data_dict={"format": fmt})
 
 
 def set_sha256_job(resource):
@@ -73,4 +70,5 @@ def set_sha256_job(resource):
         sha256sum = file_hash.hexdigest()
         patch_resource_noauth(
             package_id=resource["package_id"],
-            data_dict={"id": resource["id"], "sha256": sha256sum})
+            resource_id=resource["id"],
+            data_dict={"sha256": sha256sum})
