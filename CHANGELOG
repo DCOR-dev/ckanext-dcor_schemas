@@ -1,6 +1,7 @@
 0.10.0
  - enh: implement supplementary resource json files (#6)
  - fix: TemplateSyntaxError in bulk_process.html
+ - fix: sha256 sum was not always computed due to faulty test
  - ref: remove custom form fileds in favor of
    supplementary resource data
 0.9.5
