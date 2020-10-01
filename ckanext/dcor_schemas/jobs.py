@@ -1,4 +1,5 @@
 import hashlib
+import random
 import time
 
 from ckan import logic
@@ -15,18 +16,21 @@ def patch_resource_noauth(package_id, data_dict):
     """Patch a resource and make sure that the patch was applied"""
     package_revise = logic.get_action("package_revise")
     resource_show = logic.get_action("resource_show")
+    res_id = data_dict.pop("id")
 
     revise_dict = {"match": {"id": package_id},
-                   "update__resources__{}".format(data_dict["id"]): data_dict}
-    package_revise(context=admin_context(), data_dict=revise_dict)
-    time.sleep(1)
-    rs = resource_show(context=admin_context(),
-                       data_dict={"id": data_dict["id"]})
-    for key in data_dict:
-        if data_dict[key] != rs[key]:
-            raise ValueError(
-                "Could not update resource {} key '{}'".format(data_dict["id"],
-                                                               key))
+                   "update__resources__{}".format(res_id): data_dict}
+    while True:
+        package_revise(context=admin_context(), data_dict=revise_dict)
+        time.sleep(random.randint(1, 100)/100)
+        rs = resource_show(context=admin_context(),
+                           data_dict={"id": data_dict["id"]})
+        for key in data_dict:
+            if data_dict[key] != rs.get(key):
+                break
+        else:
+            # all is good
+            break
 
 
 def set_dc_config_job(resource):
