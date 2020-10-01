@@ -65,8 +65,6 @@ accordingly:
   - Resource: remove "URL" button when creating a resource (only upload makes sense)
     (``fanstatic/dcor_schemas_data_upload.js``
     and ``templates/package/snippets/resource_form.html``)
-  - Add metadata key ``sha256`` (and protect it with
-    ``IResourceController.before_update``)
   - Do not show variables these variables (because they are redundant):
     ['last modified', 'revision id', 'url type', 'state', 'on same domain']
     (``templates/package/resource_read.html``)
