@@ -1,5 +1,6 @@
 0.10.0
  - enh: implement supplementary resource json files (#6)
+ - enh: allow to get supported resource suffixes via API
  - fix: TemplateSyntaxError in bulk_process.html
  - fix: use package_revise to avoid concurrency issues with
    background jobs that set resource metadata

@@ -47,6 +47,8 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         return {
             "resource_schema_supplements":
                 actions.get_resource_schema_supplements,
+            "supported_resource_suffixes":
+                actions.get_supported_resource_suffixes,
         }
 
     # IAuthfunctions
