@@ -90,6 +90,8 @@ accordingly:
 
   - ``resource_schema_supplements`` returns a dictionary of the
     current supplementary resource schema
+  - ``supported_resource_suffixes`` returns a list of supported
+    resource suffixes
 
 
 Installation
