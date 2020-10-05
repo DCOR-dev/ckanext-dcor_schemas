@@ -10,18 +10,19 @@ from ckan.common import config
 
 #: Parses from and to composite values
 PARSERS = {
-    "float": (float, float),
-    "integer": (int, int),
-    "list": (lambda x: [y.strip() for y in x.split(",")],
-             lambda x: ",".join(x)),
-    "string": (str, str),
+    "boolean": lambda x: str(x).lower() in ["true", "yes"],
+    "float": float,
+    "integer": int,
+    "list": lambda x: " ".join([y.strip() for y in x.split()]),
+    "string": str,
 }
 
 #: Data types of supplements
 CLASSES = {
+    "boolean": bool,
     "float": numbers.Real,
     "integer": numbers.Integral,
-    "list": list,
+    "list": str,
     "string": str,
 }
 
@@ -42,20 +43,11 @@ class SupplementItem(object):
             self.set_value(value)
 
     def __contains__(self, key):
-        value = self[key]
-        if (value is None
-                or (isinstance(value, str) and len(value) == 0)):
-            return False
-        else:
-            return True
+        return self._item.__contains__(key)
 
     def __getitem__(self, key):
         if key in self._item:
             return self._item[key]
-        elif key == "type":
-            return "string"
-        elif key in ["example", "hint"]:
-            return ""
         else:
             raise KeyError("Property not found: '{}'!".format(key))
 
@@ -68,7 +60,7 @@ class SupplementItem(object):
         composite_key: str
             e.g. "sp:cells:organism"
         composite_value: str, int, float, None
-            e.g. "eGFP, mCherry" (not ["eGFP", "mCherry"]), 123, or 5.24
+            e.g. "eGFP mCherry", 123, or 5.24
 
         Returns
         -------
@@ -79,7 +71,7 @@ class SupplementItem(object):
         if not (composite_value is None
                 or (isinstance(composite_value, str) and
                     len(composite_value) == 0)):
-            si.set_value(PARSERS[si["type"]][0](composite_value))
+            si.set_value(PARSERS[si["type"]](composite_value))
         return si
 
     def to_composite(self):
@@ -91,7 +83,7 @@ class SupplementItem(object):
         if self.value is None:
             composite_value = None
         else:
-            composite_value = PARSERS[self["type"]][1](self.value)
+            composite_value = PARSERS[self["type"]](self.value)
         return composite_key, composite_value
 
     def set_value(self, value):
@@ -117,7 +109,10 @@ def get_composite_item_list():
 
 
 def get_composite_section_item_list():
-    """Return a list of section dicts with name, description and item list"""
+    """Return a list of section dicts with name, description and item list
+
+    This is used for rendering the items in an online form.
+    """
     schemas = load_schema_supplements()
     csil = []
     for sec in schemas:
@@ -125,9 +120,16 @@ def get_composite_section_item_list():
         for item in schemas[sec]["items"]:
             si = SupplementItem(section=sec, key=item["key"])
             ck, _ = si.to_composite()
-            ph = "e.g. {}".format(si["example"]) if si["example"] else "text"
-            ti = si["name"].capitalize()
-            if si["hint"]:
+            if "example" in si:
+                ph = "e.g. {}".format(si["example"])
+            elif si["type"] == "boolean":
+                ph = "e.g. yes"
+            else:
+                ph = "text"
+            ti = si["name"]
+            if "unit" in si:
+                ti += " [{}]".format(si["unit"])
+            if "hint" in si:
                 ti += " ({})".format(si["hint"])
             il.append([ck, ti, ph])
         sd = {"name": schemas[sec]["name"].capitalize(),

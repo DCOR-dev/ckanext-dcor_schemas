@@ -4,7 +4,7 @@
 "requires": {},
 "items": [
   {"key": "sample type",
-   "name": "sample type",
+   "name": "Sample type",
    "hint": "Most general type of the sample",
    "type": "string",
    "options": ["choices fixed"],

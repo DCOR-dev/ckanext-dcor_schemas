@@ -1,13 +1,75 @@
 {
 "key": "experiment",
-"name": "experiment",
+"name": "Experimental details",
 "requires": {},
 "items": [
+  {"key": "interim time",
+   "name": "Time between preparation/extraction and measurement",
+   "hint": "A value of 1.5 means 90 seconds",
+   "unit": "min",
+   "type": "float",
+   "options": [">0"],
+   "example": 7.5
+   },
+  {"key": "buffer osmolality",
+   "name": "Buffer osmolality",
+   "hint": "https://en.wikipedia.org/wiki/Molality#Osmolality",
+   "unit": "mOsm/kg",
+   "type": "float",
+   "options": [">0"],
+   "example": 17.3
+   },   
+  {"key": "buffer ph",
+   "name": "Buffer pH",
+   "type": "float",
+   "options": [">0"],
+   "example": 6.14
+   },   
+  {"key": "concentration",
+   "name": "Concentration",
+   "hint": "Concentration of cells or particles",
+   "unit": "1/mL",
+   "type": "float",
+   "options": [">0"],
+   "example": 8472
+   },
+  {"key": "average brightness",
+   "name": "Average brightness of full sensor image",
+   "hint": "This value can be used to identify brightness-related artifacts",
+   "type": "float",
+   "options": [">0"],
+   "example": 127.4
+   },
+  {"key": "chip specification",
+   "name": "Chip specification",
+   "hint": "Detailed information about the chip used",
+   "type": "string"
+   },
+  {"key": "chip measurement count",
+   "name": "Measurement number on this chip",
+   "hint": "If multiple measurements are done on the same chip, this is the nth measurement",
+   "type": "integer",
+   "options": [">0"],
+   "example": 1
+   },
+  {"key": "channel width",
+   "name": "Exact channel width with submicron resolution",
+   "unit": "µm",
+   "hint": "The exact channel width of the chip might vary from batch to batch",
+   "type": "float",
+   "options": [">0"],
+   "example": 20.04
+   },
   {"key": "tubing",
-   "name": "tubing",
+   "name": "Tubing",
    "hint": "Describe the type of tubing used",
    "type": "string"
+   },
+  {"key": "details",
+   "name": "Details",
+   "hint": "Any additional information relevant for the experiment",
+   "type": "string",
+   "options": ["text"]
    }
   ]
 }
-

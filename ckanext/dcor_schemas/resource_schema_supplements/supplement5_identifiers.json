@@ -1,0 +1,37 @@
+{
+"key": "identifiers",
+"name": "Identifiers",
+"requires": {},
+"items": [
+  {"key": "catalog numbers",
+   "name": "Catalog numbers",
+   "hint": "Please prepend the catalog abbreviation",
+   "type": "list",
+   "example": "CAS:1883-75-6 MDL:MFCD00003253"
+   },
+  {"key": "geo",
+   "name": "Gene Expression Omnibus records",
+   "hint": "https://www.ncbi.nlm.nih.gov/geo/info/overview.html",
+   "type": "list",
+   "example": "GSM81022 GPL341"
+   },
+  {"key": "antibodies",
+   "name": "Antibodies",
+   "hint": "Names should match common usages",
+   "type": "list",
+   "example": "CD34 CD133"
+   },
+  {"key": "dyes",
+   "name": "Fluorescent dyes",
+   "hint": "Names should match common usages",
+   "type": "list",
+   "example": "mCherry eGFP"
+   },
+  {"key": "tags",
+   "name": "Fluorescent tags",
+   "hint": "Please follow the scheme 'antibody-dye'",
+   "type": "list",
+   "example": "CD34-PE CD133-eGFP"
+   }
+  ]
+}

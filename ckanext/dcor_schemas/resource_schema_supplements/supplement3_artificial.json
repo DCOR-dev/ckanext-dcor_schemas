@@ -1,0 +1,24 @@
+{
+"key": "artificial",
+"name": "Particle sample",
+"requires": {"general": {"sample type": ["artificial"]}},
+"items": [
+  {"key": "type",
+   "name": "Particle type",
+   "hint": "The type of artificial particles",
+   "type": "string",
+   "example": "beads",
+   "choices": [
+     "beads",
+     "crystals",
+     "droplets"
+     ]
+   },
+  {"key": "details",
+   "name": "Details",
+   "hint": "Other details about the particles",
+   "type": "string",
+   "options": ["text"]
+   }
+  ]
+}

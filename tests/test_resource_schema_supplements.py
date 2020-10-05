@@ -1,8 +1,26 @@
 from ckanext.dcor_schemas import resource_schema_supplements as rss
 
 
-def test_load():
-    rss.load_schema_supplements()
+def test_check_types():
+    schema = rss.load_schema_supplements()
+    for section in schema:
+        assert section == schema[section]["key"]
+        for item in schema[section]["items"]:
+            msg = "Invalid type [{}]:{} '{}'".format(
+                section, item["key"], item["type"])
+            assert item["type"] in rss.PARSERS, msg
+            assert item["type"] in rss.CLASSES, msg
+
+
+def test_check_units():
+    schema = rss.load_schema_supplements()
+    for section in schema:
+        assert section == schema[section]["key"]
+        for item in schema[section]["items"]:
+            if "unit" in item:
+                msg = "Invalid unit [{}]:{} '{}'".format(
+                    section, item["key"], item["unit"])
+                assert isinstance(item["unit"], str), msg
 
 
 def test_composite_loop():
@@ -37,6 +55,10 @@ def test_get_composite_list():
 
 def test_get_composite_section_item_list():
     rss.get_composite_section_item_list()
+
+
+def test_load():
+    rss.load_schema_supplements()
 
 
 def test_supplement_item():
