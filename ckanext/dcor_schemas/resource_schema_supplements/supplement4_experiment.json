@@ -3,9 +3,9 @@
 "name": "Experimental details",
 "requires": {},
 "items": [
-  {"key": "interim time",
-   "name": "Time between preparation/extraction and measurement",
-   "hint": "A value of 1.5 means 90 seconds",
+  {"key": "delay",
+   "name": "Acquisition delay",
+   "hint": "Time between preparation/extraction and measurement. A value of 1.5 means 90 seconds",
    "unit": "min",
    "type": "float",
    "options": [">0"],
@@ -34,8 +34,8 @@
    "example": 8472
    },
   {"key": "average brightness",
-   "name": "Average brightness of full sensor image",
-   "hint": "This value can be used to identify brightness-related artifacts",
+   "name": "Average brightness",
+   "hint": "The average brightness of the full sensor image can be used to identify brightness-related artifacts",
    "type": "float",
    "options": [">0"],
    "example": 127.4
@@ -46,16 +46,16 @@
    "type": "string"
    },
   {"key": "chip measurement count",
-   "name": "Measurement number on this chip",
+   "name": "Chip measurement",
    "hint": "If multiple measurements are done on the same chip, this is the nth measurement",
    "type": "integer",
    "options": [">0"],
    "example": 1
    },
   {"key": "channel width",
-   "name": "Exact channel width with submicron resolution",
+   "name": "Exact channel width",
    "unit": "µm",
-   "hint": "The exact channel width of the chip might vary from batch to batch",
+   "hint": "The exact channel width with submicron resolution might vary from batch to batch",
    "type": "float",
    "options": [">0"],
    "example": 20.04
