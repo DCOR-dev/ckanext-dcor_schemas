@@ -1,6 +1,6 @@
 {
 "key": "general",
-"name": "general",
+"name": "General options",
 "requires": {},
 "items": [
   {"key": "sample type",

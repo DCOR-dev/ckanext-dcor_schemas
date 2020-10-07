@@ -53,18 +53,18 @@
      "healthy"
      ]
    },
-  {"key": "derivation",
-   "name": "Derivation procedure",
-   "hint": "Retrieval location and method, dissociation procedure, and/or cell culture protocol",
-   "type": "string",
-   "options": ["text"]
-   },
   {"key": "passage number",
    "name": "Passage number",
    "requires": {"general": {"sample type": ["cell line"]}},
    "hint": "Passage number of cell culture",
    "type": "integer",
    "example": 42
+   },
+  {"key": "derivation",
+   "name": "Derivation procedure",
+   "hint": "Retrieval location and method, dissociation procedure, and/or cell culture protocol",
+   "type": "string",
+   "options": ["text"]
    },
   {"key": "details",
    "name": "Details",
