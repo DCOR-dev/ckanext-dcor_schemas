@@ -15,21 +15,21 @@
    "type": "list",
    "example": "GSM81022 GPL341"
    },
-  {"key": "antibodies",
-   "name": "Antibodies",
+  {"key": "compounds",
+   "name": "Antibodies, proteins, etc.",
    "hint": "Names should match common usages",
    "type": "list",
    "example": "CD34 CD133"
    },
-  {"key": "dyes",
-   "name": "Fluorescent dyes",
+  {"key": "labels",
+   "name": "Fluorescent dyes or other labels",
    "hint": "Names should match common usages",
    "type": "list",
    "example": "mCherry eGFP"
    },
   {"key": "tags",
    "name": "Fluorescent tags",
-   "hint": "Please follow the scheme 'antibody-dye'",
+   "hint": "Please follow the scheme 'compound-label'",
    "type": "list",
    "example": "CD34-PE CD133-eGFP"
    }
