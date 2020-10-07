@@ -1,3 +1,5 @@
+0.10.1
+ - enh: update supplementary resource schema
 0.10.0
  - enh: implement supplementary resource json files (#6)
  - enh: allow to get supported resource suffixes via API
