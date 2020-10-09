@@ -93,6 +93,11 @@ accordingly:
   - ``supported_resource_suffixes`` returns a list of supported
     resource suffixes
 
+- CLI:
+
+  - add CKAN command `list-zombie-users` for users with no datasets and
+    no activity for a certain amount of time
+
 
 Installation
 ------------

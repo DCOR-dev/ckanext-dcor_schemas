@@ -1,3 +1,6 @@
+0.11.0
+ - enh: add CLI "list-zombie-users" to list users with no datasets
+   and no activity for a certain amount of time
 0.10.1
  - enh: update supplementary resource schema
 0.10.0

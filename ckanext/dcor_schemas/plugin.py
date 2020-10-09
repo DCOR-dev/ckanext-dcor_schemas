@@ -12,6 +12,7 @@ from dcor_shared import DC_MIME_TYPES
 
 from . import actions
 from . import auth as dcor_auth
+from .cli import get_commands
 from . import jobs
 from . import helpers as dcor_helpers
 from . import resource_schema_supplements as rss
@@ -36,6 +37,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
     """This plugin makes views of DC data"""
     plugins.implements(plugins.IActions)
     plugins.implements(plugins.IAuthFunctions)
+    plugins.implements(plugins.IClick)
     plugins.implements(plugins.IConfigurer, inherit=True)
     plugins.implements(plugins.IDatasetForm)
     plugins.implements(plugins.IPermissionLabels)
@@ -66,6 +68,10 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             'resource_delete': dcor_auth.deny,
             'resource_update': dcor_auth.resource_update,
         }
+
+    # IClick
+    def get_commands(self):
+        return get_commands()
 
     # IConfigurer
     def update_config(self, config):
