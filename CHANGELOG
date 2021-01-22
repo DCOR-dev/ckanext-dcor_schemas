@@ -1,3 +1,5 @@
+0.11.1
+ - ci: migrate to GH Actions
 0.11.0
  - enh: add CLI "list-zombie-users" to list users with no datasets
    and no activity for a certain amount of time
