@@ -5,8 +5,9 @@ import sys
 
 author = "Paul Müller"
 authors = [author]
-description = 'Introduces or lifts restrictions (authorization) for managing data and metadata on DCOR'
-name = 'ckanext-dcor_schemas'
+description = "Introduces or lifts restrictions (authorization) for " \
+              + " managing data and metadata on DCOR"
+name = "ckanext-dcor_schemas"
 year = "2020"
 
 sys.path.insert(0, realpath(dirname(__file__))+"/" + "/".join(name.split("-")))
