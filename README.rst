@@ -7,7 +7,7 @@ accordingly:
 
 - Authorization (auth.py)
 
-  - allow all logged-in users to create datasets, labs, and collections
+  - allow all logged-in users to create datasets, circles, and collections
   - do not allow deleting datasets or resources unless they are drafts
   - allow purging of deleted datasets
   - do not allow adding resources to active datasets
