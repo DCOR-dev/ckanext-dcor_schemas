@@ -37,19 +37,19 @@ RESOURCE_EXTS = [
 ]
 
 
-def authors(value):
+def dataset_authors(value):
     authors = [a.strip() for a in value.split(",") if a.strip()]
     return ", ".join(authors)
 
 
-def doi(value):
+def dataset_doi(value):
     if value.count("://"):
         value = value.split("://")[1].split("/", 1)[1]
     value = value.strip(" /")
     return value
 
 
-def license_id(key, data, errors, context):
+def dataset_license_id(key, data, errors, context):
     """Restrict to licenses.json (except sysadmins)"""
     user = context.get('user')
     ignore_auth = context.get('ignore_auth')
@@ -65,7 +65,7 @@ def license_id(key, data, errors, context):
             "Please choose a license_id: {}".format(license_ids))
 
 
-def name_create(key, data, errors, context):
+def dataset_name_create(key, data, errors, context):
     """Generate a unique name for the dataset
 
     This takes into account the ideas of "name_validator"
@@ -145,7 +145,7 @@ def name_create(key, data, errors, context):
     data[key] = slug
 
 
-def references(value):
+def dataset_references(value):
     refs = []
     for r in value.split(","):
         r = r.strip()
@@ -161,6 +161,14 @@ def references(value):
                 r = "bioRxiv:" + r.split(":", 1)[1]
             refs.append(r)
     return ", ".join(refs)
+
+
+def dataset_state(key, data, errors, context):
+    """If a dataset does not have any resources, it must be a draft"""
+    data_dict = df.unflatten(data)
+
+    if "resources" not in data_dict or len(data_dict["resources"]) == 0:
+        data[key] = "draft"
 
 
 def resource_dc_config(key, data, errors, context):
@@ -226,10 +234,3 @@ def resource_name(key, data, errors, context):
         raise toolkit.Invalid(u"Invalid characters in file name: {}".format(
             u"".join(invalid_chars)))
 
-
-def state(key, data, errors, context):
-    """If a dataset does not have any resources, it must be a draft"""
-    data_dict = df.unflatten(data)
-
-    if "resources" not in data_dict or len(data_dict["resources"]) == 0:
-        data[key] = "draft"

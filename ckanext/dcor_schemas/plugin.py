@@ -114,28 +114,28 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         schema.update({
             'authors': [
                 toolkit.get_validator('unicode_safe'),
-                dcor_validate.authors,
+                dcor_validate.dataset_authors,
                 toolkit.get_validator('not_empty'),
                 toolkit.get_converter('convert_to_extras'),
             ],
             'doi': [
                 toolkit.get_validator('ignore_missing'),
-                dcor_validate.doi,
+                dcor_validate.dataset_doi,
                 toolkit.get_validator('unicode_safe'),
                 toolkit.get_converter('convert_to_extras'),
             ],
+            'license_id': [
+                dcor_validate.dataset_license_id,
+            ],
             'references': [
                 toolkit.get_validator('ignore_missing'),
-                dcor_validate.references,
+                dcor_validate.dataset_references,
                 toolkit.get_validator('unicode_safe'),
                 toolkit.get_converter('convert_to_extras'),
             ],
             'state': [
                 toolkit.get_validator('ignore_missing'),
-                dcor_validate.state,
-            ],
-            'license_id': [
-                dcor_validate.license_id,
+                dcor_validate.dataset_state,
             ],
         })
         schema['resources'].update({
@@ -172,7 +172,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         schema.update({
             'name': [
                 toolkit.get_validator('unicode_safe'),
-                dcor_validate.name_create,
+                dcor_validate.dataset_name_create,
             ],
         })
 
@@ -308,7 +308,6 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                         filename))
 
     # ITemaplateHelpers
-
     def get_helpers(self):
         # Template helper function names should begin with the name of the
         # extension they belong to, to avoid clashing with functions from
