@@ -238,9 +238,9 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
 
     # IPermissionLabels
     def get_dataset_labels(self, dataset_obj):
-        u'''
+        """
         Add labels according to groups the dataset is part of.
-        '''
+        """
         labels = super(DCORDatasetFormPlugin, self).get_dataset_labels(
             dataset_obj)
         groups = dataset_obj.get_groups()
@@ -248,10 +248,10 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         return labels
 
     def get_user_dataset_labels(self, user_obj):
-        u'''
+        """
         Include group labels (If user is part of a group, then he
         should be able to see all private datasets therein).
-        '''
+        """
         labels = super(DCORDatasetFormPlugin, self
                        ).get_user_dataset_labels(user_obj)
         if user_obj:
@@ -290,7 +290,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
 
     def before_create(self, context, resource):
         if "upload" in resource:
-            # set the filename
+            # set/override the filename
             upload = resource["upload"]
             if hasattr(upload, "filename"):
                 filename = upload.filename
