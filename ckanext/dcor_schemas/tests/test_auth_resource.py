@@ -44,3 +44,41 @@ def test_resource_delete_only_drafts():
     with pytest.raises(logic.NotAuthorized):
         helpers.call_auth("resource_delete", test_context,
                           id=res["id"])
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_resource_patch_only_description():
+    """do not allow deleting resources unless they are drafts"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    create_context = {'ignore_auth': False, 'user': user['name']}
+    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    # create a dataset
+    ds, res = make_dataset(create_context, owner_org, with_resource=True,
+                           activate=True)
+    # assert: allow updating the description
+    assert helpers.call_auth("resource_patch", test_context,
+                             id=res["id"],
+                             package_id=ds["id"],
+                             description="my nice text")
+    # assert: do not allow updating other things
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth("resource_patch", test_context,
+                          id=res["id"],
+                          package_id=ds["id"],
+                          name="hans.rtdc")
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth("resource_patch", test_context,
+                          id=res["id"],
+                          package_id=ds["id"],
+                          format="UnknownDC")
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth("resource_patch", test_context,
+                          id=res["id"],
+                          package_id=ds["id"],
+                          hash="doesntmakesense")

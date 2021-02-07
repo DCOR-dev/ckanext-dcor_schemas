@@ -12,7 +12,7 @@ accordingly:
   - datasets: allow purging of deleted datasets
   - datasets: do not allow switching to a more restrictive license
   - datasets: do not allow changing the name (slug)
-  - resources: do not allow adding resources to non-draft datasets
+  - datasets: do not allow adding resources to non-draft datasets
   - resources: do not allow deleting resources unless they are drafts
   - resources: only allow changing the "description"
   - resources: do not allow uploading resources with the same name (ckanext-dcor_depot)
