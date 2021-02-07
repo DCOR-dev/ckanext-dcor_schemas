@@ -21,8 +21,10 @@ def test_dataset_delete_only_drafts():
         'name': user['id'],
         'capacity': 'admin'
     }])
-    # create dataset (`call_action` bypasses authorization!)
+    # Note: `call_action` bypasses authorization!
     create_context = {'ignore_auth': False, 'user': user['name']}
+    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    # create a dataset
     dataset = helpers.call_action("package_create", create_context,
                                   title="test-dataset",
                                   authors="Peter Pan",
@@ -31,27 +33,71 @@ def test_dataset_delete_only_drafts():
                                   state="active",
                                   )
     assert dataset["state"] == "draft", "dataset without res must be draft"
+    # assert: draft datasets may be deleted
+    assert helpers.call_auth("package_delete", test_context,
+                             id=dataset["id"])
+
     # upload resource
     path = data_path / "calibration_beads_47.rtdc"
     with path.open('rb') as fd:
         upload = cgi.FieldStorage()
         upload.filename = path.name
         upload.file = fd
-        helpers.call_action("resource_create", create_context,
-                            package_id=dataset["id"],
-                            upload=upload,
-                            url="upload",
-                            name=path.name,
-                            )
+        res = helpers.call_action("resource_create", create_context,
+                                  package_id=dataset["id"],
+                                  upload=upload,
+                                  url="upload",
+                                  name=path.name,
+                                  )
+    # set dataset state to active
+    helpers.call_action("package_patch", create_context,
+                        id=dataset["id"],
+                        state="active")
     # check dataset state
     dataset2 = helpers.call_action("package_show", create_context,
                                    id=dataset["id"])
-    assert dataset2["state"] == "active", "dataset with a res must be active"
-    # try to delete it
-    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    assert dataset2["state"] == "active"
+    # assert: active datasets may not be deleted
     with pytest.raises(logic.NotAuthorized):
         helpers.call_auth("package_delete", test_context,
                           id=dataset["id"])
+    # check resource state
+    res2 = helpers.call_action("resource_show", create_context,
+                               id=res["id"])
+    assert res2["state"] == "active"
+    # assert: active resources may not be deleted
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth("resource_delete", test_context,
+                          id=res["id"])
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_purge_deleted():
+    """do not allow deleting datasets or resources unless they are drafts"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    create_context = {'ignore_auth': False, 'user': user['name']}
+    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    # create a dataset
+    dataset = helpers.call_action("package_create", create_context,
+                                  title="test-dataset",
+                                  authors="Peter Pan",
+                                  license_id="CC-BY-4.0",
+                                  owner_org=owner_org["name"],
+                                  state="active",
+                                  )
+    # delete a dataset
+    helpers.call_action("package_delete", create_context,
+                        id=dataset["id"]
+                        )
+    # assert: check that we can purge it
+    assert helpers.call_auth("dataset_purge", test_context,
+                             id=dataset["id"])
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')

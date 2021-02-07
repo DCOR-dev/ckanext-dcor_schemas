@@ -270,9 +270,8 @@ def resource_name(key, data, errors, context):
 
 
 def state(key, data, errors, context):
+    """If a dataset does not have any resources, it must be a draft"""
     data_dict = df.unflatten(data)
 
     if "resources" not in data_dict or len(data_dict["resources"]) == 0:
         data[key] = "draft"
-    else:
-        data[key] = "active"

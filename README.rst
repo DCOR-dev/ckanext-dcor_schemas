@@ -11,12 +11,12 @@ accordingly:
   - do not allow deleting datasets or resources unless they are drafts
   - allow purging of deleted datasets
   - do not allow adding resources to active datasets
+  - Allow adding resources up to 3h after creating dataset
   - do not allow bulk_update_delete (e.g. datasets by organization admins)
   - dataset: do not allow switching to a more restrictive license
   - dataset: do not allow changing the name (slug)
   - resource: only allow changing the "description"
   - Do not allow uploading resources with the same name (ckanext-dcor_depot)
-  - Allow adding resources up to 3h after creating dataset
   - Do not allow setting a resource id when uploading
 
 - Permissions (plugin.py)

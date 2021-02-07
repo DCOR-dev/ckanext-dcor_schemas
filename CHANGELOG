@@ -1,5 +1,6 @@
 0.11.3
  - tests: increase coverage
+ - enh: allow users to keep a draft dataset
 0.11.2
  - build: use install_requires instead of requirements.txt
 0.11.1
