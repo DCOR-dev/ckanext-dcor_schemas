@@ -29,15 +29,17 @@ accordingly:
   - datasets: force user to select authors
   - datasets: author list "authors" is CSV
   - datasets: parse DOI field (remove URL part)
-  - datasets: restrict to basic CC licenses
   - datasets: force user to select a license
+  - datasets: restrict to basic CC licenses
   - datasets: automatically generate dataset name (slug) using random characters
     if necessary (does not apply to admins)
   - datasets: a dataset is considered to be a draft when it does not contain
     resources (validate.state)
   - resources: do not allow uploading resources with the same name
-    for a dataset (important for ckanext-dcor_depot)
-  - resources: do not allow setting a different resource name when uploading
+    for a dataset (important for ckanext-dcor_depot); this is actually
+    implemented in plugin.before_create (IResourceController) and not
+    in validate.py
+  - resources: custom resource name is overridden during upload
   - resources: do not allow weird characters in resource names
   - resources: restrict upload data extensions to .rtdc, .csv, .tsv, .pdf,
     .txt, .png, .jpg, .tif, .py, .ipynb

@@ -233,4 +233,3 @@ def resource_name(key, data, errors, context):
     if invalid_chars:
         raise toolkit.Invalid(u"Invalid characters in file name: {}".format(
             u"".join(invalid_chars)))
-
