@@ -1,5 +1,3 @@
-import datetime
-
 import ckan.authz as authz
 from ckan import logic
 import ckan.plugins.toolkit as toolkit
@@ -137,6 +135,10 @@ def package_update(context, data_dict=None):
         if data_dict["license_id"] not in allowed:
             return {'success': False,
                     'msg': 'Cannot switch to more-restrictive license'}
+    # do not allow setting state from "active" to "draft"
+    if package_dict["state"] != "draft" and data_dict.get("state") == "draft":
+        return {'success': False,
+                'msg': 'Changing dataset state to draft not allowed'}
     # do not allow changing some of the keys
     prohibited_keys = ["name"]
     invalid = {}
@@ -163,18 +165,11 @@ def resource_create(context, data_dict=None):
             dict(context, return_type='dict'),
             {'id': data_dict["package_id"]})
 
-        # do not allow adding resources to non-draft datasets after 3h
+        # do not allow adding resources to non-draft datasets
         if pkg_dict["state"] != "draft":
-            # check metadata created
-            dt_str = pkg_dict.get("metadata_created",
-                                  "1999-09-15T08:40:43.450510")
-            dt, _ = dt_str.split(".")
-            created = datetime.datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S")
-            if created + datetime.timedelta(hours=3) < datetime.datetime.now():
-                return {'success': False,
-                        'msg': 'Adding resources to non-draft datasets only '
-                               'allowed within 3 hours after dataset '
-                               'creation!'}
+            return {'success': False,
+                    'msg': 'Adding resources to non-draft datasets not '
+                           'allowed!'}
 
         # do not allow adding resources that exist already
         if "upload" in data_dict:

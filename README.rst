@@ -10,8 +10,7 @@ accordingly:
   - allow all logged-in users to create datasets, circles, and collections
   - do not allow deleting datasets or resources unless they are drafts
   - allow purging of deleted datasets
-  - do not allow adding resources to active datasets
-  - Allow adding resources up to 3h after creating dataset
+  - do not allow adding resources to non-draft datasets
   - do not allow bulk_update_delete (e.g. datasets by organization admins)
   - dataset: do not allow switching to a more restrictive license
   - dataset: do not allow changing the name (slug)

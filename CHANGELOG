@@ -1,6 +1,7 @@
 0.11.3
  - tests: increase coverage
- - enh: allow users to keep a draft dataset
+ - enh: allow users to keep a draft dataset and remove the option
+   to upload additional datasets to active datasets within 3h
 0.11.2
  - build: use install_requires instead of requirements.txt
 0.11.1
