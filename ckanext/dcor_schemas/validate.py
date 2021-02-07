@@ -2,6 +2,7 @@ import uuid
 
 import ckan.authz as authz
 import ckan.lib.navl.dictization_functions as df
+import ckan.logic as logic
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
 
@@ -233,3 +234,24 @@ def resource_name(key, data, errors, context):
     if invalid_chars:
         raise toolkit.Invalid(u"Invalid characters in file name: {}".format(
             u"".join(invalid_chars)))
+
+    # do not allow adding resources that exist already
+    package = context.get('package')
+    if package:
+        package_id = package.id
+    else:
+        package_id = data.get(key[:-1] + ('id',))
+    pkg_dict = logic.get_action('package_show')(
+        dict(context, return_type='dict'),
+        {'id': package_id})
+
+    ress = pkg_dict.get("resources", [])
+    if ress:
+        # check name
+        for item in ress:
+            # Since this function is called for each and every
+            # resource all the time, we have to make sure that
+            # the positions are not matching.
+            if key[1] != item["position"] and item["name"] == name:
+                raise toolkit.Invalid(
+                    "Resource with name '{}' already exists!".format(name))

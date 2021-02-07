@@ -6,7 +6,6 @@ import tempfile
 import pytest
 
 import ckan.logic as logic
-import ckan.plugins.toolkit as toolkit
 import ckan.tests.factories as factories
 import ckan.tests.helpers as helpers
 
@@ -76,7 +75,7 @@ def test_resource_create_same_name_forbidden():
         upload = cgi.FieldStorage()
         upload.filename = path.name
         upload.file = fd
-        with pytest.raises(toolkit.Invalid):
+        with pytest.raises(logic.ValidationError):
             helpers.call_action("resource_create", create_context2,
                                 package_id=dataset["id"],
                                 upload=upload,

@@ -297,17 +297,8 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             elif hasattr(upload, "name"):
                 filename = pathlib.Path(upload.name).name
             resource["name"] = filename
-            # check that filename not already exists
-            pkg_dict = logic.get_action('package_show')(
-                dict(context, return_type='dict'),
-                {'id': resource["package_id"]})
-            ress = [r["name"] for r in pkg_dict.get("resources", [])]
-            if filename in ress:
-                raise toolkit.Invalid(
-                    "Resource with filename '{}' already exists!".format(
-                        filename))
 
-    # ITemaplateHelpers
+    # ITemplateHelpers
     def get_helpers(self):
         # Template helper function names should begin with the name of the
         # extension they belong to, to avoid clashing with functions from

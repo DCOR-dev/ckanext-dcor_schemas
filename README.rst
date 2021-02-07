@@ -36,15 +36,15 @@ accordingly:
   - datasets: a dataset is considered to be a draft when it does not contain
     resources (validate.state)
   - resources: do not allow uploading resources with the same name
-    for a dataset (important for ckanext-dcor_depot); this is actually
-    implemented in plugin.before_create (IResourceController) and not
-    in validate.py
+    for a dataset (important for ckanext-dcor_depot)
+  - resources: make sure the resource name matches the file name of the
+    upload; this is actually implemented in plugin.before_create
+    (IResourceController) and not in validate.py
   - resources: custom resource name is overridden during upload
   - resources: do not allow weird characters in resource names
   - resources: restrict upload data extensions to .rtdc, .csv, .tsv, .pdf,
     .txt, .png, .jpg, .tif, .py, .ipynb
   - resources: configuration metadata (using `dclab.dfn.config_funcs`)
-
 
 - UI Dataset:
 
