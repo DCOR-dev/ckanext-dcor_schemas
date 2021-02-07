@@ -8,12 +8,12 @@ data_path = pathlib.Path(__file__).parent / "data"
 
 
 def make_dataset(create_context, owner_org, with_resource=False,
-                 activate=False):
+                 activate=False, license_id="CC-BY-4.0"):
     # create a dataset
     ds = helpers.call_action("package_create", create_context,
                              title="test-dataset",
                              authors="Peter Pan",
-                             license_id="CC-BY-4.0",
+                             license_id=license_id,
                              owner_org=owner_org["name"],
                              state="draft",
                              )
