@@ -16,7 +16,7 @@ data_path = pathlib.Path(__file__).parent / "data"
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_dataset_add_resources_only_to_drafts():
-    """datasets: do not allow adding resources to non-draft datasets"""
+    """do not allow adding resources to non-draft datasets"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
         'name': user['id'],
@@ -28,7 +28,7 @@ def test_dataset_add_resources_only_to_drafts():
     # create a dataset
     dataset, _ = make_dataset(create_context, owner_org, with_resource=True,
                               activate=True)
-    # assert: adding resouces forbidden
+    # assert: adding resources to active datasets forbidden
     path = data_path / "calibration_beads_47.rtdc"
     with path.open('rb') as fd:
         upload = cgi.FieldStorage()
@@ -80,7 +80,7 @@ def test_dataset_delete_only_drafts():
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_dataset_license_more_restrictive_forbidden():
-    """dataset: do not allow switching to a more restrictive license"""
+    """do not allow switching to a more restrictive license"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
         'name': user['id'],
@@ -102,7 +102,7 @@ def test_dataset_license_more_restrictive_forbidden():
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_dataset_purge_deleted():
-    """do not allow deleting datasets or resources unless they are drafts"""
+    """allow purging of deleted datasets"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
         'name': user['id'],
@@ -125,7 +125,7 @@ def test_dataset_purge_deleted():
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_dataset_slug_editing_forbidden():
-    """datasets: do not allow changing the name (slug)"""
+    """do not allow changing the name (slug)"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
         'name': user['id'],
@@ -166,3 +166,25 @@ def test_dataset_state_from_active_to_draft_forbidden():
         helpers.call_auth("package_patch", test_context,
                           id=dataset["id"],
                           state="draft")
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_visibility_from_public_to_private():
+    """do not allow to set the visibility of a public dataset to private"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    create_context = {'ignore_auth': False, 'user': user['name']}
+    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    # create a dataset
+    dataset, res = make_dataset(create_context, owner_org, with_resource=True,
+                                activate=True, private=False)
+    # assert: cannot set private to True for active datasets
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth("package_patch", test_context,
+                          id=dataset["id"],
+                          private=True)

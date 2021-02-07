@@ -2,7 +2,6 @@ import uuid
 
 import ckan.authz as authz
 import ckan.lib.navl.dictization_functions as df
-from ckan import logic
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
 
@@ -146,30 +145,6 @@ def name_create(key, data, errors, context):
     data[key] = slug
 
 
-def private_update(key, data, errors, context):
-    """Only allow changing visibility to Public"""
-    user = context.get('user')
-    ignore_auth = context.get('ignore_auth')
-    if ignore_auth or (user and authz.is_sysadmin(user)):
-        # Admins know what they are doing
-        return
-
-    show_context = {
-        'model': context['model'],
-        'session': context['session'],
-        'user': context['user'],
-        'auth_user_obj': context['auth_user_obj'],
-    }
-
-    package = context.get('package')
-    package_dict = logic.get_action('package_show')(
-        show_context,
-        {'id': package.id})
-
-    if not package_dict["private"] and data[key]:
-        raise toolkit.Invalid("Public datasets cannot be made private!")
-
-
 def references(value):
     refs = []
     for r in value.split(","):
@@ -222,17 +197,19 @@ def resource_name(key, data, errors, context):
     - no weird characters
     - only allowed file extensions
     """
+    assert key[0] == "resources"
+    assert key[2] == "name"
     user = context.get('user')
     ignore_auth = context.get('ignore_auth')
     if ignore_auth or (user and authz.is_sysadmin(user)):
         # Admins know what they are doing (e.g. figshare import)
         return
 
-    filename = data[key]
+    name = data[key]
 
     # check suffix
-    if filename.count("."):
-        suffix = "." + filename.rsplit(".", 1)[1]
+    if name.count("."):
+        suffix = "." + name.rsplit(".", 1)[1]
     else:
         suffix = None
     if suffix not in RESOURCE_EXTS:
@@ -242,31 +219,12 @@ def resource_name(key, data, errors, context):
 
     # check that filename contains valid characters
     invalid_chars = []
-    for char in filename:
+    for char in name:
         if char not in RESOURCE_CHARS:
             invalid_chars.append(char)
     if invalid_chars:
         raise toolkit.Invalid(u"Invalid characters in file name: {}".format(
             u"".join(invalid_chars)))
-
-    # check that file not already exists
-    pkg_id = (u'id',)
-    if pkg_id in data:
-        pkg_dict = logic.get_action('package_show')(
-            dict(context, return_type='dict'),
-            {'id': data[pkg_id]})
-
-        ress = pkg_dict.get("resources", [])
-        if ress:
-            # check name
-            for item in ress:
-                # Since this function is called for each and every
-                # resource all the time, we have to make sure that
-                # the positions are not matching.
-                if key[1] != item["position"] and item["name"] == filename:
-                    raise toolkit.Invalid(
-                        "Resource with filename '{}' already exists!".format(
-                            filename))
 
 
 def state(key, data, errors, context):

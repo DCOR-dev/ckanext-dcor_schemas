@@ -181,13 +181,6 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
     def update_package_schema(self):
         schema = super(DCORDatasetFormPlugin, self).update_package_schema()
         schema = self._modify_package_schema(schema)
-        schema.update({
-            'private': [
-                # boolean validator has to come first ('False' -> False)
-                toolkit.get_validator('boolean_validator'),
-                dcor_validate.private_update,
-            ]
-        })
         return schema
 
     def show_package_schema(self):
@@ -296,16 +289,26 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                                            "job_id": jidp})
 
     def before_create(self, context, resource):
-        # set the filename
         if "upload" in resource:
+            # set the filename
             upload = resource["upload"]
             if hasattr(upload, "filename"):
                 filename = upload.filename
             elif hasattr(upload, "name"):
                 filename = pathlib.Path(upload.name).name
             resource["name"] = filename
+            # check that filename not already exists
+            pkg_dict = logic.get_action('package_show')(
+                dict(context, return_type='dict'),
+                {'id': resource["package_id"]})
+            ress = [r["name"] for r in pkg_dict.get("resources", [])]
+            if filename in ress:
+                raise toolkit.Invalid(
+                    "Resource with filename '{}' already exists!".format(
+                        filename))
 
     # ITemaplateHelpers
+
     def get_helpers(self):
         # Template helper function names should begin with the name of the
         # extension they belong to, to avoid clashing with functions from

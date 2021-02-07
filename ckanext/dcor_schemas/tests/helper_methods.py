@@ -8,14 +8,20 @@ data_path = pathlib.Path(__file__).parent / "data"
 
 
 def make_dataset(create_context, owner_org, with_resource=False,
-                 activate=False, license_id="CC-BY-4.0"):
+                 activate=False, **kwargs):
+    if "title" not in kwargs:
+        kwargs["title"] = "test-dataset"
+    if "authors" not in kwargs:
+        kwargs["authors"] = "Peter Pan"
+    if "license_id" not in kwargs:
+        kwargs["license_id"] = "CC-BY-4.0"
+    assert "state" not in kwargs, "must not be set"
+    assert "owner_org" not in kwargs, "must not be set"
     # create a dataset
     ds = helpers.call_action("package_create", create_context,
-                             title="test-dataset",
-                             authors="Peter Pan",
-                             license_id=license_id,
                              owner_org=owner_org["name"],
                              state="draft",
+                             **kwargs
                              )
     if with_resource:
         rs = make_resource(create_context, dataset_id=ds["id"])

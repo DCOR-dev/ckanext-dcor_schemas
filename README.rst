@@ -7,17 +7,17 @@ accordingly:
 
 - Authorization (auth.py)
 
-  - user: allow all logged-in users to create datasets, circles, and collections
   - datasets: do not allow deleting datasets unless they are drafts
   - datasets: allow purging of deleted datasets
   - datasets: do not allow switching to a more restrictive license
   - datasets: do not allow changing the name (slug)
   - datasets: do not allow adding resources to non-draft datasets
+  - datasets: do not allow to set the visibility of a public dataset to private
+  - organization: do not allow bulk_update_delete (e.g. datasets by organization admins)
   - resources: do not allow deleting resources unless they are drafts
   - resources: only allow changing the "description"
-  - resources: do not allow uploading resources with the same name (ckanext-dcor_depot)
   - resources: do not allow setting a resource id when uploading
-  - organization: do not allow bulk_update_delete (e.g. datasets by organization admins)
+  - user: allow all logged-in users to create datasets, circles, and collections
 
 - Permissions (plugin.py)
 
@@ -26,21 +26,23 @@ accordingly:
 
 - Validation (validate.py)
 
-  - Do not allow setting a different resource name when uploading
-  - Do not allow weird characters in resource names
-  - Restrict to basic CC licenses
-  - Author list "authors" is CSV
-  - Parse DOI field (remove URL part)
-  - Automatically generate dataset name (slug) using random characters
+  - datasets: force user to select authors
+  - datasets: author list "authors" is CSV
+  - datasets: parse DOI field (remove URL part)
+  - datasets: restrict to basic CC licenses
+  - datasets: force user to select a license
+  - datasets: automatically generate dataset name (slug) using random characters
     if necessary (does not apply to admins)
-  - restrict upload data extensions to .rtdc, .csv, .tsv, .pdf, .txt, .png,
-    .jpg, .tif, .py, .ipynb
-  - Force user to select a license
-  - Do not allow non-admins to set the visibility of a public dataset to private
-  - Configuration metadata (using `dclab.dfn.config_funcs`)
-  - A dataset is considered to be a draft when it does not contain resources
-    (validate.state)
-  - Allow to delete draft datasets
+  - datasets: a dataset is considered to be a draft when it does not contain
+    resources (validate.state)
+  - resources: do not allow uploading resources with the same name
+    for a dataset (important for ckanext-dcor_depot)
+  - resources: do not allow setting a different resource name when uploading
+  - resources: do not allow weird characters in resource names
+  - resources: restrict upload data extensions to .rtdc, .csv, .tsv, .pdf,
+    .txt, .png, .jpg, .tif, .py, .ipynb
+  - resources: configuration metadata (using `dclab.dfn.config_funcs`)
+
 
 - UI Dataset:
 

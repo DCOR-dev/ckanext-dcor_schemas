@@ -139,6 +139,10 @@ def package_update(context, data_dict=None):
     if package_dict["state"] != "draft" and data_dict.get("state") == "draft":
         return {'success': False,
                 'msg': 'Changing dataset state to draft not allowed'}
+    # do not allow setting the visibility from public to private
+    if not package_dict["private"] and data_dict.get("private", False):
+        return {'success': False,
+                'msg': 'Changing visibility to private not allowed'}
     # do not allow changing some of the keys
     prohibited_keys = ["name"]
     invalid = {}
@@ -171,24 +175,11 @@ def resource_create(context, data_dict=None):
                     'msg': 'Adding resources to non-draft datasets not '
                            'allowed!'}
 
-        # do not allow adding resources that exist already
         if "upload" in data_dict:
-            # check that we got a file
-            try:
-                filename = data_dict["upload"].filename
-            except AttributeError:
-                return {'success': False,
-                        'msg': 'Upload not recognized (got {})!'.format(
-                            data_dict["upload"])}
-
-            # check that id is not set
+            # id must not be set
             if data_dict.get("id", ""):
                 return {'success': False,
                         'msg': 'You are not allowed to set the id!'}
-
-            # check that name is filename
-            if data_dict.get("name", filename) != filename:
-                data_dict["name"] = filename
 
     return {'success': True}
 

@@ -1,3 +1,7 @@
+import cgi
+import pathlib
+import uuid
+
 import pytest
 
 import ckan.logic as logic
@@ -6,6 +10,38 @@ import ckan.tests.helpers as helpers
 from ckan import model
 
 from .helper_methods import make_dataset, make_resource
+
+data_path = pathlib.Path(__file__).parent / "data"
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_resource_create_id_forbidden():
+    """do not allow setting a resource id when uploading"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    create_context = {'ignore_auth': False, 'user': user['name']}
+    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    # create a dataset
+    dataset = make_dataset(create_context, owner_org, with_resource=False,
+                           activate=False)
+    path = data_path / "calibration_beads_47.rtdc"
+    with path.open('rb') as fd:
+        upload = cgi.FieldStorage()
+        upload.filename = path.name
+        upload.file = fd
+        with pytest.raises(logic.NotAuthorized):
+            helpers.call_auth("resource_create", test_context,
+                              package_id=dataset["id"],
+                              upload=upload,
+                              url="upload",
+                              name=path.name,
+                              id=str(uuid.uuid4()),
+                              )
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -49,7 +85,7 @@ def test_resource_delete_only_drafts():
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_resource_patch_only_description():
-    """do not allow deleting resources unless they are drafts"""
+    """only allow changing the description"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
         'name': user['id'],
