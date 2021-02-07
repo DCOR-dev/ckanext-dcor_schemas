@@ -1,6 +1,3 @@
-import cgi
-import pathlib
-
 import pytest
 
 import ckan.logic as logic
@@ -8,50 +5,7 @@ import ckan.tests.factories as factories
 import ckan.tests.helpers as helpers
 from ckan import model
 
-
-data_path = pathlib.Path(__file__).parent / "data"
-
-
-def make_dataset(create_context, owner_org, with_resource=False,
-                 activate=False):
-    # create a dataset
-    ds = helpers.call_action("package_create", create_context,
-                             title="test-dataset",
-                             authors="Peter Pan",
-                             license_id="CC-BY-4.0",
-                             owner_org=owner_org["name"],
-                             state="draft",
-                             )
-    if with_resource:
-        rs = make_resource(create_context, dataset_id=ds["id"])
-
-    if activate:
-        helpers.call_action("package_patch", create_context,
-                            id=ds["id"],
-                            state="active")
-
-    dataset = helpers.call_action("package_show", id=ds["id"])
-
-    if with_resource:
-        resource = helpers.call_action("resource_show", id=rs["id"])
-        return dataset, resource
-    else:
-        return dataset
-
-
-def make_resource(create_context, dataset_id):
-    path = data_path / "calibration_beads_47.rtdc"
-    with path.open('rb') as fd:
-        upload = cgi.FieldStorage()
-        upload.filename = path.name
-        upload.file = fd
-        res = helpers.call_action("resource_create", create_context,
-                                  package_id=dataset_id,
-                                  upload=upload,
-                                  url="upload",
-                                  name=path.name,
-                                  )
-    return res
+from .helper_methods import make_dataset, make_resource
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -140,43 +94,3 @@ def test_dataset_state_from_active_to_draft_forbidden():
         helpers.call_auth("package_patch", test_context,
                           id=dataset["id"],
                           state="draft")
-
-
-@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_login_user_create_datasets():
-    """allow all logged-in users to create datasets"""
-    user = factories.User()
-    owner_org = factories.Organization(users=[{
-        'name': user['id'],
-        'capacity': 'admin'
-    }])
-    context = {'ignore_auth': False, 'user': user['name'], "model": model}
-    success = helpers.call_auth("package_create", context,
-                                title="test-group",
-                                authors="Peter Pan",
-                                license_id="CC-BY-4.0",
-                                owner_org=owner_org["id"],
-                                )
-    assert success
-
-
-@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_login_user_create_circles():
-    """allow all logged-in users to create circles"""
-    user = factories.User()
-    context = {'ignore_auth': False, 'user': user['name'], "model": model}
-    success = helpers.call_auth("organization_create", context,
-                                name="test-org")
-    assert success
-
-
-@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_login_user_create_collections():
-    """allow all logged-in users to create collections"""
-    user = factories.User()
-    context = {'ignore_auth': False, 'user': user['name'], "model": model}
-    success = helpers.call_auth("group_create", context, name="test-group")
-    assert success
