@@ -49,7 +49,7 @@ def test_dataset_authors_mandatory():
     with pytest.raises(logic.ValidationError) as e:
         make_dataset(create_context1, owner_org, with_resource=False,
                      activate=False, authors="")
-    assert "'authors': ['Missing value']" in str(e)
+    assert "'authors': ['Missing value']" in str(e.value)
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -108,7 +108,7 @@ def test_dataset_license_id_mandatory():
     with pytest.raises(logic.ValidationError) as e:
         make_dataset(create_context1, owner_org, with_resource=False,
                      activate=False, license_id="")
-    assert "Please choose a license_id" in str(e)
+    assert "Please choose a license_id" in str(e.value)
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -127,7 +127,7 @@ def test_dataset_license_restrict_cc():
     with pytest.raises(logic.ValidationError) as e:
         make_dataset(create_context1, owner_org, with_resource=False,
                      activate=False, license_id="CC-BY-NE-4.0")
-    assert "Please choose a license_id" in str(e)
+    assert "Please choose a license_id" in str(e.value)
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')

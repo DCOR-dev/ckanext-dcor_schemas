@@ -72,12 +72,18 @@ def package_create(context, data_dict):
                        + 'these collections'}
 
     # Are we allowed to add a dataset to the given organization?
-    org_id = logic.get_or_bust(data_dict, 'owner_org')
-    if not authz.has_user_permission_for_group_or_org(
-            org_id, user, 'create_dataset'):
-        return {'success': False,
-                'msg': 'User {} not authorized to add datasets '.format(user)
-                       + 'to circle {}!'.format(org_id)}
+    org_id = data_dict.get('owner_org', None)
+    if org_id is None:
+        # No organization was given. This means that we just have to check
+        # whether the user can create packages in general. Since the user
+        # is logged-in, he can do that.
+        pass
+    else:
+        if not authz.has_user_permission_for_group_or_org(
+                org_id, user, 'create_dataset'):
+            return {'success': False,
+                    'msg': 'User {} not authorized to add '.format(user)
+                           + 'datasets to circle {}!'.format(org_id)}
 
     return {"success": True}
 

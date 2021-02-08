@@ -1,3 +1,5 @@
+0.12.1
+ - fix: browsing to "/dataset" resulted in 500 Internal Error
 0.12.0
  - enh: allow users to keep a draft dataset and remove the option
    to upload additional datasets to active datasets within 3h
