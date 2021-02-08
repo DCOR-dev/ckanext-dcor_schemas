@@ -46,6 +46,30 @@ def test_resource_create_id_forbidden():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_resource_create_in_other_users_dataset():
+    """User is not allowed to see another user's private datasets"""
+    user_a = factories.User()
+    user_b = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user_a['id'],
+        'capacity': 'admin'
+    }])
+    factories.Group(users=[
+        {'name': user_a['id'], 'capacity': 'admin'},
+    ])
+    context_a = {'ignore_auth': False, 'user': user_a['name'], "model": model}
+    context_b = {'ignore_auth': False, 'user': user_b['name'], "model": model}
+
+    dataset, _ = make_dataset(context_a, owner_org, with_resource=True,
+                              activate=False)
+
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth("resource_create", context_b,
+                          id=dataset["id"])
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_resource_delete_only_drafts():
     """do not allow deleting resources unless they are drafts"""
     user = factories.User()

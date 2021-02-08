@@ -19,11 +19,6 @@ accordingly:
   - resources: do not allow setting a resource id when uploading
   - user: allow all logged-in users to create datasets, circles, and collections
 
-- Permissions (plugin.py)
-
-  - Allow a user A to see user B's private dataset if the private dataset
-    is in a group that user A is a member of.
-
 - Validation (validate.py)
 
   - datasets: force user to select authors
@@ -44,6 +39,11 @@ accordingly:
   - resources: restrict upload data extensions to .rtdc, .csv, .tsv, .pdf,
     .txt, .png, .jpg, .tif, .py, .ipynb
   - resources: configuration metadata (using `dclab.dfn.config_funcs`)
+
+- IPermissionLabels (plugin.py)
+
+  - Allow a user A to see user B's private dataset if the private dataset
+    is in a group that user A is a member of.
 
 - UI Dataset:
 

@@ -15,6 +15,7 @@ def dataset_purge(context, data_dict):
     ao = logic.auth.update.package_update(context, data_dict)
     if not ao["success"]:
         return ao
+
     # get the current package dict
     show_context = {
         'model': context['model'],
@@ -59,8 +60,8 @@ def package_create(context, data_dict):
     ac = login_user(context)
     if not ac["success"]:
         return ac
-    user = context['user']
 
+    user = context['user']
     # If a group is given, check whether the user has the necessary permissions
     check_group = logic.auth.create._check_group_auth(context, data_dict)
     if not check_group:
@@ -90,6 +91,7 @@ def package_delete(context, data_dict):
     ao = logic.auth.update.package_update(context, data_dict)
     if not ao["success"]:
         return ao
+
     # get the current package dict
     show_context = {
         'model': context['model'],
@@ -116,6 +118,7 @@ def package_update(context, data_dict=None):
     ao = logic.auth.update.package_update(context, data_dict)
     if not ao["success"]:
         return ao
+
     # nothing to check
     if data_dict is None:
         return {'success': True}
@@ -163,6 +166,10 @@ def resource_create(context, data_dict=None):
     ac = login_user(context)
     if not ac["success"]:
         return ac
+    # original auth function
+    ao = logic.auth.create.package_create(context, data_dict)
+    if not ao["success"]:
+        return ao
 
     if "package_id" in data_dict:
         pkg_dict = logic.get_action('package_show')(
@@ -189,6 +196,11 @@ def resource_update(context, data_dict=None):
     ac = login_user(context)
     if not ac["success"]:
         return ac
+    # original auth function
+    ao = logic.auth.update.resource_update(context, data_dict)
+    if not ao["success"]:
+        return ao
+
     # get the current resource dict
     show_context = {
         'model': context['model'],
