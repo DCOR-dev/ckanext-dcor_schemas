@@ -13,7 +13,7 @@ data_path = pathlib.Path(__file__).parent / "data"
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_validate_dataset_authors_is_csv():
+def test_dataset_authors_is_csv():
     """author list "authors" is CSV"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -35,7 +35,7 @@ def test_validate_dataset_authors_is_csv():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_validate_dataset_authors_mandatory():
+def test_dataset_authors_mandatory():
     """force user to select authors"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -54,7 +54,7 @@ def test_validate_dataset_authors_mandatory():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_validate_dataset_doi_remove_url():
+def test_dataset_doi_remove_url():
     """parse DOI field (remove URL part)"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -77,7 +77,7 @@ def test_validate_dataset_doi_remove_url():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_validate_dataset_draft_no_resources():
+def test_dataset_draft_no_resources():
     """a dataset without resources is considered to be a draft"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -94,7 +94,7 @@ def test_validate_dataset_draft_no_resources():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_validate_dataset_license_id_mandatory():
+def test_dataset_license_id_mandatory():
     """force user to select license_id"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -113,7 +113,7 @@ def test_validate_dataset_license_id_mandatory():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_validate_dataset_license_restrict_cc():
+def test_dataset_license_restrict_cc():
     """restrict to basic CC licenses"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -132,7 +132,7 @@ def test_validate_dataset_license_restrict_cc():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_validate_dataset_name_slug():
+def test_dataset_name_slug():
     """automatically generate dataset name (slug) using random characters"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -154,7 +154,7 @@ def test_validate_dataset_name_slug():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_validate_dataset_name_slug_no_admin():
+def test_dataset_name_slug_no_admin():
     """not automatically generate dataset name (slug) for admins"""
     admin = factories.Sysadmin()
     owner_org = factories.Organization(users=[{

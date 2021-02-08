@@ -47,7 +47,7 @@ def test_resource_create_id_forbidden():
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_resource_create_in_other_users_dataset():
-    """User is not allowed to see another user's private datasets"""
+    """User is not allowed to create a resource in another user's dataset"""
     user_a = factories.User()
     user_b = factories.User()
     owner_org = factories.Organization(users=[{
@@ -65,7 +65,7 @@ def test_resource_create_in_other_users_dataset():
 
     with pytest.raises(logic.NotAuthorized):
         helpers.call_auth("resource_create", context_b,
-                          id=dataset["id"])
+                          package_id=dataset["id"])
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -142,3 +142,30 @@ def test_resource_patch_only_description():
                           id=res["id"],
                           package_id=ds["id"],
                           hash="doesntmakesense")
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_resource_patch_other_users_dataset():
+    """User is not allowed to patch other user's datasets"""
+    user_a = factories.User()
+    user_b = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user_a['id'],
+        'capacity': 'admin'
+    }])
+    factories.Group(users=[
+        {'name': user_a['id'], 'capacity': 'admin'},
+    ])
+    context_a = {'ignore_auth': False, 'user': user_a['name'], "model": model}
+    context_b = {'ignore_auth': False, 'user': user_b['name'], "model": model}
+
+    # create a dataset
+    ds, res = make_dataset(context_a, owner_org, with_resource=True,
+                           activate=True)
+
+    with pytest.raises(logic.NotAuthorized):
+        assert helpers.call_auth("resource_patch", context_b,
+                                 id=res["id"],
+                                 package_id=ds["id"],
+                                 description="my nice text")

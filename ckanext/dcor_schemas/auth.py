@@ -12,6 +12,8 @@ def dataset_purge(context, data_dict):
     if not ac["success"]:
         return ac
     # original auth function
+    # (usually, only sysadmins are allowed to purge, so we test against
+    # package_update)
     ao = logic.auth.update.package_update(context, data_dict)
     if not ao["success"]:
         return ao
@@ -29,7 +31,7 @@ def dataset_purge(context, data_dict):
     state = package_dict.get('state')
     if state != "deleted":
         return {"success": False,
-                "msg": "Only draft datasets can be deleted!"}
+                "msg": "Only deleted datasets can be purged!"}
     return {"success": True}
 
 
@@ -69,13 +71,12 @@ def package_create(context, data_dict):
                 'msg': 'User {} not authorized to edit '.format(user)
                        + 'these collections'}
 
-    # If an organization is given are we able to add a dataset to it?
-    data_dict = data_dict or {}
-    org_id = data_dict.get('owner_org')
-    if org_id and not authz.has_user_permission_for_group_or_org(
+    # Are we allowed to add a dataset to the given organization?
+    org_id = logic.get_or_bust(data_dict, 'owner_org')
+    if not authz.has_user_permission_for_group_or_org(
             org_id, user, 'create_dataset'):
         return {'success': False,
-                'msg': 'User {} not authorized to add dataset '.format(user)
+                'msg': 'User {} not authorized to add datasets '.format(user)
                        + 'to circle {}!'.format(org_id)}
 
     return {"success": True}
@@ -119,9 +120,6 @@ def package_update(context, data_dict=None):
     if not ao["success"]:
         return ao
 
-    # nothing to check
-    if data_dict is None:
-        return {'success': True}
     # get the current package dict
     show_context = {
         'model': context['model'],
@@ -167,7 +165,7 @@ def resource_create(context, data_dict=None):
     if not ac["success"]:
         return ac
     # original auth function
-    ao = logic.auth.create.package_create(context, data_dict)
+    ao = logic.auth.create.resource_create(context, data_dict)
     if not ao["success"]:
         return ao
 
@@ -214,12 +212,8 @@ def resource_update(context, data_dict=None):
     # convert to package id (otherwise the check below might fail)
     convert_package_name_or_id_to_id = toolkit.get_converter(
         'convert_package_name_or_id_to_id')
-    if "package_id" in data_dict:
-        data_dict["package_id"] = convert_package_name_or_id_to_id(
-            data_dict["package_id"], context)
-    else:
-        return {'success': False,
-                'msg': 'No package id specified!'}
+    data_dict["package_id"] = convert_package_name_or_id_to_id(
+            logic.get_or_bust(data_dict, "package_id"), context)
     # only allow updating the description
     allowed_keys = ["description"]
     invalid = {}

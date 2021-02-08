@@ -1,4 +1,4 @@
-0.11.3
+0.12.0
  - enh: allow users to keep a draft dataset and remove the option
    to upload additional datasets to active datasets within 3h
  - fix: users could create resources in datasets of other users
