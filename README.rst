@@ -33,8 +33,7 @@ accordingly:
   - datasets: restrict to basic CC licenses
   - datasets: automatically generate dataset name (slug) using random characters
     if necessary (does not apply to admins)
-  - datasets: a dataset is considered to be a draft when it does not contain
-    resources (validate.state)
+  - datasets: a dataset without resources is considered to be a draft
   - resources: do not allow uploading resources with the same name
     for a dataset (important for ckanext-dcor_depot)
   - resources: make sure the resource name matches the file name of the
