@@ -324,3 +324,43 @@ def test_dataset_name_slug_short_2():
     finally:
         # reset everything
         model.PACKAGE_NAME_MIN_LENGTH = 2
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_references():
+    """Test parsing of references"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    # create 1st dataset
+    model.PACKAGE_NAME_MIN_LENGTH = 10
+    create_context = {'ignore_auth': False, 'user': user['name'],
+                      'model': model}
+    references = [
+        "https://dx.doi.org/10.1186/s12859-020-03553-y",
+        "http://dx.doi.org/10.1038/s41592-020-0831-y",
+        "dx.doi.org/10.1186/s12859-019-3010-3",
+        "doi:10.1039/C9SM01226E",
+        "https://arxiv.org/abs/1507.00466",
+        "arxiv:1507.00466",
+        "https://www.biorxiv.org/content/10.1101/862227v2",
+        "https://www.biorxiv.org/content/10.1101/862227v2.full.pdf+html",
+        "biorxiv:10.1101/862227v2",
+    ]
+    ds, _ = make_dataset(create_context, owner_org, with_resource=True,
+                         activate=True,
+                         references=",".join(references))
+    refs = [r.strip() for r in ds["references"].split(",")]
+    assert refs[0] == "doi:10.1186/s12859-020-03553-y"
+    assert refs[1] == "doi:10.1038/s41592-020-0831-y"
+    assert refs[2] == "doi:10.1186/s12859-019-3010-3"
+    assert refs[3] == "doi:10.1039/C9SM01226E"
+    assert refs[4] == "arXiv:1507.00466"
+    assert refs[5] == "arXiv:1507.00466"
+    assert refs[6] == "bioRxiv:10.1101/862227v2"
+    assert refs[7] == "bioRxiv:10.1101/862227v2"
+    assert refs[8] == "bioRxiv:10.1101/862227v2"

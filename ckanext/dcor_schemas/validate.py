@@ -154,9 +154,12 @@ def dataset_references(value):
             if r.count("doi.org/"):
                 r = "doi:" + r.split("doi.org/", 1)[1]
             elif r.count("arxiv.org/"):
-                r = "arxiv:" + r.split("/")[-1]
+                r = "arXiv:" + r.split("/")[-1]
+            if r.lower().startswith("arxiv:"):
+                r = "arXiv:" + r.split(":", 1)[1]
             elif r.count("biorxiv.org/"):
                 r = "bioRxiv:" + r.split("biorxiv.org/content/")[-1]
+                r = r.replace(".full.pdf+html", "")
                 r = r.replace(".full.pdf", "")
             if r.lower().startswith("biorxiv:"):
                 r = "bioRxiv:" + r.split(":", 1)[1]
