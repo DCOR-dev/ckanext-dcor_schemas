@@ -57,6 +57,14 @@ def test_get_composite_section_item_list():
     rss.get_composite_section_item_list()
 
 
+def test_get_wrong_item():
+    try:
+        rss.SupplementItem.from_composite(composite_key="sp:cells:peter pan",
+                                          composite_value="human")
+    except KeyError:
+        pass
+
+
 def test_load():
     rss.load_schema_supplements()
 

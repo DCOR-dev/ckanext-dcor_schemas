@@ -72,11 +72,16 @@ def package_create(context, data_dict):
                        + 'these collections'}
 
     # Are we allowed to add a dataset to the given organization?
-    org_id = data_dict.get('owner_org', None)
+    org_id = None if data_dict is None else data_dict.get('owner_org', None)
     if org_id is None:
         # No organization was given. This means that we just have to check
         # whether the user can create packages in general. Since the user
         # is logged-in, he can do that.
+        # elaboration:
+        # - if `data_dict` is None, we currently want to create a new dataset
+        #   (/dataset/new)
+        # - if `data_dict["owner_org"] is None, we currently want to view
+        #   the datasets (/dataset)
         pass
     else:
         if not authz.has_user_permission_for_group_or_org(

@@ -1,4 +1,6 @@
 0.12.2
+ - fix: regression where a new dataset could not be created via the
+   web interface
  - tests: increase coverage
 0.12.1
  - fix: browsing to "/dataset" resulted in 500 Internal Error

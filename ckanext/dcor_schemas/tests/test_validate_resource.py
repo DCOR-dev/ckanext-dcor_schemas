@@ -111,37 +111,6 @@ def test_resource_create_configuration_supplement():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_resource_create_configuration_supplement_invalid_key():
-    """test whether "sp:cells:peter pan": "hans" is an invalid key"""
-    user = factories.User()
-    owner_org = factories.Organization(users=[{
-        'name': user['id'],
-        'capacity': 'admin'
-    }])
-    # Note: `call_action` bypasses authorization!
-    # create 1st dataset
-    create_context1 = {'ignore_auth': False, 'user': user['name']}
-    dataset = make_dataset(create_context1, owner_org, with_resource=False,
-                           activate=False)
-    path = data_path / "calibration_beads_47.rtdc"
-    with path.open('rb') as fd:
-        upload = cgi.FieldStorage()
-        upload.filename = path.name
-        upload.file = fd
-        with pytest.raises(logic.ValidationError):
-            helpers.call_action("resource_create", create_context1,
-                                package_id=dataset["id"],
-                                upload=upload,
-                                url="upload",
-                                name=path.name,
-                                # We have to add them as kwargs dict
-                                **{"sp:general:sample type": "primary cells",
-                                   "sp:cells:peter pan": "hans"}
-                                )
-
-
-@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_resource_create_configuration_supplement_invalid_value():
     """test whether "sp:cells:passage number": "peter" is an invalid value"""
     user = factories.User()
