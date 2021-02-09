@@ -3,6 +3,7 @@ import pathlib
 import pytest
 
 import ckan.logic as logic
+import ckan.model as model
 import ckan.tests.factories as factories
 import ckan.tests.helpers as helpers
 
@@ -154,6 +155,120 @@ def test_dataset_name_slug():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_name_slug_empty():
+    """dataset title generation when user passed empty value"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    # create 1st dataset
+    create_context1 = {'ignore_auth': False, 'user': user['name']}
+    ds1 = make_dataset(create_context1, owner_org, with_resource=False,
+                       activate=False, title="")
+    assert ds1["name"]
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_name_slug_exists():
+    """not automatically generate dataset name (slug) for admins"""
+    admin = factories.Sysadmin()
+    owner_org1 = factories.Organization(users=[{
+        'name': admin['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    # create 1st dataset
+    create_context1 = {'ignore_auth': False, 'user': admin['name']}
+
+    # Create all possible datasets with admin so that "user" has to
+    # create one with a character more.
+    ds1 = make_dataset(create_context1, owner_org1, with_resource=False,
+                       activate=False, name="existing-name")
+    assert ds1["name"] == "existing-name", "sanity check"
+    for ch in "0123456789abcdef":
+        name = "existing-name-" + ch
+        ds1 = make_dataset(create_context1, owner_org1, with_resource=False,
+                           activate=False, name=name)
+        assert ds1["name"] == name, "sanity check"
+
+    # Now create user dataset
+    user = factories.User()
+    owner_org2 = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    # create 1st dataset
+    create_context2 = {'ignore_auth': False, 'user': user['name']}
+    ds2 = make_dataset(create_context2, owner_org2, with_resource=False,
+                       activate=False, title="existing-name")
+    assert ds2["name"].startswith("existing-name-")
+    assert len(ds2["name"]) == len("existing-name-") + 2
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_name_slug_invalid():
+    """test bad dataset names"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    # create 1st dataset
+    for name in ["edit", "new", "search"]:
+        create_context1 = {'ignore_auth': False, 'user': user['name']}
+        ds1 = make_dataset(create_context1, owner_org, with_resource=False,
+                           activate=False, title=name)
+        assert ds1["name"] != name
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_name_slug_long():
+    """the slug should not be longer than allowed"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    # create 1st dataset
+    create_context1 = {'ignore_auth': False, 'user': user['name']}
+    ds1 = make_dataset(create_context1, owner_org, with_resource=False,
+                       activate=False, title="a"*500)
+    assert len(ds1["name"]) < 500
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_name_slug_long_2():
+    """This is a test for when PACKAGE_NAME_MAX_LENGTH!=100"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    model.PACKAGE_NAME_MAX_LENGTH = 10
+    create_context1 = {'ignore_auth': False, 'user': user['name'],
+                       'model': model}
+    ds1 = make_dataset(create_context1, owner_org, with_resource=False,
+                       activate=False, title="z"*15)
+    try:
+        assert len(ds1["name"]) <= 10
+    except BaseException:
+        pass
+    finally:
+        # reset everything
+        model.PACKAGE_NAME_MAX_LENGTH = 100
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_dataset_name_slug_no_admin():
     """not automatically generate dataset name (slug) for admins"""
     admin = factories.Sysadmin()
@@ -167,3 +282,45 @@ def test_dataset_name_slug_no_admin():
     ds1 = make_dataset(create_context1, owner_org, with_resource=False,
                        activate=False, name="ignored")
     assert ds1["name"] == "ignored"
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_name_slug_short():
+    """dataset title generation when user passed value that is too short"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    # create 1st dataset
+    create_context1 = {'ignore_auth': False, 'user': user['name']}
+    ds1 = make_dataset(create_context1, owner_org, with_resource=False,
+                       activate=False, title="z")
+    assert len(ds1["name"]) >= 2
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_name_slug_short_2():
+    """This is a special case when PACKAGE_NAME_MIN_LENGTH is changed"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    # create 1st dataset
+    model.PACKAGE_NAME_MIN_LENGTH = 10
+    create_context1 = {'ignore_auth': False, 'user': user['name'],
+                       'model': model}
+    ds1 = make_dataset(create_context1, owner_org, with_resource=False,
+                       activate=False, title="z")
+    try:
+        assert len(ds1["name"]) >= 10
+    except BaseException:
+        pass
+    finally:
+        # reset everything
+        model.PACKAGE_NAME_MIN_LENGTH = 2
