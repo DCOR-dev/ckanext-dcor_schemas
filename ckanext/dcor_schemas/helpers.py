@@ -11,7 +11,7 @@ def get_reference_dict(value):
              }
 
     for r in refs:
-        if r.startswith("arxiv:"):
+        if r.startswith("arXiv:"):
             rdict["arxiv"].append(r.split(":")[1])
         elif r.startswith("doi:"):
             rdict["dois"].append(r.split(":")[1])

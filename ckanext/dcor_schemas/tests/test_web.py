@@ -4,21 +4,29 @@ import ckan.model as model
 import ckan.tests.factories as factories
 import ckan.tests.helpers as helpers
 
+from .helper_methods import make_dataset
+
 
 def test_homepage(app):
-    resp = app.get("/dataset")
-    assert resp.status == "200 OK"
+    app.get("/dataset", status=200)
 
 
 def test_homepage_bad_link(app):
     """this is a negative test"""
-    resp = app.get("/bad_link")
-    assert resp.status == "404 NOT FOUND"
+    app.get("/bad_link", status=404)
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_theme')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_login_and_browse_to_circle(app):
+@pytest.mark.parametrize("url", ["/dataset",
+                                 "/dataset/new",
+                                 "/group",
+                                 "/group/new",
+                                 "/organization",
+                                 "/organization/new",
+
+                                 ])
+def test_login_and_browse_to_main_locations(url, app):
     user = factories.User()
 
     # taken from ckanext/example_iapitoken/tests/test_plugin.py
@@ -30,17 +38,33 @@ def test_login_and_browse_to_circle(app):
     )
 
     # assert: try to access /dataset
-    resp = app.get("/organization",
-                   params={u"id": user[u"id"]},
-                   headers={u"authorization": data["token"]},
-                   )
-    assert resp.status == "200 OK"
+    app.get(url,
+            params={u"id": user[u"id"]},
+            headers={u"authorization": data["token"]},
+            status=200,
+            )
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_theme')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_login_and_browse_to_circle_creation_page(app):
+def test_resource_view_references(app):
+    """Test whether the references links render correctly"""
     user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    create_context = {'ignore_auth': False, 'user': user['name']}
+    # create a dataset
+    references = [
+        "https://dx.doi.org/10.1186/s12859-020-03553-y",
+        "https://arxiv.org/abs/1507.00466",
+        "https://www.biorxiv.org/content/10.1101/862227v2.full.pdf+html",
+        "https://dc.readthedocs.io/en/latest/",
+    ]
+    dataset, _ = make_dataset(create_context, owner_org, with_resource=True,
+                              activate=True, references=",".join(references))
 
     # taken from ckanext/example_iapitoken/tests/test_plugin.py
     data = helpers.call_action(
@@ -50,93 +74,24 @@ def test_login_and_browse_to_circle_creation_page(app):
         name=u"token-name",
     )
 
-    # assert: try to access /dataset
-    resp = app.get("/organization/new",
+    # get the dataset page
+    resp = app.get("/dataset/" + dataset["id"],
                    params={u"id": user[u"id"]},
                    headers={u"authorization": data["token"]},
+                   status=200
                    )
-    assert resp.status == "200 OK"
+    rendered_refs = [
+        ["https://doi.org/10.1186/s12859-020-03553-y",
+         "doi:10.1186/s12859-020-03553-y"],
+        ["https://arxiv.org/abs/1507.00466",
+         "arXiv:1507.00466"],
+        ["https://biorxiv.org/content/10.1101/862227v2",
+         "bioRxiv:10.1101/862227v2"],
+        ["https://dc.readthedocs.io/en/latest/",
+         "https://dc.readthedocs.io/en/latest/"]
+    ]
 
-
-@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_theme')
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_login_and_browse_to_collection(app):
-    user = factories.User()
-
-    # taken from ckanext/example_iapitoken/tests/test_plugin.py
-    data = helpers.call_action(
-        u"api_token_create",
-        context={u"model": model, u"user": user[u"name"]},
-        user=user[u"name"],
-        name=u"token-name",
-    )
-
-    # assert: try to access /dataset
-    resp = app.get("/group",
-                   params={u"id": user[u"id"]},
-                   headers={u"authorization": data["token"]},
-                   )
-    assert resp.status == "200 OK"
-
-
-@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_theme')
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_login_and_browse_to_collection_creation_page(app):
-    user = factories.User()
-
-    # taken from ckanext/example_iapitoken/tests/test_plugin.py
-    data = helpers.call_action(
-        u"api_token_create",
-        context={u"model": model, u"user": user[u"name"]},
-        user=user[u"name"],
-        name=u"token-name",
-    )
-
-    # assert: try to access /dataset
-    resp = app.get("/group/new",
-                   params={u"id": user[u"id"]},
-                   headers={u"authorization": data["token"]},
-                   )
-    assert resp.status == "200 OK"
-
-
-@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_theme')
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_login_and_browse_to_dataset(app):
-    user = factories.User()
-
-    # taken from ckanext/example_iapitoken/tests/test_plugin.py
-    data = helpers.call_action(
-        u"api_token_create",
-        context={u"model": model, u"user": user[u"name"]},
-        user=user[u"name"],
-        name=u"token-name",
-    )
-
-    # assert: try to access /dataset
-    resp = app.get("/dataset",
-                   params={u"id": user[u"id"]},
-                   headers={u"authorization": data["token"]},
-                   )
-    assert resp.status == "200 OK"
-
-
-@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_theme')
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_login_and_browse_to_dataset_creation_page(app):
-    user = factories.User()
-
-    # taken from ckanext/example_iapitoken/tests/test_plugin.py
-    data = helpers.call_action(
-        u"api_token_create",
-        context={u"model": model, u"user": user[u"name"]},
-        user=user[u"name"],
-        name=u"token-name",
-    )
-
-    # assert: try to access /dataset
-    resp = app.get("/dataset/new",
-                   params={u"id": user[u"id"]},
-                   headers={u"authorization": data["token"]},
-                   )
-    assert resp.status == "200 OK"
+    # make sure the links render correctly
+    for link, text in rendered_refs:
+        href = '<a href="{}">{}</a>'.format(link, text)
+        assert resp.body.count(href)
