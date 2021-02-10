@@ -45,20 +45,31 @@ def test_dataset_add_resources_only_to_drafts():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_create_anonymous():
+    """anonymous cannot create dataset"""
+    # Note: `call_action` bypasses authorization!
+    context = {'ignore_auth': False, 'user': None, "model": model}
+    # create a dataset
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth("package_create", context)
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_dataset_create_missing_org():
     """cannot create dataset in non-existent circle"""
     user = factories.User()
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
+    context = {'ignore_auth': False, 'user': user['name'], "model": model}
     # create a dataset
     with pytest.raises(logic.NotAuthorized):
-        helpers.call_action("package_create", create_context,
-                            state="draft",
-                            authors="Peter Pan",
-                            license_id="CC-BY-4.0",
-                            title="test",
-                            owner_org="notthere"
-                            )
+        helpers.call_auth("package_create", context,
+                          state="draft",
+                          authors="Peter Pan",
+                          license_id="CC-BY-4.0",
+                          title="test",
+                          owner_org="notthere"
+                          )
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -139,6 +150,47 @@ def test_dataset_delete_other_user():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_delete_anonymous():
+    """anonymous cannot edit dataset"""
+    user_a = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user_a['id'],
+        'capacity': 'admin'
+    }])
+    context_a = {'ignore_auth': False, 'user': user_a['name'], "model": model}
+    context_b = {'ignore_auth': False, 'user': None, "model": model}
+
+    dataset = make_dataset(context_a, owner_org, with_resource=False,
+                           activate=False)
+    # assert: other users cannot delete your drafts
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth("package_delete", context_b,
+                          id=dataset["id"])
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_edit_anonymous():
+    """anonymous cannot edit dataset"""
+    user_a = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user_a['id'],
+        'capacity': 'admin'
+    }])
+    context_a = {'ignore_auth': False, 'user': user_a['name'], "model": model}
+    context_b = {'ignore_auth': False, 'user': None, "model": model}
+
+    dataset = make_dataset(context_a, owner_org, with_resource=False,
+                           activate=False)
+    # assert: other users cannot delete your drafts
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth("package_update", context_b,
+                          id=dataset["id"],
+                          title="Hans Peter")
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_dataset_license_more_restrictive_forbidden():
     """do not allow switching to a more restrictive license"""
     user = factories.User()
@@ -157,6 +209,30 @@ def test_dataset_license_more_restrictive_forbidden():
         helpers.call_auth("package_patch", test_context,
                           id=dataset["id"],
                           license_id="CC-BY-4.0")
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_purge_anonymous():
+    """anonymous cannot purge datasets"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    create_context = {'ignore_auth': False, 'user': user['name']}
+    test_context = {'ignore_auth': False, 'user': None, "model": model}
+    # create a dataset
+    dataset = make_dataset(create_context, owner_org, with_resource=False)
+    # delete a dataset
+    helpers.call_action("package_delete", create_context,
+                        id=dataset["id"]
+                        )
+    # assert: check that anonymous cannot purge it
+    with pytest.raises(logic.NotAuthorized):
+        assert helpers.call_auth("dataset_purge", test_context,
+                                 id=dataset["id"])
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')

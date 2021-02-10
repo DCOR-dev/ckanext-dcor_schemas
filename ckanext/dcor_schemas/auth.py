@@ -8,10 +8,6 @@ from . import helpers as dcor_helpers
 
 def dataset_purge(context, data_dict):
     """Only allow deletion of deleted datasets"""
-    # user must be logged-in
-    ac = login_user(context)
-    if not ac["success"]:
-        return ac
     # original auth function
     # (usually, only sysadmins are allowed to purge, so we test against
     # package_update)
@@ -54,29 +50,7 @@ def get_package_id(context, data_dict):
     return convert_package_name_or_id_to_id(package_id, context)
 
 
-def login_user(context, data_dict=None):
-    # Get the user name of the logged-in user.
-    user = context['user']
-    convert_user_name_or_id_to_id = toolkit.get_converter(
-        'convert_user_name_or_id_to_id')
-    try:
-        # check whether the user is logged-in
-        convert_user_name_or_id_to_id(user, context)
-    except toolkit.Invalid:
-        # The user doesn't exist (e.g. they're not logged-in).
-        return {'success': False,
-                'msg': 'You must be logged-in.'}
-
-    # All users are allowed to do this
-    return {'success': True}
-
-
 def package_create(context, data_dict):
-    # user must be logged-in
-    ac = login_user(context)
-    if not ac["success"]:
-        return ac
-
     user = context['user']
     # If a group is given, check whether the user has the necessary permissions
     check_group = logic.auth.create._check_group_auth(context, data_dict)
@@ -109,10 +83,6 @@ def package_create(context, data_dict):
 
 def package_delete(context, data_dict):
     """Only allow deletion of draft datasets"""
-    # user must be logged-in
-    ac = login_user(context)
-    if not ac["success"]:
-        return ac
     # original auth function
     ao = logic.auth.update.package_update(context, data_dict)
     if not ao["success"]:
@@ -136,10 +106,6 @@ def package_delete(context, data_dict):
 
 
 def package_update(context, data_dict=None):
-    # user must be logged-in
-    ac = login_user(context)
-    if not ac["success"]:
-        return ac
     # original auth function
     ao = logic.auth.update.package_update(context, data_dict)
     if not ao["success"]:
@@ -189,10 +155,6 @@ def package_update(context, data_dict=None):
 
 
 def resource_create(context, data_dict=None):
-    # user must be logged-in
-    ac = login_user(context)
-    if not ac["success"]:
-        return ac
     # original auth function
     ao = logic.auth.create.resource_create(context, data_dict)
     if not ao["success"]:
@@ -219,10 +181,6 @@ def resource_create(context, data_dict=None):
 
 
 def resource_update(context, data_dict=None):
-    # user must be logged-in
-    ac = login_user(context)
-    if not ac["success"]:
-        return ac
     # original auth function
     ao = logic.auth.update.resource_update(context, data_dict)
     if not ao["success"]:

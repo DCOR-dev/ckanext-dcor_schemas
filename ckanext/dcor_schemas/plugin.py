@@ -55,12 +55,14 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
 
     # IAuthfunctions
     def get_auth_functions(self):
-        # `*_patch` has same authorization as `*_update`
+        # - `*_patch` has same authorization as `*_update`
+        # - If you are wondering why group_create and organization_create
+        #   are not here, it's because authz.py always checks whether
+        #   anonymous access is allowed via the auth_allow_anonymous_access
+        #   flag. So we just leave it at the defaults.
         return {
             'bulk_update_delete': dcor_auth.deny,
             'dataset_purge': dcor_auth.dataset_purge,
-            'group_create': dcor_auth.login_user,
-            'organization_create': dcor_auth.login_user,
             'package_create': dcor_auth.package_create,
             'package_delete': dcor_auth.package_delete,
             'package_update': dcor_auth.package_update,
