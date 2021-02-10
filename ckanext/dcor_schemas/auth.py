@@ -27,7 +27,7 @@ def dataset_purge(context, data_dict):
     }
     package_dict = logic.get_action('package_show')(
         show_context,
-        {'id': logic.get_or_bust(data_dict, 'id')})
+        {'id': get_package_id(context, data_dict)})
     state = package_dict.get('state')
     if state != "deleted":
         return {"success": False,
@@ -38,6 +38,19 @@ def dataset_purge(context, data_dict):
 def deny(context, data_dict):
     return {'success': False,
             'msg': "Only admins may do so."}
+
+
+def get_package_id(context, data_dict):
+    """Convenience function that extracts the package_id"""
+    package = context.get('package')
+    if package:
+        # web
+        package_id = package.id
+    else:
+        package_id = logic.get_or_bust(data_dict, 'id')
+    convert_package_name_or_id_to_id = toolkit.get_converter(
+        'convert_package_name_or_id_to_id')
+    return convert_package_name_or_id_to_id(package_id, context)
 
 
 def login_user(context, data_dict=None):
@@ -113,7 +126,7 @@ def package_delete(context, data_dict):
     }
     package_dict = logic.get_action('package_show')(
         show_context,
-        {'id': logic.get_or_bust(data_dict, 'id')})
+        {'id': get_package_id(context, data_dict)})
     state = package_dict.get('state')
     if state != "draft":
         return {"success": False,
@@ -134,13 +147,6 @@ def package_update(context, data_dict=None):
     if data_dict is None:
         data_dict = {}
 
-    package = context.get('package')
-    if package:
-        # web
-        package_id = package.id
-    else:
-        package_id = logic.get_or_bust(data_dict, 'id')
-
     # get the current package dict
     show_context = {
         'model': context['model'],
@@ -149,7 +155,8 @@ def package_update(context, data_dict=None):
         'auth_user_obj': context['auth_user_obj'],
     }
     pkg_dict = logic.get_action('package_show')(
-        show_context, {'id': package_id})
+        show_context,
+        {'id': get_package_id(context, data_dict)})
     # do not allow switching to a more restrictive license
     if "license_id" in data_dict:
         allowed = dcor_helpers.get_valid_licenses(pkg_dict["license_id"])
@@ -229,11 +236,7 @@ def resource_update(context, data_dict=None):
     resource_dict = logic.get_action('resource_show')(
         show_context,
         {'id': logic.get_or_bust(data_dict, 'id')})
-    # convert to package id (otherwise the check below might fail)
-    convert_package_name_or_id_to_id = toolkit.get_converter(
-        'convert_package_name_or_id_to_id')
-    data_dict["package_id"] = convert_package_name_or_id_to_id(
-        logic.get_or_bust(data_dict, "package_id"), context)
+    data_dict["package_id"] = get_package_id(context, data_dict)
     # only allow updating the description
     allowed_keys = ["description"]
     invalid = {}
