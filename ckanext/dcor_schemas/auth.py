@@ -224,7 +224,7 @@ def resource_update(context, data_dict=None):
     convert_package_name_or_id_to_id = toolkit.get_converter(
         'convert_package_name_or_id_to_id')
     data_dict["package_id"] = convert_package_name_or_id_to_id(
-            logic.get_or_bust(data_dict, "package_id"), context)
+        logic.get_or_bust(data_dict, "package_id"), context)
     # only allow updating the description
     allowed_keys = ["description"]
     invalid = {}

@@ -142,6 +142,12 @@ def test_resource_patch_only_description():
                           id=res["id"],
                           package_id=ds["id"],
                           hash="doesntmakesense")
+    sha = "490efdf5d9bb4cd4b2a6bcf2fe54d4dc201c38530140bcb168980bf8bf846c72"
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth("resource_patch", test_context,
+                          id=res["id"],
+                          package_id=ds["id"],
+                          sha256=sha)
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
