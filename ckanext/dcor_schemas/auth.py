@@ -1,4 +1,5 @@
 import ckan.authz as authz
+from ckan.common import asbool
 from ckan import logic
 import ckan.plugins.toolkit as toolkit
 
@@ -168,7 +169,8 @@ def package_update(context, data_dict=None):
         return {'success': False,
                 'msg': 'Changing dataset state to draft not allowed'}
     # do not allow setting the visibility from public to private
-    if not pkg_dict["private"] and data_dict.get("private", False):
+    if not pkg_dict["private"] and asbool(data_dict.get("private", False)):
+        assert isinstance(pkg_dict["private"], bool)
         return {'success': False,
                 'msg': 'Changing visibility to private not allowed'}
     # do not allow changing some of the keys

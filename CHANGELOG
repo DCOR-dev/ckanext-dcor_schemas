@@ -1,6 +1,9 @@
 0.12.3
  - fix: regression where some dataset edit pages could not be accessed
+ - fix: "private" key was not parsed correctly in auth.py when updating
+   a dataset
  - tests: increase coverage
+ - setup: bump dcor_shared from 0.2.0 to 0.2.8
 0.12.2
  - fix: regression where a new dataset could not be created via the
    web interface
