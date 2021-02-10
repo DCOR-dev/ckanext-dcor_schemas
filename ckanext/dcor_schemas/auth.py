@@ -131,6 +131,16 @@ def package_update(context, data_dict=None):
     if not ao["success"]:
         return ao
 
+    if data_dict is None:
+        data_dict = {}
+
+    package = context.get('package')
+    if package:
+        # web
+        package_id = package.id
+    else:
+        package_id = logic.get_or_bust(data_dict, 'id')
+
     # get the current package dict
     show_context = {
         'model': context['model'],
@@ -138,30 +148,29 @@ def package_update(context, data_dict=None):
         'user': context['user'],
         'auth_user_obj': context['auth_user_obj'],
     }
-    package_dict = logic.get_action('package_show')(
-        show_context,
-        {'id': logic.get_or_bust(data_dict, 'id')})
+    pkg_dict = logic.get_action('package_show')(
+        show_context, {'id': package_id})
     # do not allow switching to a more restrictive license
     if "license_id" in data_dict:
-        allowed = dcor_helpers.get_valid_licenses(package_dict["license_id"])
+        allowed = dcor_helpers.get_valid_licenses(pkg_dict["license_id"])
         if data_dict["license_id"] not in allowed:
             return {'success': False,
                     'msg': 'Cannot switch to more-restrictive license'}
     # do not allow setting state from "active" to "draft"
-    if package_dict["state"] != "draft" and data_dict.get("state") == "draft":
+    if pkg_dict["state"] != "draft" and data_dict.get("state") == "draft":
         return {'success': False,
                 'msg': 'Changing dataset state to draft not allowed'}
     # do not allow setting the visibility from public to private
-    if not package_dict["private"] and data_dict.get("private", False):
+    if not pkg_dict["private"] and data_dict.get("private", False):
         return {'success': False,
                 'msg': 'Changing visibility to private not allowed'}
     # do not allow changing some of the keys
     prohibited_keys = ["name"]
     invalid = {}
     for key in data_dict:
-        if (key in package_dict
+        if (key in pkg_dict
             and key in prohibited_keys
-                and data_dict[key] != package_dict[key]):
+                and data_dict[key] != pkg_dict[key]):
             invalid[key] = data_dict[key]
     if invalid:
         return {'success': False,
