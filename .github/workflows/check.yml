@@ -19,7 +19,7 @@ jobs:
       run: |
         # prerequisites
         python -m pip install --upgrade pip wheel
-        python -m pip install flake8 codecov
+        python -m pip install flake8
     - name: Lint with flake8
       run: |
         flake8 .
@@ -32,6 +32,10 @@ jobs:
         key: macos-build-${{ env.cache-name }}-${{ hashFiles('Vagrantfile') }}
         restore-keys: |
           macos-build-${{ env.cache-name }}-
+    - name: save environment variables for codecov in VM
+      run: |
+        env | grep GITHUB > environment.txt
+        cat environment.txt
     - name: Get the latest box and remove old boxes from the GH Actions cache
       run: |
         vagrant box update
@@ -42,12 +46,3 @@ jobs:
     - name: Run tests in vagrant VM
       run: |
         vagrant ssh -- sudo bash /testing/vagrant-run-tests.sh
-    - name: Codecov
-      run: |
-        # We have to run codecov outside of the VM, because it does not
-        # detect GitHub Actions.
-        # Fetch coverage results from VM
-        vagrant ssh-config > ssh_config
-        rsync -avH -e "ssh -F ./ssh_config" default:/testing/.coverage ./
-        # Run codecov
-        codecov
