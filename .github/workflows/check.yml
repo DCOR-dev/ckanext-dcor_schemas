@@ -32,4 +32,4 @@ jobs:
           vagrant up
       - name: Run tests
         run: |
-          vagrant ssh -- sudo bash /root/testing/vagrant-run-tests.sh
+          vagrant ssh -- sudo bash /testing/vagrant-run-tests.sh
