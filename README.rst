@@ -1,6 +1,8 @@
 ckanext-dcor_schemas
 ====================
 
+|PyPI Version| |Build Status| |Coverage Status|
+
 This module introduces/lifts restrictions (authorization) for the management
 of data and meta data on DCOR. The corresponding UI elements are modified
 accordingly:
@@ -138,3 +140,11 @@ following commands in the root of this repository:
     vagrant up
     # Run the tests
     vagrant ssh -- sudo bash /testing/vagrant-run-tests.sh
+
+
+.. |PyPI Version| image:: https://img.shields.io/pypi/v/ckanext.dcor_schemas.svg
+   :target: https://pypi.python.org/pypi/ckanext.dcor_schemas
+.. |Build Status| image:: https://img.shields.io/github/workflow/status/DCOR-dev/ckanext-dcor_schemas/Checks
+   :target: https://github.com/DCOR-dev/ckanext-dcor_schemas/actions?query=workflow%3AChecks
+.. |Coverage Status| image:: https://img.shields.io/codecov/c/github/DCOR-dev/ckanext-dcor_schemas
+   :target: https://codecov.io/gh/DCOR-dev/ckanext-dcor_schemas
