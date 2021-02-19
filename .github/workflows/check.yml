@@ -27,6 +27,12 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
+      # macOS sometimes allows symlinks to have permissions other than 777,
+      # so change all symlink perms to match the Linux convention. Otherwise
+      # the rsync run by Vagrant will complain that it can't copy over the
+      # perms.
+      - name: Fix symlink permissions
+        run: find . -type link -exec chmod -h 777 \{\} \;
       - name: Setup vagrant vm
         run: |
           vagrant init paulmueller/dcor-test
