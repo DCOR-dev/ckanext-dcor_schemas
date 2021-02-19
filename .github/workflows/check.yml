@@ -7,19 +7,14 @@ on:
   - cron: "0 0 1 * *"
 
 jobs:
-  build:
-
+  style-check:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.7', '3.8']
-
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: 3.8
     - name: Install flake8 dependencies
       run: |
         # prerequisites
@@ -28,16 +23,19 @@ jobs:
     - name: Lint with flake8
       run: |
         flake8 .
-    - name: Install testing dependencies
-      run: |
-        sudo apt install -y vagrant virtualbox ssh qemu-system-x86
-    - name: Run tests with vagrant dcor-test image
-      run: |
-        vagrant init paulmueller/dcor-test
-        vagrant up
-        vagrant ssh
-        rsync /vagrant/ /project
-        export CKAN_INI=/etc/ckan/default/test-dcor.ini
-        cd /project
-        pip install -e .
-        py.test --disable-warnings ckanext
+  dcor-test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup vagrant vm
+        run: |
+          vagrant init paulmueller/dcor-test
+          vagrant up
+      - name: Run tests
+        run: |
+          vagrant ssh
+          rsync /vagrant/ /project
+          export CKAN_INI=/etc/ckan/default/test-dcor.ini
+          cd /project
+          pip install -e .
+          py.test --disable-warnings ckanext
