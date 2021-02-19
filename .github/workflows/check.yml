@@ -20,16 +20,23 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+    - name: Install flake8 dependencies
       run: |
         # prerequisites
         python -m pip install --upgrade pip wheel
-        python -m pip install codecov coverage flake8 pytest
-        # install dependencies
-        pip install -e .
-        # show installed packages
-        pip freeze
+        python -m pip install flake8
     - name: Lint with flake8
       run: |
         flake8 .
-
+    - name: Install testing dependencies
+      run: |
+        sudo apt install -y vagrant virtualbox ssh qemu-system-x86
+    - name: Run tests with vagrant dcor-test image
+      run: |
+        vagrant init paulmueller/dcor-test
+        vagrant ssh
+        rsync /vagrant/ /project
+        export CKAN_INI=/etc/ckan/default/test-dcor.ini
+        cd /project
+        pip install -e .
+        py.test --disable-warnings ckanext
