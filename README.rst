@@ -116,3 +116,25 @@ In the configuration file ckan.ini:
     
     ckan.plugins = [...] dcor_schemas
     ckan.extra_resource_fields = sha256
+
+
+Testing
+-------
+If CKAN/DCOR is installed and setup for testing, this extension can
+be tested with pytest:
+
+::
+
+    py.test ckanext
+
+Testing can also be done via vagrant in a virtualmachine using the
+`dcor-test <https://app.vagrantup.com/paulmueller/boxes/dcor-test/>` image.
+Make sure that `vagrant` and `virtualbox` are installed and run the
+following commands in the root of this repository:
+
+::
+
+    # Setup virtual machine using `Vagrantfile`
+    vagrant up
+    # Run the tests
+    vagrant ssh -- sudo bash /root/testing/vagrant-run-tests.sh
