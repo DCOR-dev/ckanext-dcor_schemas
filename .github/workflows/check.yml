@@ -48,9 +48,11 @@ jobs:
           vagrant ssh -- sudo bash /testing/vagrant-run-tests.sh
       - name: Codecov
         run: |
+          # We have to run codecov outside of the VM, because it does not
+          # detect GitHub Actions.
           # Fetch coverage results from VM
           vagrant ssh-config > ssh_config
-          rsync -avH -e "ssh -F ./ssh_config" default:/testing/coverage.xml ./
+          rsync -avH -e "ssh -F ./ssh_config" default:/testing/.coverage ./
           # Run codecov
           pip install codecov
           codecov
