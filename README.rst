@@ -137,4 +137,4 @@ following commands in the root of this repository:
     # Setup virtual machine using `Vagrantfile`
     vagrant up
     # Run the tests
-    vagrant ssh -- sudo bash /root/testing/vagrant-run-tests.sh
+    vagrant ssh -- sudo bash /testing/vagrant-run-tests.sh
