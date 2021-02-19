@@ -32,8 +32,4 @@ jobs:
           vagrant up
       - name: Run tests
         run: |
-          vagrant ssh
-          export CKAN_INI=/etc/ckan/default/test-dcor.ini
-          cd /root/testing
-          pip install -e .
-          py.test --disable-warnings ckanext
+          vagrant ssh -- sudo bash /root/testing/vagrant-run-tests.sh
