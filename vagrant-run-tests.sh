@@ -6,6 +6,7 @@ export CKAN_INI=/etc/ckan/default/test-dcor.ini
 cd "$(dirname "${BASH_SOURCE[0]}")"
 # Install the package in editable mode for testing
 source /usr/lib/ckan/default/bin/activate
+ckan db init
 pip install codecov coverage
 pip install pytest-ckan
 pip install -e .
