@@ -40,9 +40,17 @@ jobs:
         run: |
           vagrant box update
           vagrant box prune
-      - name: Setup vagrant vm
+      - name: Setup vagrant VM
         run: |
           vagrant up
-      - name: Run tests
+      - name: Run tests in vagrant VM
         run: |
           vagrant ssh -- sudo bash /testing/vagrant-run-tests.sh
+      - name: Codecov
+        run: |
+          # Fetch coverage results from VM
+          vagrant ssh-config > ssh_config
+          rsync -avH -e "ssh -F ./ssh_config" default:/testing/coverage.xml ./
+          # Run codecov
+          pip install codecov
+          codecov

@@ -10,7 +10,5 @@ source /usr/lib/ckan/default/bin/activate
 dcor update --yes
 # Install the current package in editable mode for testing
 pip install -e .
-# run tests
+# run tests with coverage
 coverage run -m pytest -p no:warnings ckanext
-# submit code coverage
-codecov
