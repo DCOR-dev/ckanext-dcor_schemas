@@ -27,6 +27,19 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Cache vagrant images
+        uses: actions/cache@v2
+        env:
+          cache-name: vagrant-image
+        with:
+          path: ~/.vagrant.d
+          key: macos-build-${{ env.cache-name }}-${{ hashFiles('Vagrantfile') }}
+          restore-keys: |
+            macos-build-${{ env.cache-name }}-
+      - name: Get the latest box and remove old boxes from the GH Actions cache
+        run: |
+          vagrant box update
+          vagrant box prune
       - name: Setup vagrant vm
         run: |
           vagrant up
