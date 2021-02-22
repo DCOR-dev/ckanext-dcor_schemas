@@ -1,3 +1,5 @@
+0.12.4
+ - tests: implement testing pipeline using vagrant and GH Actions
 0.12.3
  - fix: regression where some dataset edit pages could not be accessed
  - fix: "private" key was not parsed correctly in auth.py when updating
