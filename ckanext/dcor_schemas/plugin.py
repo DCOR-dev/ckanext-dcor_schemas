@@ -86,11 +86,12 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         for key in DC_MIME_TYPES:
             mimetypes.add_type(key, DC_MIME_TYPES[key])
         # Set licenses path
-        here = pathlib.Path(__file__).parent
-        license_loc = "file://{}".format(here / "licenses.json")
-
         if not sys.argv.count("db"):
-            # workaround for https://github.com/ckan/ckan/issues/5580
+            # Workaround for https://github.com/ckan/ckan/issues/5580
+            # Only update the configuration options when we are not
+            # trying to do anything with the database (e.g. `ckan db clean`).
+            here = pathlib.Path(__file__).parent
+            license_loc = "file://{}".format(here / "licenses.json")
             toolkit.get_action('config_option_update')(
                 context={'ignore_auth': True, 'user': None},
                 data_dict={'licenses_group_url': license_loc}
@@ -103,7 +104,6 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             # making it available to be editable at runtime
             'licenses_group_url': [ignore_missing],
         })
-
         return schema
 
     # IDatasetForm
