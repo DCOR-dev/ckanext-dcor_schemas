@@ -10,6 +10,7 @@ source /usr/lib/ckan/default/bin/activate
 dcor update --yes
 # Install the current package in editable mode for testing
 pip install -e .
+pip install -r ckanext/dcor_schemas/tests/requirements.txt
 # run tests with coverage
 coverage run --source=ckanext.dcor_schemas -m pytest -p no:warnings ckanext
 # Get GitHub environment variables so codecov detects GH Actions (allow command to fail)

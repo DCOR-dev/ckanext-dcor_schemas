@@ -27,16 +27,11 @@ setup(
     packages=find_packages(exclude=['contrib', 'docs', 'tests*']),
     package_dir={name: name},
     namespace_packages=['ckanext'],
-    setup_requires=["pytest-runner"],
     install_requires=[
         # the "ckan" dependency is implied
         "dclab>=0.27.11",
         "dcor_shared>=0.2.8",
         "python-slugify",
-    ],
-    tests_require=[
-        "pytest>=6.2.2",
-        "pytest-ckan",
     ],
     include_package_data=True,
     # To provide executable scripts, use entry points in preference to the

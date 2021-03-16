@@ -1,3 +1,5 @@
+0.12.5
+ - setup: setup.py test is deprecated
 0.12.4
  - tests: implement testing pipeline using vagrant and GH Actions
 0.12.3
