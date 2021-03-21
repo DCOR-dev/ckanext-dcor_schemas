@@ -1,4 +1,6 @@
-0.12.5
+0.13.0
+ - feat: allow to optionally set a custom licenses_group_url
+   in ckan.ini without breaking things
  - setup: setup.py test is deprecated
 0.12.4
  - tests: implement testing pipeline using vagrant and GH Actions

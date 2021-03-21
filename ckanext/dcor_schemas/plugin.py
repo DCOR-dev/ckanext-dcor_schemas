@@ -3,7 +3,7 @@ import pathlib
 import sys
 
 from ckan.lib.plugins import DefaultPermissionLabels
-from ckan import logic
+from ckan import common, logic
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 
@@ -81,29 +81,32 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         # that CKAN will use this plugin's custom templates.
         toolkit.add_template_directory(config, 'templates')
         toolkit.add_resource('assets', 'dcor_schemas')
-        toolkit.add_public_directory(config, 'public')
         # Add RT-DC mime types
         for key in DC_MIME_TYPES:
             mimetypes.add_type(key, DC_MIME_TYPES[key])
-        # Set licenses path
-        if not sys.argv.count("db"):
+        # Set licenses path if no licenses_group_url was given
+        if not common.config.get("licenses_group_url", ""):
             # Workaround for https://github.com/ckan/ckan/issues/5580
             # Only update the configuration options when we are not
             # trying to do anything with the database (e.g. `ckan db clean`).
-            here = pathlib.Path(__file__).parent
-            license_loc = "file://{}".format(here / "licenses.json")
-            toolkit.get_action('config_option_update')(
-                context={'ignore_auth': True, 'user': None},
-                data_dict={'licenses_group_url': license_loc}
-            )
+            if not sys.argv.count("db"):
+                # use default license location from dcor_schemas
+                here = pathlib.Path(__file__).parent
+                license_loc = "file://{}".format(here / "licenses.json")
+                toolkit.get_action('config_option_update')(
+                    context={'ignore_auth': True, 'user': None},
+                    data_dict={'licenses_group_url': license_loc}
+                )
 
     def update_config_schema(self, schema):
         ignore_missing = toolkit.get_validator('ignore_missing')
-        schema.update({
-            # This is an existing CKAN core configuration option, we are just
-            # making it available to be editable at runtime
-            'licenses_group_url': [ignore_missing],
-        })
+        if not common.config.get("licenses_group_url", ""):
+            # Only update the schema if no licenses_group_url was given
+            schema.update({
+                # This is an existing CKAN core configuration option, we are
+                # just making it available to be editable at runtime
+                'licenses_group_url': [ignore_missing],
+            })
         return schema
 
     # IDatasetForm
