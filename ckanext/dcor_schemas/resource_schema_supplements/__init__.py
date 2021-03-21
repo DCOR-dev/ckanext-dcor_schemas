@@ -3,6 +3,7 @@ import functools
 import json
 import numbers
 import os
+import pathlib
 from pkg_resources import resource_listdir, resource_filename
 
 from ckan.common import config
@@ -164,21 +165,22 @@ def load_schema_supplements():
     if jd == "package":  # use package json files (in this directory here)
         module = "ckanext.dcor_schemas"
         submod = "resource_schema_supplements"
+        root = pathlib.Path(resource_filename(module, submod))
         filelist = resource_listdir(module, submod)
     else:  # use user-defined json files
         filelist = os.listdir(jd)
+        root = pathlib.Path(jd)
     jsons = sorted([fi for fi in filelist if fi.endswith(".json")])
     schemas = OrderedDict()
     for js in jsons:
-        pp = resource_filename(module + "." + submod, js)
         key = js.split("_", 1)[1][:-5]
-        with open(pp, "r") as fp:
+        with (root / js).open("r") as fp:
             try:
                 schemas[key] = json.load(fp)
                 assert key == schemas[key]["key"]
             except json.decoder.JSONDecodeError as e:
                 if not e.args:
                     e.args = ('',)
-                e.args = e.args + ("file {}".format(pp),)
+                e.args = e.args + ("file {}".format(root/js),)
                 raise e
     return schemas

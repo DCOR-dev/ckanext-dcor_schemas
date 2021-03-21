@@ -1,6 +1,7 @@
 0.13.0
  - feat: allow to optionally set a custom licenses_group_url
    in ckan.ini without breaking things
+ - fix: setting custom json_resource_schema_dir did not work
  - setup: setup.py test is deprecated
 0.12.4
  - tests: implement testing pipeline using vagrant and GH Actions
