@@ -231,8 +231,8 @@ def test_dataset_purge_anonymous():
                         )
     # assert: check that anonymous cannot purge it
     with pytest.raises(logic.NotAuthorized):
-        assert helpers.call_auth("dataset_purge", test_context,
-                                 id=dataset["id"])
+        helpers.call_auth("dataset_purge", test_context,
+                          id=dataset["id"])
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -252,8 +252,8 @@ def test_dataset_purge_draft():
                            activate=False)
     with pytest.raises(logic.NotAuthorized):
         # assert: cannot purge a draft
-        assert helpers.call_auth("dataset_purge", test_context,
-                                 id=dataset["id"])
+        helpers.call_auth("dataset_purge", test_context,
+                          id=dataset["id"])
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -352,9 +352,75 @@ def test_dataset_user_anonymous():
                           id=ds["id"])
 
 
+@pytest.mark.ckan_config('ckanext.dcor_schemas.allow_public_datasets', False)
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_visibility_from_public_to_private():
+def test_dataset_visibility_create_public_if_not_allowed():
+    """do not allow creating public datasets if disallowed via config"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    # create a dataset
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth("package_create", test_context,
+                          authors="Peter Pan",
+                          license_id="CC-BY-4.0",
+                          title="test",
+                          owner_org=owner_org["name"],
+                          private=False,
+                          )
+
+
+@pytest.mark.ckan_config('ckanext.dcor_schemas.allow_public_datasets', True)
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_visibility_create_public_if_not_allowed_control():
+    """allow creating public datasets if allowed via config"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    # create a dataset
+    assert helpers.call_auth("package_create", test_context,
+                             authors="Peter Pan",
+                             license_id="CC-BY-4.0",
+                             title="test",
+                             owner_org=owner_org["name"],
+                             private=False,
+                             )
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_visibility_update_1_private2public_allowed():
+    """allow changing visibility from private to public"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    create_context = {'ignore_auth': False, 'user': user['name']}
+    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    # create a dataset
+    dataset, res = make_dataset(create_context, owner_org, with_resource=True,
+                                activate=True, private=True)
+    # assert: user should be able to make private dataset public
+    assert helpers.call_auth("package_patch", test_context,
+                             id=dataset["id"],
+                             private=False)
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_visibility_update_1_public2private_not_allowed():
     """do not allow to set the visibility of a public dataset to private"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -372,3 +438,56 @@ def test_dataset_visibility_from_public_to_private():
         helpers.call_auth("package_patch", test_context,
                           id=dataset["id"],
                           private=True)
+
+
+@pytest.mark.ckan_config('ckanext.dcor_schemas.allow_public_datasets', False)
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_visibility_update_2_private2public_not_allowed():
+    """
+    do not allow to change visibility from private to public if
+    ckanext.dcor_schemas.allow_public_datasets is False
+    """
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    create_context = {'ignore_auth': False, 'user': user['name']}
+    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    # create a dataset (no auth check done during testing, so we can create
+    # a public dataset)
+    dataset, res = make_dataset(create_context, owner_org, with_resource=True,
+                                activate=True, private=True)
+    # assert: changing private to public should not work
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth("package_patch", test_context,
+                          id=dataset["id"],
+                          private=False)
+
+
+@pytest.mark.ckan_config('ckanext.dcor_schemas.allow_public_datasets', False)
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_visibility_update_2_public2private_allowed():
+    """
+    allow to change visibility from public to private if
+    ckanext.dcor_schemas.allow_public_datasets is False
+    """
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    create_context = {'ignore_auth': True, 'user': user['name']}
+    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    # create a dataset (no auth check done during testing, so we can create
+    # a public dataset)
+    dataset, res = make_dataset(create_context, owner_org, with_resource=True,
+                                activate=True, private=False, name="test")
+    # assert: changing public to private should work
+    assert helpers.call_auth("package_patch", test_context,
+                             id=dataset["id"],
+                             private=True)

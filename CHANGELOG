@@ -1,3 +1,6 @@
+0.14.0
+ - feat: add new configuration option to disable public datasets
+   "ckanext.dcor_schemas.allow_public_datasets"
 0.13.0
  - feat: allow to optionally set a custom licenses_group_url
    in ckan.ini without breaking things

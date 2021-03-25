@@ -1,5 +1,5 @@
 import ckan.authz as authz
-from ckan.common import asbool
+from ckan.common import asbool, config
 from ckan import logic
 import ckan.plugins.toolkit as toolkit
 
@@ -74,9 +74,21 @@ def package_create(context, data_dict):
     else:
         if not authz.has_user_permission_for_group_or_org(
                 org_id, user, 'create_dataset'):
+            # user is not allowed to add datasets to the group
             return {'success': False,
                     'msg': 'User {} not authorized to add '.format(user)
                            + 'datasets to circle {}!'.format(org_id)}
+        # Use our own configuration option to determine whether the
+        # admin has disabled public datasets (e.g. for DCOR-med).
+        must_be_private = not config.get(
+            "ckanext.dcor_schemas.allow_public_datasets", True)
+        private_default = must_be_private  # public if not has to be private
+        is_private = asbool(data_dict.get('private', private_default))
+        if must_be_private and not is_private:
+            return {"success": False,
+                    "msg": "Creating public datasets has been disabled via "
+                           "the configuration option 'ckanext.dcor_schemas."
+                           "allow_public_datasets = false'!"}
 
     return {"success": True}
 
@@ -134,11 +146,29 @@ def package_update(context, data_dict=None):
     if pkg_dict["state"] != "draft" and data_dict.get("state") == "draft":
         return {'success': False,
                 'msg': 'Changing dataset state to draft not allowed'}
-    # do not allow setting the visibility from public to private
-    if not pkg_dict["private"] and asbool(data_dict.get("private", False)):
-        assert isinstance(pkg_dict["private"], bool)
-        return {'success': False,
-                'msg': 'Changing visibility to private not allowed'}
+    # private dataset?
+    must_be_private = not config.get(
+        "ckanext.dcor_schemas.allow_public_datasets", True)
+    private_default = must_be_private  # public if not has to be private
+    is_private = asbool(data_dict.get('private', private_default))
+    was_private = pkg_dict["private"]
+    assert isinstance(was_private, bool)
+    if must_be_private:
+        # has to be private
+        if not is_private:
+            # do not allow setting visibility from private to public if public
+            # datasets are not allowed
+            return {"success": False,
+                    "msg": "Public datasets have been disabled via "
+                           "the configuration option 'ckanext."
+                           "dcor_schemas.allow_public_datasets = false'!"}
+    else:
+        # does not have to be private
+        if not was_private and is_private:
+            # do not allow setting the visibility from public to private
+            return {'success': False,
+                    'msg': 'Changing visibility to private not allowed'}
+
     # do not allow changing some of the keys
     prohibited_keys = ["name"]
     invalid = {}

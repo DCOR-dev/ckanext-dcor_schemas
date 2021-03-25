@@ -85,6 +85,8 @@ accordingly:
 
 - Configuration keywords:
 
+  - the ``ckanext.dcor_schemas.allow_public_datasets`` boolean parameter
+    can be used to disable the creation of public datasets (e.g. for DCOR-med).
   - the ``ckanext.dcor_schemas.json_resource_schema_dir`` parameter
     can be used to specify a directory containing .json files that
     define the supplementary resource schema. The default is
