@@ -352,7 +352,7 @@ def test_dataset_user_anonymous():
                           id=ds["id"])
 
 
-@pytest.mark.ckan_config('ckanext.dcor_schemas.allow_public_datasets', False)
+@pytest.mark.ckan_config('ckanext.dcor_schemas.allow_public_datasets', "false")
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_dataset_visibility_create_public_if_not_allowed():
@@ -375,7 +375,7 @@ def test_dataset_visibility_create_public_if_not_allowed():
                           )
 
 
-@pytest.mark.ckan_config('ckanext.dcor_schemas.allow_public_datasets', True)
+@pytest.mark.ckan_config('ckanext.dcor_schemas.allow_public_datasets', "true")
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_dataset_visibility_create_public_if_not_allowed_control():
@@ -397,6 +397,7 @@ def test_dataset_visibility_create_public_if_not_allowed_control():
                              )
 
 
+@pytest.mark.ckan_config('ckanext.dcor_schemas.allow_public_datasets', "true")
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_dataset_visibility_update_1_private2public_allowed():
@@ -418,6 +419,7 @@ def test_dataset_visibility_update_1_private2public_allowed():
                              private=False)
 
 
+@pytest.mark.ckan_config('ckanext.dcor_schemas.allow_public_datasets', "true")
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_dataset_visibility_update_1_public2private_not_allowed():
@@ -440,13 +442,13 @@ def test_dataset_visibility_update_1_public2private_not_allowed():
                           private=True)
 
 
-@pytest.mark.ckan_config('ckanext.dcor_schemas.allow_public_datasets', False)
+@pytest.mark.ckan_config('ckanext.dcor_schemas.allow_public_datasets', "false")
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_dataset_visibility_update_2_private2public_not_allowed():
     """
     do not allow to change visibility from private to public if
-    ckanext.dcor_schemas.allow_public_datasets is False
+    ckanext.dcor_schemas.allow_public_datasets is false
     """
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -467,13 +469,13 @@ def test_dataset_visibility_update_2_private2public_not_allowed():
                           private=False)
 
 
-@pytest.mark.ckan_config('ckanext.dcor_schemas.allow_public_datasets', False)
+@pytest.mark.ckan_config('ckanext.dcor_schemas.allow_public_datasets', "false")
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_dataset_visibility_update_2_public2private_allowed():
     """
     allow to change visibility from public to private if
-    ckanext.dcor_schemas.allow_public_datasets is False
+    ckanext.dcor_schemas.allow_public_datasets is false
     """
     user = factories.User()
     owner_org = factories.Organization(users=[{

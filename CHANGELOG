@@ -1,4 +1,6 @@
 0.14.1
+ - fix: ckanext.dcor_schemas.allow_public_datasets was not parsed
+   correctly (string == True instead of boolean)
  - ci: fix codecov
 0.14.0
  - feat: add new configuration option to disable public datasets

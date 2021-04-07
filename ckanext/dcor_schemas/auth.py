@@ -80,8 +80,8 @@ def package_create(context, data_dict):
                            + 'datasets to circle {}!'.format(org_id)}
         # Use our own configuration option to determine whether the
         # admin has disabled public datasets (e.g. for DCOR-med).
-        must_be_private = not config.get(
-            "ckanext.dcor_schemas.allow_public_datasets", True)
+        must_be_private = not asbool(config.get(
+            "ckanext.dcor_schemas.allow_public_datasets", "true"))
         private_default = must_be_private  # public if not has to be private
         is_private = asbool(data_dict.get('private', private_default))
         if must_be_private and not is_private:
@@ -147,8 +147,8 @@ def package_update(context, data_dict=None):
         return {'success': False,
                 'msg': 'Changing dataset state to draft not allowed'}
     # private dataset?
-    must_be_private = not config.get(
-        "ckanext.dcor_schemas.allow_public_datasets", True)
+    must_be_private = not asbool(config.get(
+        "ckanext.dcor_schemas.allow_public_datasets", "true"))
     private_default = must_be_private  # public if not has to be private
     is_private = asbool(data_dict.get('private', private_default))
     was_private = pkg_dict["private"]
