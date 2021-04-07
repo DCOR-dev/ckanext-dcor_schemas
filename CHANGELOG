@@ -1,3 +1,5 @@
+0.14.1
+ - ci: fix codecov
 0.14.0
  - feat: add new configuration option to disable public datasets
    "ckanext.dcor_schemas.allow_public_datasets"
