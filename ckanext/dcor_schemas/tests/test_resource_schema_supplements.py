@@ -1,4 +1,5 @@
 from ckanext.dcor_schemas import resource_schema_supplements as rss
+import pytest
 
 
 def test_check_types():
@@ -21,6 +22,16 @@ def test_check_units():
                 msg = "Invalid unit [{}]:{} '{}'".format(
                     section, item["key"], item["unit"])
                 assert isinstance(item["unit"], str), msg
+
+
+@pytest.mark.parametrize("invalid_date", ["2011-15-01", "peter", "2020-1212"])
+def test_date_string(invalid_date):
+    try:
+        rss.SupplementItem.from_composite(
+                composite_key="sp:chip:production date",
+                composite_value=invalid_date)  # invalid date
+    except ValueError:
+        pass
 
 
 def test_composite_loop():

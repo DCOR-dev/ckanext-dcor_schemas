@@ -1,4 +1,5 @@
 from collections import OrderedDict
+import datetime
 import functools
 import json
 import numbers
@@ -9,9 +10,19 @@ from pkg_resources import resource_listdir, resource_filename
 from ckan.common import config
 
 
+def validate_date(value):
+    try:
+        datetime.datetime.strptime(value, '%Y-%m-%d')
+    except BaseException:
+        return False
+    else:
+        return True
+
+
 #: Parses from and to composite values
 PARSERS = {
     "boolean": lambda x: str(x).lower() in ["true", "yes"],
+    "date": str,
     "float": float,
     "integer": int,
     "list": lambda x: " ".join([y.strip() for y in x.split()]),
@@ -21,10 +32,21 @@ PARSERS = {
 #: Data types of supplements
 CLASSES = {
     "boolean": bool,
+    "date": str,
     "float": numbers.Real,
     "integer": numbers.Integral,
     "list": str,
     "string": str,
+}
+
+#: Data type validators
+VALIDATORS = {
+    "boolean": lambda x: isinstance(x, bool),
+    "date": validate_date,
+    "float": lambda x: isinstance(x, numbers.Real),
+    "integer": lambda x: isinstance(x, numbers.Integral),
+    "list": lambda x: isinstance(x, str),
+    "string": lambda x: isinstance(x, str),
 }
 
 
@@ -90,12 +112,12 @@ class SupplementItem(object):
     def set_value(self, value):
         """Set a value of the key, perform checks"""
         # Check for type
-        if not isinstance(value, CLASSES[self["type"]]):
+        if not VALIDATORS[self["type"]](value):
             raise ValueError(
-                "Class type for '{}', should be ".format(self.key)
-                + "'{}', but got '{}' ('{}')!".format(CLASSES[self["type"]],
-                                                      type(value),
-                                                      value))
+                f"Invalid value for '{self.key}'! You were supposed to pass "
+                f"an object of type '{self['type']}'/{CLASSES[self['type']]} "
+                f"but you gave me an instance of {type(value)} with a value "
+                f"of '{value}'!")
         self.value = value
 
 
