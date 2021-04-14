@@ -45,21 +45,6 @@
    "hint": "Detailed information about the chip used",
    "type": "string"
    },
-  {"key": "chip measurement count",
-   "name": "Chip measurement",
-   "hint": "If multiple measurements are done on the same chip, this is the nth measurement",
-   "type": "integer",
-   "options": [">0"],
-   "example": 1
-   },
-  {"key": "channel width",
-   "name": "Exact channel width",
-   "unit": "µm",
-   "hint": "The exact channel width with submicron resolution might vary from batch to batch",
-   "type": "float",
-   "options": [">0"],
-   "example": 20.04
-   },
   {"key": "tubing",
    "name": "Tubing",
    "hint": "Describe the type of tubing used",
