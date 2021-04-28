@@ -171,8 +171,14 @@ def dataset_state(key, data, errors, context):
     """If a dataset does not have any resources, it must be a draft"""
     data_dict = df.unflatten(data)
 
-    if "resources" not in data_dict or len(data_dict["resources"]) == 0:
-        data[key] = "draft"
+    if (data[key] == "active"
+        and ("resources" not in data_dict
+             or len(data_dict["resources"]) == 0)):
+        # The user wants to activate the dataset although it does not
+        # contain any resources. This is not possible!
+        raise toolkit.Invalid(
+            "Cannot set state of dataset to 'active', because it does not "
+            "contain any resources!")
 
 
 def resource_dc_config(key, data, errors, context):

@@ -79,7 +79,7 @@ def test_dataset_doi_remove_url():
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_dataset_draft_no_resources():
-    """a dataset without resources is considered to be a draft"""
+    """a dataset without resources is cannot be activated"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
         'name': user['id'],
@@ -88,9 +88,9 @@ def test_dataset_draft_no_resources():
     # Note: `call_action` bypasses authorization!
     create_context = {'ignore_auth': False, 'user': user['name']}
 
-    ds = make_dataset(create_context, owner_org, with_resource=False,
-                      activate=True)
-    assert ds["state"] == "draft"
+    with pytest.raises(logic.ValidationError):
+        make_dataset(create_context, owner_org, with_resource=False,
+                     activate=True)
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
