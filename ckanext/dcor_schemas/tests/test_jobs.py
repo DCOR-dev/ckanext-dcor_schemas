@@ -174,3 +174,36 @@ def test_set_sha256_job(enqueue_job_mock, create_with_upload, monkeypatch,
     assert dcor_shared.get_resource_path(result["id"]).exists()
     sha = "490efdf5d9bb4cd4b2a6bcf2fe54d4dc201c38530140bcb168980bf8bf846c73"
     assert resource["sha256"] == sha
+
+
+# We need the dcor_depot extension to make sure that the symbolic-
+# linking pipeline is used.
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_depot')
+@pytest.mark.usefixtures('clean_db', 'with_request_context')
+@mock.patch('ckan.plugins.toolkit.enqueue_job',
+            side_effect=synchronous_enqueue_job)
+def test_set_sha256_job_empty_file(enqueue_job_mock, create_with_upload,
+                                   monkeypatch, ckan_config, tmpdir):
+    monkeypatch.setitem(ckan_config, 'ckan.storage_path', str(tmpdir))
+    monkeypatch.setattr(ckan.lib.uploader, '_storage_path', str(tmpdir))
+
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    # create 1st dataset
+    create_context = {'ignore_auth': False, 'user': user['name']}
+    dataset = make_dataset(create_context, owner_org, with_resource=False,
+                           activate=False)
+    result = create_with_upload(
+        b"", 'test.ini',
+        url="upload",
+        package_id=dataset["id"],
+        context=create_context,
+    )
+    resource = helpers.call_action("resource_show", id=result["id"])
+    assert dcor_shared.get_resource_path(result["id"]).exists()
+    sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    assert resource["sha256"] == sha256
