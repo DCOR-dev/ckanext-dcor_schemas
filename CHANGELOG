@@ -1,3 +1,5 @@
+0.14.4
+ - fix: allow uploading .ini files to DCOR
 0.14.3
  - fix: raise tk.Invalid when the state of a package is set to "active"
    and it does not have any resources

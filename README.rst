@@ -40,7 +40,7 @@ accordingly:
   - resources: custom resource name is overridden during upload
   - resources: do not allow weird characters in resource names
   - resources: restrict upload data extensions to .rtdc, .csv, .tsv, .pdf,
-    .txt, .png, .jpg, .tif, .py, .ipynb
+    .txt, .png, .jpg, .tif, .py, .ipynb, .ini
   - resources: configuration metadata (using `dclab.dfn.config_funcs`)
 
 - IPermissionLabels (plugin.py)

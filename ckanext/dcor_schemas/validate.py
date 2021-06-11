@@ -20,6 +20,8 @@ RESOURCE_CHARS = "abcdefghijklmnopqrstuvwxyz" \
 RESOURCE_EXTS = [
     # data
     ".rtdc",
+    # metadata
+    ".ini",
     # tables
     ".csv",
     ".tsv",
