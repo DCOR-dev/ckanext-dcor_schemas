@@ -1,3 +1,6 @@
+0.14.6
+ - fix: remove redunant entry for "chip: comment" in the "experiment"
+   section of the supplementary resource metadata schema
 0.14.5
  - tests: increase coverage for empty uploads
  - build: bump dcor_shared from 0.2.8 to 0.2.9 (handle small files)

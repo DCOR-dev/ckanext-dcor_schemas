@@ -40,11 +40,6 @@
    "options": [">0"],
    "example": 127.4
    },
-  {"key": "chip specification",
-   "name": "Chip specification",
-   "hint": "Detailed information about the chip used",
-   "type": "string"
-   },
   {"key": "tubing",
    "name": "Tubing",
    "hint": "Describe the type of tubing used",
