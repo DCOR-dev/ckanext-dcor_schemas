@@ -1,3 +1,5 @@
+0.14.7
+ - setup: bump dclab to 0.35.1
 0.14.6
  - fix: remove redunant entry for "chip: comment" in the "experiment"
    section of the supplementary resource metadata schema

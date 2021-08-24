@@ -29,7 +29,7 @@ setup(
     namespace_packages=['ckanext'],
     install_requires=[
         # the "ckan" dependency is implied
-        "dclab>=0.27.11",
+        "dclab>=0.35.1",
         "dcor_shared>=0.2.9",
         "python-slugify",
     ],
