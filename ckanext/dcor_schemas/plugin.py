@@ -273,7 +273,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                             [resource],
                             title="Set SHA256 hash for resource",
                             queue="dcor-normal",
-                            rq_kwargs={"timeout": 500,
+                            rq_kwargs={"timeout": 1000,
                                        "job_id": jids})
 
         if resource.get('mimetype') in DC_MIME_TYPES:
@@ -282,7 +282,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                                 [resource],
                                 title="Set mimetype for resource",
                                 queue="dcor-short",
-                                rq_kwargs={"timeout": 60,
+                                rq_kwargs={"timeout": 500,
                                            "job_id": jidm})
 
             jidp = "-".join([resource["id"], resource["name"], "dcparms"])
@@ -290,7 +290,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                                 [resource],
                                 title="Set DC parameters for resource",
                                 queue="dcor-normal",
-                                rq_kwargs={"timeout": 60,
+                                rq_kwargs={"timeout": 500,
                                            "job_id": jidp})
 
     def before_create(self, context, resource):

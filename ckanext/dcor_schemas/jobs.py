@@ -3,7 +3,8 @@ import hashlib
 from ckan import logic
 
 import dclab
-from dcor_shared import DC_MIME_TYPES, get_resource_path, wait_for_resource
+from dcor_shared import (
+    DC_MIME_TYPES, VALID_FORMATS, get_resource_path, wait_for_resource)
 
 
 def admin_context():
@@ -20,7 +21,8 @@ def patch_resource_noauth(package_id, resource_id, data_dict):
 
 def set_dc_config_job(resource):
     """Store all DC config metadata"""
-    if resource.get('mimetype') in DC_MIME_TYPES:
+    if (resource.get('mimetype') in DC_MIME_TYPES
+            and resource.get("dc:setup:channel width", None) is None):
         path = get_resource_path(resource["id"])
         wait_for_resource(path)
         data_dict = {}
@@ -36,11 +38,14 @@ def set_dc_config_job(resource):
             package_id=resource["package_id"],
             resource_id=resource["id"],
             data_dict=data_dict)
+        return True
+    return False
 
 
 def set_format_job(resource):
     """Writes the correct format to the resource metadata"""
-    if resource.get('mimetype') in DC_MIME_TYPES:
+    if (resource.get('mimetype') in DC_MIME_TYPES
+            and resource.get("format") not in VALID_FORMATS):
         path = get_resource_path(resource["id"])
         wait_for_resource(path)
         with dclab.rtdc_dataset.check.IntegrityChecker(path) as ic:
@@ -52,6 +57,8 @@ def set_format_job(resource):
             package_id=resource["package_id"],
             resource_id=resource["id"],
             data_dict={"format": fmt})
+        return True
+    return False
 
 
 def set_sha256_job(resource):
@@ -72,3 +79,5 @@ def set_sha256_job(resource):
             package_id=resource["package_id"],
             resource_id=resource["id"],
             data_dict={"sha256": sha256sum})
+        return True
+    return False

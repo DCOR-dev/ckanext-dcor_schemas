@@ -105,6 +105,8 @@ accordingly:
 
   - add CKAN command `list-zombie-users` for users with no datasets and
     no activity for a certain amount of time
+  - add CKAN command `run_jobs_dcor_schemas` that runs all background
+    jobs for all resources (if not already done)
 
 
 Installation

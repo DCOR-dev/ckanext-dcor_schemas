@@ -30,7 +30,7 @@ setup(
     install_requires=[
         # the "ckan" dependency is implied
         "dclab>=0.35.1",
-        "dcor_shared>=0.2.9",
+        "dcor_shared>=0.2.10",
         "python-slugify",
     ],
     include_package_data=True,
