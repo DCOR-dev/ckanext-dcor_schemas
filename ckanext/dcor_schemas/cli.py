@@ -38,11 +38,11 @@ def run_jobs_dcor_schemas():
     """Set SHA256 sums for all resources (including draft datasets)"""
     # go through all datasets
     datasets = model.Session.query(model.Package)
+    nl = False  # new line character
     for dataset in datasets:
         click.echo(f"Checking dataset {dataset.id}\r", nl=False)
         for resource in dataset.resources:
             res_dict = resource.as_dict()
-            nl = False  # new line character
             if jobs.set_format_job(res_dict):
                 click.echo("")
                 nl = True
@@ -56,6 +56,8 @@ def run_jobs_dcor_schemas():
                 if not nl:
                     click.echo("")
                 click.echo(f"Updated config for {resource.name}")
+    if not nl:
+        click.echo("")
     click.echo("Done!")
 
 
