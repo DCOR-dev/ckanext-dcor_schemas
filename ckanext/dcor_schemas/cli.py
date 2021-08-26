@@ -40,6 +40,7 @@ def run_jobs_dcor_schemas():
     datasets = model.Session.query(model.Package)
     nl = False  # new line character
     for dataset in datasets:
+        nl = False
         click.echo(f"Checking dataset {dataset.id}\r", nl=False)
         for resource in dataset.resources:
             res_dict = resource.as_dict()
@@ -56,7 +57,8 @@ def run_jobs_dcor_schemas():
                 if not nl:
                     click.echo("")
                 click.echo(f"Updated config for {resource.name}")
-    click.echo("")
+    if not nl:
+        click.echo("")
     click.echo("Done!")
 
 
