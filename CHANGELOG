@@ -1,6 +1,6 @@
 0.15.0
  - feat: add new "run-jobs-dcor-schemas" CLI command that runs all
-   background jobs on all datasets
+   background jobs on all dataset resources
  - enh: increase timeout values for jobs (things might be slower
    if `/data` is a network share)
  - setup: bump dcor_shared from 0.2.9 to 0.2.10
