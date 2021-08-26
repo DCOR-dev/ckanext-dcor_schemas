@@ -56,8 +56,7 @@ def run_jobs_dcor_schemas():
                 if not nl:
                     click.echo("")
                 click.echo(f"Updated config for {resource.name}")
-    if not nl:
-        click.echo("")
+    click.echo("")
     click.echo("Done!")
 
 
