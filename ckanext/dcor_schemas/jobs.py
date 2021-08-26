@@ -44,8 +44,9 @@ def set_dc_config_job(resource):
 
 def set_format_job(resource):
     """Writes the correct format to the resource metadata"""
-    if (resource.get('mimetype') in DC_MIME_TYPES
-            and resource.get("format") not in VALID_FORMATS):
+    mimetype = resource.get("mimetype")
+    if (mimetype in DC_MIME_TYPES
+            and resource.get("format", mimetype) == mimetype):
         path = get_resource_path(resource["id"])
         wait_for_resource(path)
         with dclab.rtdc_dataset.check.IntegrityChecker(path) as ic:
