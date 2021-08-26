@@ -3,8 +3,7 @@ import hashlib
 from ckan import logic
 
 import dclab
-from dcor_shared import (
-    DC_MIME_TYPES, VALID_FORMATS, get_resource_path, wait_for_resource)
+from dcor_shared import DC_MIME_TYPES, get_resource_path, wait_for_resource
 
 
 def admin_context():
@@ -45,8 +44,9 @@ def set_dc_config_job(resource):
 def set_format_job(resource):
     """Writes the correct format to the resource metadata"""
     mimetype = resource.get("mimetype")
-    if (mimetype in DC_MIME_TYPES
-            and resource.get("format", mimetype) == mimetype):
+    rformat = resource.get("format")
+    if mimetype in DC_MIME_TYPES and rformat in [mimetype, None]:
+        # (if format is already something like RT-FDC then we don't do this)
         path = get_resource_path(resource["id"])
         wait_for_resource(path)
         with dclab.rtdc_dataset.check.IntegrityChecker(path) as ic:
@@ -54,11 +54,12 @@ def set_format_job(resource):
                 fmt = "RT-FDC"
             else:
                 fmt = "RT-DC"
-        patch_resource_noauth(
-            package_id=resource["package_id"],
-            resource_id=resource["id"],
-            data_dict={"format": fmt})
-        return True
+        if rformat != fmt:  # only update if necessary
+            patch_resource_noauth(
+                package_id=resource["package_id"],
+                resource_id=resource["id"],
+                data_dict={"format": fmt})
+            return True
     return False
 
 
