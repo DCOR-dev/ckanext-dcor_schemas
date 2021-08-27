@@ -1,3 +1,5 @@
+0.15.1
+ - enh: allow resources with .poly and .sof suffix
 0.15.0
  - feat: add new "run-jobs-dcor-schemas" CLI command that runs all
    background jobs on all dataset resources
