@@ -44,13 +44,13 @@ def get_valid_licenses(license_id):
 
 
 def license_options(existing_license_id="none"):
-    '''Returns [(l.title, l.id), ...] for the licenses configured to be
+    """Returns [(l.title, l.id), ...] for the licenses configured to be
     offered. Always includes the existing_license_id, if supplied.
 
     DCOR edits:
      - prohibit license downgrade
      - still allow licenses not defined in LICENSE_RATING
-    '''
+    """
     register = model.Package.get_license_register()
     sorted_licenses = sorted(register.values(), key=lambda x: x.title)
     license_ids = [lic.id for lic in sorted_licenses]
