@@ -1,3 +1,7 @@
+0.15.2
+ - fix: run all background jobs sequentially to avoid race conditions
+   with package_revise
+ - ref: change background job IDs to "{package_id}_{position}_{task}}"
 0.15.1
  - enh: allow resources with .poly and .sof suffix
 0.15.0

@@ -1,7 +1,9 @@
+import copy
 import mimetypes
 import pathlib
 import sys
 
+from ckan.common import config
 from ckan.lib.plugins import DefaultPermissionLabels
 from ckan import common, logic
 import ckan.plugins as plugins
@@ -268,30 +270,57 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
     # IResourceController
     def after_create(self, context, resource):
         """Add custom jobs"""
-        jids = "-".join([resource["id"], resource["name"], "sha256"])
-        toolkit.enqueue_job(jobs.set_sha256_job,
-                            [resource],
-                            title="Set SHA256 hash for resource",
-                            queue="dcor-normal",
-                            rq_kwargs={"timeout": 1000,
-                                       "job_id": jids})
+        # It turns out that package_revise might not be as atomic as I
+        # thought (because it also calls package_show). Therefore, we
+        # make all the jobst that interact with the database sequential.
+        depends_on = []
+        extensions = [config.get("ckan.plugins")]
 
+        for ii in range(resource['position']):
+            # depend on completion of previous resources
+            depends_on.append(f"{resource['package_id']}_{ii}_sha256")
+
+        package_job_id = f"{resource['package_id']}_{resource['position']}_"
+
+        # Are we waiting for symlinking (ckanext-dcor_depot)?
+        # (This makes wait_for_resource really fast ;)
+        if "dcor_depot" in extensions:
+            # Wait for the resource to be moved to the depot.
+            jid_sl = package_job_id + "symlink"
+            depends_on.append(jid_sl)
+
+        # Add the fast jobs first.
         if resource.get('mimetype') in DC_MIME_TYPES:
-            jidm = "-".join([resource["id"], resource["name"], "mimetype"])
+            jid_form = package_job_id + "format"
             toolkit.enqueue_job(jobs.set_format_job,
                                 [resource],
                                 title="Set mimetype for resource",
                                 queue="dcor-short",
-                                rq_kwargs={"timeout": 500,
-                                           "job_id": jidm})
+                                rq_kwargs={
+                                    "timeout": 500,
+                                    "job_id": jid_form,
+                                    "depends_on": copy.copy(depends_on)})
+            depends_on.append(jid_form)
 
-            jidp = "-".join([resource["id"], resource["name"], "dcparms"])
+            jid_par = package_job_id + "dcparms"
             toolkit.enqueue_job(jobs.set_dc_config_job,
                                 [resource],
                                 title="Set DC parameters for resource",
                                 queue="dcor-normal",
-                                rq_kwargs={"timeout": 500,
-                                           "job_id": jidp})
+                                rq_kwargs={
+                                    "timeout": 500,
+                                    "job_id": jid_par,
+                                    "depends_on": copy.copy(depends_on)})
+            depends_on.append(jid_par)
+
+        # The SHA256 job comes last.
+        toolkit.enqueue_job(jobs.set_sha256_job,
+                            [resource],
+                            title="Set SHA256 hash for resource",
+                            queue="dcor-normal",
+                            rq_kwargs={"timeout": 3600,
+                                       "job_id": package_job_id + "sha256",
+                                       "depends_on": copy.copy(depends_on)})
 
     def before_create(self, context, resource):
         if "upload" in resource:
