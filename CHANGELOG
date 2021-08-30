@@ -1,3 +1,5 @@
+0.15.3
+ - setup: bump rq to >=1.8.0, because we need multiple job dependencies
 0.15.2
  - fix: run all background jobs sequentially to avoid race conditions
    with package_revise

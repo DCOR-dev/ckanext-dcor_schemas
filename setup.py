@@ -32,6 +32,10 @@ setup(
         "dclab>=0.35.1",
         "dcor_shared>=0.2.10",
         "python-slugify",
+        # The default rq version in CKAN is 1.0. We want version 1.8 or
+        # above, since we have to specify multiple dependencies in the
+        # jobs.
+        "rq>=1.9,<2",
     ],
     include_package_data=True,
     # To provide executable scripts, use entry points in preference to the
