@@ -34,20 +34,20 @@ def list_zombie_users(last_activity_weeks=12):
         click.echo(user.name)
 
 
-@click.option('--days', default=0,
+@click.option('--modified-days', default=-1,
               help='Only run for datasets modified within this number of days "'
                    + 'in the past. Set to zero to apply to all datasets.')
 @click.command()
-def run_jobs_dcor_schemas(days=0):
+def run_jobs_dcor_schemas(modified_days=-1):
     """Set .rtdc metadata and SHA256 sums and for all resources
 
     This also happens for draft datasets.
     """
     datasets = model.Session.query(model.Package)
 
-    if days >= 0:
+    if modified_days >= 0:
         # Search only the last `days` days.
-        past = datetime.date.today() - datetime.timedelta(days=days)
+        past = datetime.date.today() - datetime.timedelta(days=modified_days)
         past_str = time.strftime("%Y-%m-%d", past.timetuple())
         datasets = datasets.filter(model.Package.metadata_modified >= past_str)
 
