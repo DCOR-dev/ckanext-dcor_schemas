@@ -35,8 +35,8 @@ def list_zombie_users(last_activity_weeks=12):
 
 
 @click.option('--modified-days', default=-1,
-              help='Only run for datasets modified within this number of days "'
-                   + 'in the past. Set to zero to apply to all datasets.')
+              help='Only run for datasets modified within this number of days '
+                   + 'in the past. Set to -1 to apply to all datasets.')
 @click.command()
 def run_jobs_dcor_schemas(modified_days=-1):
     """Set .rtdc metadata and SHA256 sums and for all resources
