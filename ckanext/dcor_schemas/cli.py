@@ -1,3 +1,4 @@
+import datetime
 import time
 
 import ckan.model as model
@@ -33,11 +34,23 @@ def list_zombie_users(last_activity_weeks=12):
         click.echo(user.name)
 
 
+@click.option('--days', default=0,
+              help='Only run for datasets modified within this number of days "'
+                   + 'in the past. Set to zero to apply to all datasets.')
 @click.command()
-def run_jobs_dcor_schemas():
-    """Set SHA256 sums for all resources (including draft datasets)"""
-    # go through all datasets
+def run_jobs_dcor_schemas(days=0):
+    """Set .rtdc metadata and SHA256 sums and for all resources
+
+    This also happens for draft datasets.
+    """
     datasets = model.Session.query(model.Package)
+
+    if days >= 0:
+        # Search only the last `days` days.
+        past = datetime.date.today() - datetime.timedelta(days=days)
+        past_str = time.strftime("%Y-%m-%d", past.timetuple())
+        datasets = datasets.filter(model.Package.metadata_modified >= past_str)
+
     nl = False  # new line character
     for dataset in datasets:
         nl = False
@@ -45,8 +58,9 @@ def run_jobs_dcor_schemas():
         for resource in dataset.resources:
             res_dict = resource.as_dict()
             if jobs.set_format_job(res_dict):
-                click.echo("")
-                nl = True
+                if not nl:
+                    click.echo("")
+                    nl = True
                 click.echo(f"Updated format for {resource.name}")
             if jobs.set_sha256_job(res_dict):
                 if not nl:
