@@ -1,3 +1,5 @@
+0.15.5
+ - setup: bump rq to actual supported version
 0.15.4
  - enh: add --modified-days argument to CLI run-jobs-dcor-schemas
 0.15.3

@@ -35,7 +35,7 @@ setup(
         # The default rq version in CKAN is 1.0. We want version 1.8 or
         # above, since we have to specify multiple dependencies in the
         # jobs.
-        "rq>=1.9,<2",
+        "rq>=1.10,<2",
     ],
     include_package_data=True,
     # To provide executable scripts, use entry points in preference to the

@@ -272,7 +272,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         """Add custom jobs"""
         # It turns out that package_revise might not be as atomic as I
         # thought (because it also calls package_show). Therefore, we
-        # make all the jobst that interact with the database sequential.
+        # make all the jobs that interact with the database sequential.
         depends_on = []
         extensions = [config.get("ckan.plugins")]
 
