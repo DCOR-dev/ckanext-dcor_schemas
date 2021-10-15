@@ -45,6 +45,39 @@ def test_dataset_add_resources_only_to_drafts():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_add_resources_only_to_drafts_package_revise():
+    """do not allow adding resources to non-draft datasets"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    create_context = {'ignore_auth': False, 'user': user['name']}
+    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    # create a dataset
+    dataset, _ = make_dataset(create_context, owner_org, with_resource=True,
+                              activate=True)
+    # assert: adding resources to active datasets forbidden
+    path = data_path / "calibration_beads_47.rtdc"
+    with path.open('rb') as fd:
+        upload = cgi.FieldStorage()
+        upload.filename = path.name
+        upload.file = fd
+        with pytest.raises(logic.NotAuthorized):
+            helpers.call_auth(
+                "package_revise", test_context,
+                **{"update": {
+                       "id": dataset["id"],
+                       "resources": {
+                           "extend": [{"name": "peter.rtdc"}],
+                           "-1": {"upload": ("peter.rtdc", fd)}
+                       }},
+                   })
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_dataset_create_anonymous():
     """anonymous cannot create dataset"""
     # Note: `call_action` bypasses authorization!

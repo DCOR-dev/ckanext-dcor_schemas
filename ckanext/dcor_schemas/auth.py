@@ -137,10 +137,18 @@ def package_update(context, data_dict=None):
         show_context,
         {'id': get_package_id(context, data_dict)})
 
-    state = pkg_dict.get('state')
-    if state != "draft":
-        return {"success": False,
-                "msg": "Only draft datasets can be updated!"}
+    # do not allow changing things and uploading resources to non-drafts
+    if pkg_dict.get('state') != "draft":
+        # these things are allowed to be in the data dictionary (see below)
+        allowed_keys = ["license_id",
+                        "private",
+                        "state",
+                        ]
+        for key in data_dict:
+            if data_dict[key] != pkg_dict.get(key) and key not in allowed_keys:
+                return {'success': False,
+                        'msg': f"Changing '{key}' not allowed for non-draft "
+                               + "datasets!"}
 
     # do not allow switching to a more restrictive license
     if "license_id" in data_dict:
@@ -148,10 +156,12 @@ def package_update(context, data_dict=None):
         if data_dict["license_id"] not in allowed:
             return {'success': False,
                     'msg': 'Cannot switch to more-restrictive license'}
+
     # do not allow setting state from "active" to "draft"
     if pkg_dict["state"] != "draft" and data_dict.get("state") == "draft":
         return {'success': False,
                 'msg': 'Changing dataset state to draft not allowed'}
+
     # private dataset?
     must_be_private = not asbool(config.get(
         "ckanext.dcor_schemas.allow_public_datasets", "true"))
@@ -175,7 +185,7 @@ def package_update(context, data_dict=None):
             return {'success': False,
                     'msg': 'Changing visibility to private not allowed'}
 
-    # do not allow changing some of the keys
+    # do not allow changing some of the keys (also for drafts)
     prohibited_keys = ["name"]
     invalid = {}
     for key in data_dict:
