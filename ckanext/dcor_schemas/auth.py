@@ -22,10 +22,10 @@ def dataset_purge(context, data_dict):
         'user': context['user'],
         'auth_user_obj': context['auth_user_obj'],
     }
-    package_dict = logic.get_action('package_show')(
+    pkg_dict = logic.get_action('package_show')(
         show_context,
         {'id': get_package_id(context, data_dict)})
-    state = package_dict.get('state')
+    state = pkg_dict.get('state')
     if state != "deleted":
         return {"success": False,
                 "msg": "Only deleted datasets can be purged!"}
@@ -107,10 +107,10 @@ def package_delete(context, data_dict):
         'user': context['user'],
         'auth_user_obj': context['auth_user_obj'],
     }
-    package_dict = logic.get_action('package_show')(
+    pkg_dict = logic.get_action('package_show')(
         show_context,
         {'id': get_package_id(context, data_dict)})
-    state = package_dict.get('state')
+    state = pkg_dict.get('state')
     if state != "draft":
         return {"success": False,
                 "msg": "Only draft datasets can be deleted!"}
@@ -136,6 +136,12 @@ def package_update(context, data_dict=None):
     pkg_dict = logic.get_action('package_show')(
         show_context,
         {'id': get_package_id(context, data_dict)})
+
+    state = pkg_dict.get('state')
+    if state != "draft":
+        return {"success": False,
+                "msg": "Only draft datasets can be updated!"}
+
     # do not allow switching to a more restrictive license
     if "license_id" in data_dict:
         allowed = dcor_helpers.get_valid_licenses(pkg_dict["license_id"])

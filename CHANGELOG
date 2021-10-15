@@ -1,3 +1,6 @@
+0.15.6
+ - fix: prevent removal or addition of resources to active datasets
+   via package_revise
 0.15.5
  - setup: bump rq to actual supported version
 0.15.4
