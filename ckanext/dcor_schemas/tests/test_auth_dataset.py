@@ -180,7 +180,6 @@ def test_dataset_update_resources_only_for_drafts_package_revise():
             }})
 
 
-
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_dataset_create_anonymous():
