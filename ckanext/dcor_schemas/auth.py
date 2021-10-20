@@ -137,6 +137,29 @@ def package_update(context, data_dict=None):
         show_context,
         {'id': get_package_id(context, data_dict)})
 
+    resource_ids = [r["id"] for r in pkg_dict.get("resources", [])]
+
+    # run resource check functions
+    for res_dict in data_dict.get("resources", []):
+        # Note that on DCOR, you are not allowed to specify the ID
+        # during upload.
+        curid = res_dict.get("id")
+        if curid in resource_ids:
+            # we are updating a resource
+            aorc = resource_update_check(context, res_dict)
+            if not aorc["success"]:
+                return aorc
+        elif curid is None:
+            # we are creating a resource
+            aorc = resource_create_check(context, res_dict)
+            if not aorc["success"]:
+                return aorc
+        else:
+            # Somebody is trying something nasty
+            return {'success': False,
+                    'msg': f"Invalid resource ID {curid} for dataset "
+                           + f"{pkg_dict['id']}!"}
+
     # do not allow changing things and uploading resources to non-drafts
     if pkg_dict.get('state') != "draft":
         # these things are allowed to be in the data dictionary (see below)
@@ -206,24 +229,29 @@ def resource_create(context, data_dict=None):
     if not ao["success"]:
         return ao
 
-    if "package_id" in data_dict:
+    return resource_create_check(context, data_dict)
+
+
+def resource_create_check(context, new_dict):
+    if "package_id" in new_dict:
         pkg_dict = logic.get_action('package_show')(
             dict(context, return_type='dict'),
-            {'id': data_dict["package_id"]})
+            {'id': new_dict["package_id"]})
 
         # do not allow adding resources to non-draft datasets
         if pkg_dict["state"] != "draft":
             return {'success': False,
                     'msg': 'Adding resources to non-draft datasets not '
                            'allowed!'}
+        # id must not be set
+        if new_dict.get("id", ""):
+            return {'success': False,
+                    'msg': 'You are not allowed to set the resource ID!'}
 
-        if "upload" in data_dict:
-            # id must not be set
-            if data_dict.get("id", ""):
-                return {'success': False,
-                        'msg': 'You are not allowed to set the id!'}
-
-    return {'success': True}
+        return {'success': True}
+    else:
+        return {'success': False,
+                'msg': 'No package_id specified!'}
 
 
 def resource_update(context, data_dict=None):
@@ -232,6 +260,12 @@ def resource_update(context, data_dict=None):
     if not ao["success"]:
         return ao
 
+    data_dict["package_id"] = get_package_id(context, data_dict)
+
+    return resource_update_check(context, data_dict)
+
+
+def resource_update_check(context, new_dict):
     # get the current resource dict
     show_context = {
         'model': context['model'],
@@ -239,18 +273,18 @@ def resource_update(context, data_dict=None):
         'user': context['user'],
         'auth_user_obj': context['auth_user_obj'],
     }
-    resource_dict = logic.get_action('resource_show')(
+    old_dict = logic.get_action('resource_show')(
         show_context,
-        {'id': logic.get_or_bust(data_dict, 'id')})
-    data_dict["package_id"] = get_package_id(context, data_dict)
+        {'id': logic.get_or_bust(new_dict, 'id')})
+
     # only allow updating the description
     allowed_keys = ["description"]
     invalid = {}
-    for key in data_dict:
-        if (key not in resource_dict
+    for key in new_dict:
+        if (key not in old_dict
             or (key not in allowed_keys
-                and data_dict[key] != resource_dict[key])):
-            invalid[key] = data_dict[key]
+                and new_dict[key] != old_dict[key])):
+            invalid[key] = new_dict[key]
     if invalid:
         return {'success': False,
                 'msg': 'Editing not allowed: {}'.format(invalid)}

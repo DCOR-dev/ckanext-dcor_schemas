@@ -1,5 +1,7 @@
 import cgi
+import copy
 import pathlib
+import uuid
 
 import pytest
 
@@ -59,21 +61,124 @@ def test_dataset_add_resources_only_to_drafts_package_revise():
     dataset, _ = make_dataset(create_context, owner_org, with_resource=True,
                               activate=True)
     # assert: adding resources to active datasets forbidden
-    path = data_path / "calibration_beads_47.rtdc"
-    with path.open('rb') as fd:
-        upload = cgi.FieldStorage()
-        upload.filename = path.name
-        upload.file = fd
-        with pytest.raises(logic.NotAuthorized):
-            helpers.call_auth(
-                "package_revise", test_context,
-                **{"update": {
-                       "id": dataset["id"],
-                       "resources": {
-                           "extend": [{"name": "peter.rtdc"}],
-                           "-1": {"upload": ("peter.rtdc", fd)}
-                       }},
-                   })
+    resources = copy.deepcopy(dataset["resources"])
+    resources.append({"name": "peter.rtdc",
+                      "url": "upload",
+                      "package_id": dataset["id"]})
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth(
+            "package_revise", test_context,
+            **{"update": {
+                "id": dataset["id"],
+                "resources": resources}
+               })
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_add_resources_only_to_drafts_package_revise_control():
+    """do not allow adding resources to non-draft datasets"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    create_context = {'ignore_auth': False, 'user': user['name']}
+    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    # create a dataset
+    dataset, _ = make_dataset(create_context, owner_org, with_resource=True,
+                              activate=False)
+    # assert: adding resources to draft datasets allowed
+    resources = copy.deepcopy(dataset["resources"])
+    resources.append({"name": "peter.rtdc",
+                      "url": "upload",
+                      "package_id": dataset["id"]})
+    helpers.call_auth(
+        "package_revise", test_context,
+        **{"update": {
+            "id": dataset["id"],
+            "resources": resources}
+           })
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_add_resources_set_id_not_allowed_package_revise():
+    """do not allow adding resources to non-draft datasets"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    create_context = {'ignore_auth': False, 'user': user['name']}
+    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    # create a dataset
+    dataset, _ = make_dataset(create_context, owner_org, with_resource=True,
+                              activate=False)
+    # assert: adding resources to active datasets forbidden
+    resources = copy.deepcopy(dataset["resources"])
+    resources.append({"name": "peter.rtdc",
+                      "url": "upload",
+                      "package_id": dataset["id"],
+                      "id": uuid.uuid4()})
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth(
+            "package_revise", test_context,
+            **{"update": {
+                "id": dataset["id"],
+                "resources": resources,
+            }},
+        )
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_update_resources_only_for_drafts_package_revise():
+    """do not allow editing resources (except description)"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    create_context = {'ignore_auth': False, 'user': user['name']}
+    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+
+    # create a dataset
+    dataset, _ = make_dataset(create_context, owner_org, with_resource=True,
+                              activate=False)
+    # modifying the description should work
+    helpers.call_auth(
+        "package_revise", test_context,
+        **{"update": {
+            "id": dataset["id"],
+            "resources": [{
+                "id": dataset["resources"][0]["id"],
+                "description": "A new description"}],
+        }})
+    helpers.call_action(
+        "package_revise", test_context,
+        **{"match__id": dataset["id"],
+           "update__resources__0": {"description": "A new description"}
+           })
+    # make sure that worked
+    dataset2 = helpers.call_action("package_show", create_context,
+                                   id=dataset["id"])
+    assert dataset2["resources"][-1]["description"] == "A new description"
+
+    # modifying anything else should *not* work
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth(
+            "package_revise", test_context,
+            **{"update": {
+                "id": dataset["id"],
+                "resources": [{
+                    "id": dataset["resources"][0]["id"],
+                    "dc:experiment:date": "2017-02-09"}],
+            }})
+
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
