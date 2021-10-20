@@ -4,6 +4,7 @@ from ckan import logic
 import ckan.plugins.toolkit as toolkit
 
 from . import helpers as dcor_helpers
+from . import resource_schema_supplements as rss
 
 
 def dataset_purge(context, data_dict):
@@ -280,14 +281,19 @@ def resource_update_check(context, new_dict):
 
     # only allow updating the description
     allowed_keys = ["description"]
-    invalid = {}
+    # ad "sp:*" keys
+    allowed_keys += rss.get_composite_item_list()
+
+    invalid = []
     for key in new_dict:
-        if (key not in old_dict
-            or (key not in allowed_keys
-                and new_dict[key] != old_dict[key])):
-            invalid[key] = new_dict[key]
+        if key in allowed_keys:
+            continue
+        elif key in old_dict and new_dict[key] == old_dict[key]:
+            continue
+        else:
+            invalid.append(f"{key}={new_dict[key]}")
     if invalid:
         return {'success': False,
-                'msg': 'Editing not allowed: {}'.format(invalid)}
+                'msg': f'Editing not allowed: {", ".join(invalid)}'}
 
     return {'success': True}

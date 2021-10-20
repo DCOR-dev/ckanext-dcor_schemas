@@ -1,3 +1,6 @@
+0.15.8
+ - fix: regression where resource supplement data could not be
+   written to resource metadata
 0.15.7
  - fix: seal auth functions for usage with package_revise
 0.15.6

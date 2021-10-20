@@ -219,6 +219,7 @@ def resource_name(key, data, errors, context):
 
     - no weird characters
     - only allowed file extensions
+    - unique resource names
     """
     assert key[0] == "resources"
     assert key[2] == "name"
