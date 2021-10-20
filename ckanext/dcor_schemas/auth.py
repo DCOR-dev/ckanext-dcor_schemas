@@ -144,6 +144,7 @@ def package_update(context, data_dict=None):
         # Note that on DCOR, you are not allowed to specify the ID
         # during upload.
         curid = res_dict.get("id")
+        res_dict["package_id"] = pkg_dict["id"]
         if curid in resource_ids:
             # we are updating a resource
             aorc = resource_update_check(context, res_dict)
