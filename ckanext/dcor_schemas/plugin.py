@@ -44,6 +44,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
     plugins.implements(plugins.IDatasetForm)
     plugins.implements(plugins.IPermissionLabels)
     plugins.implements(plugins.IResourceController, inherit=True)
+    plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(plugins.ITemplateHelpers)
 
     # IActions
@@ -267,9 +268,15 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             labels.extend(u'group-%s' % o['id'] for o in grps)
         return labels
 
-    # IResourceController
+    # IResourceController and IPackageController
     def after_create(self, context, resource):
         """Add custom jobs"""
+        if resource.get("package_id") is None:
+            # `resource` is a package dictionary, because we implemented
+            # both IResourceController and IPackageController. Stop here.
+            # https://github.com/ckan/ckan/issues/2949
+            return
+
         # It turns out that package_revise might not be as atomic as I
         # thought (because it also calls package_show). Therefore, we
         # make all the jobs that interact with the database sequential.
@@ -322,7 +329,27 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                                        "job_id": package_job_id + "sha256",
                                        "depends_on": copy.copy(depends_on)})
 
+    def after_update(self, context, pkg_dict):
+        if pkg_dict.get("package_id") is not None:
+            # `pkg_dict` is a resource dictionary, because we implemented
+            # both IResourceController and IPackageController. Stop here.
+            # https://github.com/ckan/ckan/issues/2949
+            return
+
+        # On DCOR, "active" means that no changes can be made anymore.
+        # So we may proceed with running all jobs.
+        if pkg_dict["state"] == "active":
+            # Run all jobs that should be ran after resource creation.
+            # Note that some of the jobs are added twice, because rq
+            # does not do job uniqueness. But the implementation of the
+            # jobs is such that this should not be a problem.
+            for plugin in plugins.PluginImplementations(
+                    plugins.IResourceController):
+                for resource in pkg_dict["resources"]:
+                    plugin.after_create(context, resource)
+
     def before_create(self, context, resource):
+        # IPackageController does not implement before_create
         if "upload" in resource:
             # set/override the filename
             upload = resource["upload"]
