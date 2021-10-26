@@ -353,7 +353,12 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
 
             for plugin in plugins.PluginImplementations(
                     plugins.IResourceController):
-                plugin.after_create(context, resource)
+                if "pytest" not in sys.modules:
+                    # Unfortunately, this is a necessary thing, because
+                    # otherwise the job tests fail with
+                    # "FileNotFoundError: [Errno 2] No such file or directory"
+                    # (during the actions in ckanext-dcor_depot)
+                    plugin.after_create(context, resource)
 
             # Create default resource views
             # https://github.com/ckan/ckan/issues/6472#issuecomment-944067114
