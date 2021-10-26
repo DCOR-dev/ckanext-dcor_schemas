@@ -336,18 +336,15 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             # https://github.com/ckan/ckan/issues/2949
             return
 
-        # On DCOR, "active" means that no changes can be made anymore.
-        # So we may proceed with running all jobs.
-        if pkg_dict["state"] == "active":
+        for resource in pkg_dict.get('resources', []):
             # Run all jobs that should be ran after resource creation.
             # Note that some of the jobs are added twice, because rq
             # does not do job uniqueness. But the implementation of the
             # jobs is such that this should not be a problem.
+            resource.set_default("position", resource["id"][:5])
             for plugin in plugins.PluginImplementations(
                     plugins.IResourceController):
-                for ii, resource in pkg_dict["resources"]:
-                    resource["position"] = ii  # for some reason it's missing
-                    plugin.after_create(context, resource)
+                plugin.after_create(context, resource)
 
     def before_create(self, context, resource):
         # IPackageController does not implement before_create
