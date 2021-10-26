@@ -345,7 +345,8 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             # jobs is such that this should not be a problem.
             for plugin in plugins.PluginImplementations(
                     plugins.IResourceController):
-                for resource in pkg_dict["resources"]:
+                for ii, resource in pkg_dict["resources"]:
+                    resource["position"] = ii  # for some reason it's missing
                     plugin.after_create(context, resource)
 
     def before_create(self, context, resource):
