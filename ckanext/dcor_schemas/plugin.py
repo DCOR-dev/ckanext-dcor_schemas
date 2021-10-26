@@ -345,6 +345,18 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             for plugin in plugins.PluginImplementations(
                     plugins.IResourceController):
                 plugin.after_create(context, resource)
+                plugin.after_create(context, resource)
+
+            # Create default resource views
+            # https://github.com/ckan/ckan/issues/6472#issuecomment-944067114
+            logic.get_action('resource_create_default_resource_views')(
+                {'model': context['model'],
+                 'user': context['user'],
+                 'ignore_auth': True
+                 },
+                {'resource': resource,
+                 'package': pkg_dict
+                 })
 
     def before_create(self, context, resource):
         # IPackageController does not implement before_create
