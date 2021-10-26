@@ -341,7 +341,16 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             # Note that some of the jobs are added twice, because rq
             # does not do job uniqueness. But the implementation of the
             # jobs is such that this should not be a problem.
-            resource = logic.get_action("resource_show")(resource["id"])
+            resource = logic.get_action("resource_show")(
+                {'model': context['model'],
+                 'user': context['user'],
+                 'ignore_auth': True
+                 },
+                resource["id"])
+            if "sha256" in resource:
+                # that means we already went through all of this
+                continue
+
             for plugin in plugins.PluginImplementations(
                     plugins.IResourceController):
                 plugin.after_create(context, resource)
