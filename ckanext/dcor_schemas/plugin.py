@@ -345,7 +345,6 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             for plugin in plugins.PluginImplementations(
                     plugins.IResourceController):
                 plugin.after_create(context, resource)
-                plugin.after_create(context, resource)
 
             # Create default resource views
             # https://github.com/ckan/ckan/issues/6472#issuecomment-944067114
