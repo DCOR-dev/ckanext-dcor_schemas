@@ -336,12 +336,12 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             # https://github.com/ckan/ckan/issues/2949
             return
 
-        for resource in pkg_dict.get('resources', []):
+        for ii, resource in enumerate(pkg_dict.get('resources', [])):
             # Run all jobs that should be ran after resource creation.
             # Note that some of the jobs are added twice, because rq
             # does not do job uniqueness. But the implementation of the
             # jobs is such that this should not be a problem.
-            resource.setdefault("position", resource["id"][:5])
+            resource.setdefault("position", ii)
             for plugin in plugins.PluginImplementations(
                     plugins.IResourceController):
                 plugin.after_create(context, resource)
