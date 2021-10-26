@@ -347,7 +347,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                  'ignore_auth': True
                  },
                 resource["id"])
-            if "sha256" in resource:
+            if resource.get("sha256"):
                 # that means we already went through all of this
                 continue
 
