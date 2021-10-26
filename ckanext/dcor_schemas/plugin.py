@@ -341,7 +341,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             # Note that some of the jobs are added twice, because rq
             # does not do job uniqueness. But the implementation of the
             # jobs is such that this should not be a problem.
-            resource.set_default("position", resource["id"][:5])
+            resource.setdefault("position", resource["id"][:5])
             for plugin in plugins.PluginImplementations(
                     plugins.IResourceController):
                 plugin.after_create(context, resource)
