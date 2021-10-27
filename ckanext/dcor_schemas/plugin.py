@@ -277,15 +277,8 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             # https://github.com/ckan/ckan/issues/2949
             return
 
-        # It turns out that package_revise might not be as atomic as I
-        # thought (because it also calls package_show). Therefore, we
-        # make all the jobs that interact with the database sequential.
         depends_on = []
         extensions = [config.get("ckan.plugins")]
-
-        for ii in range(resource['position']):
-            # depend on completion of previous resources
-            depends_on.append(f"{resource['package_id']}_{ii}_sha256")
 
         package_job_id = f"{resource['package_id']}_{resource['position']}_"
 
@@ -298,27 +291,23 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
 
         # Add the fast jobs first.
         if resource.get('mimetype') in DC_MIME_TYPES:
-            jid_form = package_job_id + "format"
             toolkit.enqueue_job(jobs.set_format_job,
                                 [resource],
                                 title="Set mimetype for resource",
                                 queue="dcor-short",
                                 rq_kwargs={
                                     "timeout": 500,
-                                    "job_id": jid_form,
+                                    "job_id": package_job_id + "format",
                                     "depends_on": copy.copy(depends_on)})
-            depends_on.append(jid_form)
 
-            jid_par = package_job_id + "dcparms"
             toolkit.enqueue_job(jobs.set_dc_config_job,
                                 [resource],
                                 title="Set DC parameters for resource",
                                 queue="dcor-normal",
                                 rq_kwargs={
                                     "timeout": 500,
-                                    "job_id": jid_par,
+                                    "job_id": package_job_id + "dcparms",
                                     "depends_on": copy.copy(depends_on)})
-            depends_on.append(jid_par)
 
         # The SHA256 job comes last.
         toolkit.enqueue_job(jobs.set_sha256_job,
