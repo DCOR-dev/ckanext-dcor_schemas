@@ -7,7 +7,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 # Source the CKAN environment
 source /usr/lib/ckan/default/bin/activate
 # Update pip
-pip install --upgrade pip wheel
+pip install --upgrade pip wheel faker
 # Update all DCOR extensions
 dcor update --yes
 # Install the current package in editable mode for testing
