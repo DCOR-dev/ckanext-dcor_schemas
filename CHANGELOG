@@ -1,5 +1,6 @@
 0.15.10
  - ref: decomplicate after_create (b/c package_revise now kind of works)
+ - tests: remove dcor_depot dependency
 0.15.9
  - ref: Implement workaround to support package_revise (see #19)
 0.15.8

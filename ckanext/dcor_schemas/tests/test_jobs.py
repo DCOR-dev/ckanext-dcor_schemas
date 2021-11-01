@@ -36,9 +36,7 @@ def synchronous_enqueue_job(job_func, args=None, kwargs=None, title=None,
     job_func(*args, **kwargs)
 
 
-# We need the dcor_depot extension to make sure that the symbolic-
-# linking pipeline is used.
-@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_depot')
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_request_context')
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
@@ -71,9 +69,7 @@ def test_set_dc_config_job_fl(enqueue_job_mock, create_with_upload,
     assert np.allclose(resource["dc:setup:flow rate"], 0.06)
 
 
-# We need the dcor_depot extension to make sure that the symbolic-
-# linking pipeline is used.
-@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_depot')
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_request_context')
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
@@ -109,9 +105,7 @@ def test_set_format_job(enqueue_job_mock, create_with_upload, monkeypatch,
     assert resource["format"] == "RT-DC"
 
 
-# We need the dcor_depot extension to make sure that the symbolic-
-# linking pipeline is used.
-@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_depot')
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_request_context')
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
@@ -142,9 +136,7 @@ def test_set_format_job_fl(enqueue_job_mock, create_with_upload, monkeypatch,
     assert resource["format"] == "RT-FDC"
 
 
-# We need the dcor_depot extension to make sure that the symbolic-
-# linking pipeline is used.
-@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_depot')
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_request_context')
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
@@ -176,9 +168,7 @@ def test_set_sha256_job(enqueue_job_mock, create_with_upload, monkeypatch,
     assert resource["sha256"] == sha
 
 
-# We need the dcor_depot extension to make sure that the symbolic-
-# linking pipeline is used.
-@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_depot')
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_request_context')
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
