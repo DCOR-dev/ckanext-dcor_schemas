@@ -1,3 +1,5 @@
+0.15.12
+ - fix: add redis connection
 0.15.11
  - fix: prevent enqueueing of same background job twice
 0.15.10

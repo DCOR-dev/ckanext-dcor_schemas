@@ -5,6 +5,7 @@ import sys
 
 from ckan.common import config
 from ckan.lib.plugins import DefaultPermissionLabels
+from ckan.lib.jobs import _connect as ckan_redis_connect
 from ckan import common, logic
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
@@ -294,7 +295,8 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         # Add the fast jobs first.
         if resource.get('mimetype') in DC_MIME_TYPES:
             jid_format = package_job_id + "format"
-            if not Job.exists(jid_format):
+            redis_connect = ckan_redis_connect()
+            if not Job.exists(jid_format, connection=redis_connect):
                 toolkit.enqueue_job(jobs.set_format_job,
                                     [resource],
                                     title="Set mimetype for resource",
@@ -305,7 +307,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                                         "depends_on": copy.copy(depends_on)})
 
             jid_dcparams = package_job_id + "dcparms"
-            if not Job.exists(jid_dcparams):
+            if not Job.exists(jid_dcparams, connection=redis_connect):
                 toolkit.enqueue_job(jobs.set_dc_config_job,
                                     [resource],
                                     title="Set DC parameters for resource",
@@ -317,7 +319,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
 
         # The SHA256 job comes last.
         jid_sha256 = package_job_id + "sha256"
-        if not Job.exists(jid_sha256):
+        if not Job.exists(jid_sha256, connection=redis_connect):
             toolkit.enqueue_job(jobs.set_sha256_job,
                                 [resource],
                                 title="Set SHA256 hash for resource",
