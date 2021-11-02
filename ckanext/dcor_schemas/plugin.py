@@ -292,10 +292,10 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             jid_sl = package_job_id + "symlink"
             depends_on.append(jid_sl)
 
+        redis_connect = ckan_redis_connect()
         # Add the fast jobs first.
         if resource.get('mimetype') in DC_MIME_TYPES:
             jid_format = package_job_id + "format"
-            redis_connect = ckan_redis_connect()
             if not Job.exists(jid_format, connection=redis_connect):
                 toolkit.enqueue_job(jobs.set_format_job,
                                     [resource],
