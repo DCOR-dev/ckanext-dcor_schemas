@@ -322,9 +322,10 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                                 [resource],
                                 title="Set SHA256 hash for resource",
                                 queue="dcor-normal",
-                                rq_kwargs={"timeout": 3600,
-                                           "job_id": jid_sha256,
-                                           "depends_on": copy.copy(depends_on)})
+                                rq_kwargs={
+                                    "timeout": 3600,
+                                    "job_id": jid_sha256,
+                                    "depends_on": copy.copy(depends_on)})
 
     def after_update(self, context, pkg_dict):
         if pkg_dict.get("package_id") is not None:
