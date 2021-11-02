@@ -1,5 +1,5 @@
 0.15.11
- - enh: prevent enqueueing of same background job twice
+ - fix: prevent enqueueing of same background job twice
 0.15.10
  - ref: decomplicate after_create (b/c package_revise now kind of works)
  - tests: remove dcor_depot dependency
