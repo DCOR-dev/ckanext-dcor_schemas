@@ -11,6 +11,8 @@ import ckan.plugins.toolkit as toolkit
 
 import dclab
 from dcor_shared import DC_MIME_TYPES
+from rq.job import Job
+
 
 from . import actions
 from . import auth as dcor_auth
@@ -291,32 +293,38 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
 
         # Add the fast jobs first.
         if resource.get('mimetype') in DC_MIME_TYPES:
-            toolkit.enqueue_job(jobs.set_format_job,
-                                [resource],
-                                title="Set mimetype for resource",
-                                queue="dcor-short",
-                                rq_kwargs={
-                                    "timeout": 500,
-                                    "job_id": package_job_id + "format",
-                                    "depends_on": copy.copy(depends_on)})
+            jid_format = package_job_id + "format"
+            if not Job.exists(jid_format):
+                toolkit.enqueue_job(jobs.set_format_job,
+                                    [resource],
+                                    title="Set mimetype for resource",
+                                    queue="dcor-short",
+                                    rq_kwargs={
+                                        "timeout": 500,
+                                        "job_id": jid_format,
+                                        "depends_on": copy.copy(depends_on)})
 
-            toolkit.enqueue_job(jobs.set_dc_config_job,
-                                [resource],
-                                title="Set DC parameters for resource",
-                                queue="dcor-normal",
-                                rq_kwargs={
-                                    "timeout": 500,
-                                    "job_id": package_job_id + "dcparms",
-                                    "depends_on": copy.copy(depends_on)})
+            jid_dcparams = package_job_id + "dcparms"
+            if not Job.exists(jid_dcparams):
+                toolkit.enqueue_job(jobs.set_dc_config_job,
+                                    [resource],
+                                    title="Set DC parameters for resource",
+                                    queue="dcor-short",
+                                    rq_kwargs={
+                                        "timeout": 500,
+                                        "job_id": jid_dcparams,
+                                        "depends_on": copy.copy(depends_on)})
 
         # The SHA256 job comes last.
-        toolkit.enqueue_job(jobs.set_sha256_job,
-                            [resource],
-                            title="Set SHA256 hash for resource",
-                            queue="dcor-normal",
-                            rq_kwargs={"timeout": 3600,
-                                       "job_id": package_job_id + "sha256",
-                                       "depends_on": copy.copy(depends_on)})
+        jid_sha256 = package_job_id + "sha256"
+        if not Job.exists(jid_sha256):
+            toolkit.enqueue_job(jobs.set_sha256_job,
+                                [resource],
+                                title="Set SHA256 hash for resource",
+                                queue="dcor-normal",
+                                rq_kwargs={"timeout": 3600,
+                                           "job_id": jid_sha256,
+                                           "depends_on": copy.copy(depends_on)})
 
     def after_update(self, context, pkg_dict):
         if pkg_dict.get("package_id") is not None:
