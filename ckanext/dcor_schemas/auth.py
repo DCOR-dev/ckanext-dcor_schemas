@@ -301,6 +301,7 @@ def resource_update_check(context, new_dict):
     return {'success': True}
 
 
+@logic.auth_allow_anonymous_access
 def user_create(context, data_dict=None):
     """Measure against automated registration from gmail addresses
 
@@ -310,6 +311,13 @@ def user_create(context, data_dict=None):
     - https://github.com/DCOR-dev/ckanext-dcor_schemas/issues/1
     - https://github.com/DCOR-dev/ckanext-dcor_schemas/issues/4
     - https://github.com/DCOR-dev/ckanext-dcor_schemas/issues/14
+
+    Part of this (implementing as auth function) is actually
+    security by obscurity. Anyone trying to register with a
+    gmail address will just get a "403 Forbidden".
+
+    Implementing this with IUserForm would be much better:
+    https://github.com/ckan/ckan/issues/6070
     """
     # original auth function
     ao = logic.auth.create.user_create(context, data_dict)
@@ -333,7 +341,7 @@ def user_create(context, data_dict=None):
                 # not a valid email address
                 return {'success': False,
                         'msg': 'Invalid email address provided!'}
-            domain = email.split("@")
+            domain = email.split("@")[1]
             if domain in ["gmail.com"]:
                 return {'success': False,
                         'msg': f'Domain not allowed due to spam: {domain}!'}
