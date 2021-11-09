@@ -319,21 +319,23 @@ def user_create(context, data_dict=None):
     if data_dict is None:
         data_dict = {}
 
-    email = data_dict.get("email", "").strip()
-    if not email:
-        return {'success': False,
-                'msg': 'No email address provided!'}
-    else:
-        email = parseaddr(email)[1]
-        if (not email
-            or "@" not in email
-                or "." not in email.split("@")[1]):
-            # not a valid email address
+    if "email" in data_dict:
+        # somebody is attempting to create a user
+        email = data_dict.get("email", "").strip()
+        if not email:
             return {'success': False,
-                    'msg': 'Invalid email address provided!'}
-        domain = email.split("@")
-        if domain in ["gmail.com"]:
-            return {'success': False,
-                    'msg': f'Email domain not allowed due to spam: {domain}!'}
+                    'msg': 'No email address provided!'}
+        else:
+            email = parseaddr(email)[1]
+            if (not email
+                or "@" not in email
+                    or "." not in email.split("@")[1]):
+                # not a valid email address
+                return {'success': False,
+                        'msg': 'Invalid email address provided!'}
+            domain = email.split("@")
+            if domain in ["gmail.com"]:
+                return {'success': False,
+                        'msg': f'Domain not allowed due to spam: {domain}!'}
 
     return {'success': True}
