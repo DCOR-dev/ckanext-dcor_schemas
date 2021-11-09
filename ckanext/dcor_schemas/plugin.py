@@ -75,6 +75,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             'resource_create': dcor_auth.resource_create,
             'resource_delete': dcor_auth.deny,
             'resource_update': dcor_auth.resource_update,
+            'user_create': dcor_auth.user_create,
         }
 
     # IClick

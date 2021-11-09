@@ -1,3 +1,5 @@
+from email.utils import parseaddr
+
 import ckan.authz as authz
 from ckan.common import asbool, config
 from ckan import logic
@@ -295,5 +297,43 @@ def resource_update_check(context, new_dict):
     if invalid:
         return {'success': False,
                 'msg': f'Editing not allowed: {", ".join(invalid)}'}
+
+    return {'success': True}
+
+
+def user_create(context, data_dict=None):
+    """Measure against automated registration from gmail addresses
+
+    This function is the first escalation of many more possible
+    ways to restrict user registration via bots, e.g.
+
+    - https://github.com/DCOR-dev/ckanext-dcor_schemas/issues/1
+    - https://github.com/DCOR-dev/ckanext-dcor_schemas/issues/4
+    - https://github.com/DCOR-dev/ckanext-dcor_schemas/issues/14
+    """
+    # original auth function
+    ao = logic.auth.create.user_create(context, data_dict)
+    if not ao["success"]:
+        return ao
+
+    if data_dict is None:
+        data_dict = {}
+
+    email = data_dict.get("email", "").strip()
+    if not email:
+        return {'success': False,
+                'msg': 'No email address provided!'}
+    else:
+        email = parseaddr(email)[1]
+        if (not email
+            or "@" not in email
+                or "." not in email.split("@")[1]):
+            # not a valid email address
+            return {'success': False,
+                    'msg': 'Invalid email address provided!'}
+        domain = email.split("@")
+        if domain in ["gmail.com"]:
+            return {'success': False,
+                    'msg': f'Email domain not allowed due to spam: {domain}!'}
 
     return {'success': True}
