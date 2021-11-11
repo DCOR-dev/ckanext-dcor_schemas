@@ -260,6 +260,7 @@ def resource_create_check(context, new_dict):
 
 def resource_update(context, data_dict=None):
     # original auth function
+    # (this also checks against package_update auth)
     ao = logic.auth.update.resource_update(context, data_dict)
     if not ao["success"]:
         return ao
@@ -281,9 +282,9 @@ def resource_update_check(context, new_dict):
         show_context,
         {'id': logic.get_or_bust(new_dict, 'id')})
 
-    # only allow updating the description
+    # only allow updating the description...
     allowed_keys = ["description"]
-    # ad "sp:*" keys
+    # ...and "sp:*" keys
     allowed_keys += rss.get_composite_item_list()
 
     invalid = []
