@@ -68,17 +68,18 @@ def package_create(context, data_dict):
     if not ao["success"]:
         return ao
 
-    # Use our own configuration option to determine whether the
-    # admin has disabled public datasets (e.g. for DCOR-med).
-    must_be_private = not asbool(config.get(
-        "ckanext.dcor_schemas.allow_public_datasets", "true"))
-    private_default = must_be_private  # public if not has to be private
-    is_private = asbool(data_dict.get('private', private_default))
-    if must_be_private and not is_private:
-        return {"success": False,
-                "msg": "Creating public datasets has been disabled via "
-                       "the configuration option 'ckanext.dcor_schemas."
-                       "allow_public_datasets = false'!"}
+    if data_dict:
+        # Use our own configuration option to determine whether the
+        # admin has disabled public datasets (e.g. for DCOR-med).
+        must_be_private = not asbool(config.get(
+            "ckanext.dcor_schemas.allow_public_datasets", "true"))
+        private_default = must_be_private  # public if not has to be private
+        is_private = asbool(data_dict.get('private', private_default))
+        if must_be_private and not is_private:
+            return {"success": False,
+                    "msg": "Creating public datasets has been disabled via "
+                           "the configuration option 'ckanext.dcor_schemas."
+                           "allow_public_datasets = false'!"}
 
     return {"success": True}
 
