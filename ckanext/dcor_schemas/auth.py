@@ -54,44 +54,32 @@ def get_package_id(context, data_dict):
 
 
 def package_create(context, data_dict):
-    user = context['user']
-    # If a group is given, check whether the user has the necessary permissions
-    check_group = logic.auth.create._check_group_auth(context, data_dict)
-    if not check_group:
-        return {'success': False,
-                'msg': 'User {} not authorized to edit '.format(user)
-                       + 'these collections'}
+    # Note that we did not decorate this function with
+    # @logic.auth_allow_anonymous_access. This effectively
+    # disables dataset creation via the web interface.
+    # However, we make sure that the API is used with the following:
+    using_api = 'api_version' in context
+    if not using_api:
+        return {"success": False,
+                "msg": "Creating datasets is only possible via the API. "
+                       "Please use DCOR-Aid for uploading data!"}
 
-    # Are we allowed to add a dataset to the given organization?
-    org_id = None if data_dict is None else data_dict.get('owner_org', None)
-    if org_id is None:
-        # No organization was given. This means that we just have to check
-        # whether the user can create packages in general. Since the user
-        # is logged-in, he can do that.
-        # elaboration:
-        # - if `data_dict` is None, we currently want to create a new dataset
-        #   (/dataset/new)
-        # - if `data_dict["owner_org"] is None, we currently want to view
-        #   the datasets (/dataset)
-        pass
-    else:
-        if not authz.has_user_permission_for_group_or_org(
-                org_id, user, 'create_dataset'):
-            # user is not allowed to add datasets to the group
-            return {'success': False,
-                    'msg': 'User {} not authorized to add '.format(user)
-                           + 'datasets to circle {}!'.format(org_id)}
-        # Use our own configuration option to determine whether the
-        # admin has disabled public datasets (e.g. for DCOR-med).
-        must_be_private = not asbool(config.get(
-            "ckanext.dcor_schemas.allow_public_datasets", "true"))
-        private_default = must_be_private  # public if not has to be private
-        is_private = asbool(data_dict.get('private', private_default))
-        if must_be_private and not is_private:
-            return {"success": False,
-                    "msg": "Creating public datasets has been disabled via "
-                           "the configuration option 'ckanext.dcor_schemas."
-                           "allow_public_datasets = false'!"}
+    # original auth function
+    ao = logic.auth.update.package_create(context, data_dict)
+    if not ao["success"]:
+        return ao
+
+    # Use our own configuration option to determine whether the
+    # admin has disabled public datasets (e.g. for DCOR-med).
+    must_be_private = not asbool(config.get(
+        "ckanext.dcor_schemas.allow_public_datasets", "true"))
+    private_default = must_be_private  # public if not has to be private
+    is_private = asbool(data_dict.get('private', private_default))
+    if must_be_private and not is_private:
+        return {"success": False,
+                "msg": "Creating public datasets has been disabled via "
+                       "the configuration option 'ckanext.dcor_schemas."
+                       "allow_public_datasets = false'!"}
 
     return {"success": True}
 

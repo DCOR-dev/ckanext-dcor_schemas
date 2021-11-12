@@ -1,3 +1,5 @@
+0.16.0
+ - fix: Disable browser-based uploads (#20)
 0.15.13
  - enh: do not allow signing up from gmail addresses (#14)
 0.15.12
