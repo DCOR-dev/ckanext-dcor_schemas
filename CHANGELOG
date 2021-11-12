@@ -1,5 +1,8 @@
 0.16.0
  - fix: disable browser-based uploads (#20)
+ - ref: use the original auth function for package_create to
+   make things more transparent (even though now the error
+   messages are the default ones again)
 0.15.13
  - enh: do not allow signing up from gmail addresses (#14)
 0.15.12

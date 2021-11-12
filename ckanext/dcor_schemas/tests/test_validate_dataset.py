@@ -268,7 +268,7 @@ def test_dataset_name_slug_long_2():
     }])
     model.PACKAGE_NAME_MAX_LENGTH = 10
     create_context1 = {'ignore_auth': False, 'user': user['name'],
-                       'model': model}
+                       'model': model, 'api_version': 3}
     ds1 = make_dataset(create_context1, owner_org, with_resource=False,
                        activate=False, title="z"*15)
     try:

@@ -22,6 +22,28 @@ def test_homepage_bad_link(app):
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_theme')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_login_and_browse_to_dataset_new_fails(app):
+    """We disabled dataset creation with #20"""
+    user = factories.User()
+
+    # taken from ckanext/example_iapitoken/tests/test_plugin.py
+    data = helpers.call_action(
+        u"api_token_create",
+        context={u"model": model, u"user": user[u"name"]},
+        user=user[u"name"],
+        name=u"token-name",
+    )
+
+    # assert: try to access /dataset
+    app.get("/dataset/new",
+            params={u"id": user[u"id"]},
+            headers={u"authorization": data["token"]},
+            status=403,
+            )
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_theme')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 @pytest.mark.parametrize("url", ["/dataset",
                                  "/dataset/new",
                                  "/group",

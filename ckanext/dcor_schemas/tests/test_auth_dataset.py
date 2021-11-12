@@ -67,11 +67,11 @@ def test_dataset_create_missing_org():
     """cannot create dataset in non-existent circle"""
     user = factories.User()
     # Note: `call_action` bypasses authorization!
-    context = {'ignore_auth': False,
-               'user': user['name'], 'model': model, 'api_version': 3}
+    context = {'ignore_auth': False, 'user': user['name'],
+               'model': model, 'api_version': 3}
     # create a dataset
     with pytest.raises(logic.NotAuthorized,
-                       match="not authorized to add datasets to circle"):
+                       match="not authorized to create packages"):
         helpers.call_auth("package_create", context,
                           state="draft",
                           authors="Peter Pan",
@@ -94,11 +94,11 @@ def test_dataset_create_bad_collection():
     owner_group = factories.Group(users=[
         {'name': user_a['id'], 'capacity': 'admin'},
     ])
-    context_b = {'ignore_auth': False,
-                 'user': user_b['name'], 'model': model, 'api_version': 3}
+    context_b = {'ignore_auth': False, 'user': user_b['name'],
+                 'model': model, 'api_version': 3}
 
     with pytest.raises(logic.NotAuthorized,
-                       match="not authorized to edit these collections"):
+                       match="not authorized to create packages"):
         make_dataset(context_b, owner_org, with_resource=True,
                      activate=True,
                      groups=[{"id": owner_group["id"]}])
