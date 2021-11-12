@@ -15,6 +15,7 @@ accordingly:
   - datasets: do not allow changing the name (slug)
   - datasets: do not allow adding resources to non-draft datasets
   - datasets: do not allow to set the visibility of a public dataset to private
+  - datasets: do not allow uploading datasets via the web interface
   - organization: do not allow bulk_update_delete (e.g. datasets by organization admins)
   - resources: do not allow deleting resources unless they are drafts
   - resources: only allow changing the "description"

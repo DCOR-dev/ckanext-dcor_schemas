@@ -154,11 +154,27 @@ def package_update(context, data_dict=None):
     # do not allow changing things and uploading resources to non-drafts
     if pkg_dict.get('state') != "draft":
         # these things are allowed to be in the data dictionary (see below)
-        allowed_keys = ["license_id",
-                        "private",
-                        "state",
-                        ]
+        allowed_keys = [
+            "license_id",  # see below, setting less restrictive license
+            "private",  # see below, making dataset public
+            "state",  # see below, not really important
+            ]
+        ignored_keys = [
+            "pkg_name",  # this is sometimes present in the web interface
+        ]
+        ignored_empty_keys = [
+            # keys that may be present if they are empty
+            "tag_string",  # redundant with "tags"
+        ]
         for key in data_dict:
+            if key in ignored_keys:
+                continue
+            elif key in ignored_empty_keys and not data_dict[key]:
+                # ignore some of the keys
+                continue
+            elif not data_dict[key] and not pkg_dict.get(key):
+                # ignore empty keys that are not in the original dict
+                continue
             if data_dict[key] != pkg_dict.get(key) and key not in allowed_keys:
                 return {'success': False,
                         'msg': f"Changing '{key}' not allowed for non-draft "
