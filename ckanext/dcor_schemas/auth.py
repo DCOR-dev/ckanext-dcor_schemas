@@ -65,7 +65,7 @@ def package_create(context, data_dict):
                        "Please use DCOR-Aid for uploading data!"}
 
     # original auth function
-    ao = logic.auth.update.package_create(context, data_dict)
+    ao = logic.auth.create.package_create(context, data_dict)
     if not ao["success"]:
         return ao
 
