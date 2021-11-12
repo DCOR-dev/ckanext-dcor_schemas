@@ -18,14 +18,17 @@ def test_org_admin_bulk_update_delete_forbidden():
         'capacity': 'admin'
     }])
     # create a datasets
-    create_context1 = {'ignore_auth': False, 'user': user['name']}
+    create_context1 = {'ignore_auth': False,
+                       'user': user['name'], 'api_version': 3}
     ds1, _ = make_dataset(create_context1, owner_org, with_resource=True,
                           activate=True)
-    create_context2 = {'ignore_auth': False, 'user': user['name']}
+    create_context2 = {'ignore_auth': False,
+                       'user': user['name'], 'api_version': 3}
     ds2, _ = make_dataset(create_context2, owner_org, with_resource=True,
                           activate=True)
     # assert: bulk_update_delete is should be forbidden
-    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
     with pytest.raises(logic.NotAuthorized):
         helpers.call_auth("bulk_update_delete", test_context,
                           datasets=[ds1, ds2],

@@ -23,7 +23,8 @@ def test_dataset_authors_is_csv():
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context1 = {'ignore_auth': False, 'user': user['name']}
+    create_context1 = {'ignore_auth': False,
+                       'user': user['name'], 'api_version': 3}
 
     ds, _ = make_dataset(create_context1, owner_org, with_resource=True,
                          activate=True,
@@ -45,7 +46,8 @@ def test_dataset_authors_mandatory():
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context1 = {'ignore_auth': False, 'user': user['name']}
+    create_context1 = {'ignore_auth': False,
+                       'user': user['name'], 'api_version': 3}
 
     with pytest.raises(logic.ValidationError) as e:
         make_dataset(create_context1, owner_org, with_resource=False,
@@ -64,7 +66,8 @@ def test_dataset_doi_remove_url():
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context1 = {'ignore_auth': False, 'user': user['name']}
+    create_context1 = {'ignore_auth': False,
+                       'user': user['name'], 'api_version': 3}
 
     ds, _ = make_dataset(create_context1, owner_org, with_resource=True,
                          activate=True,
@@ -86,7 +89,8 @@ def test_dataset_draft_no_resources():
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
 
     with pytest.raises(logic.ValidationError):
         make_dataset(create_context, owner_org, with_resource=False,
@@ -104,7 +108,8 @@ def test_dataset_license_id_mandatory():
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context1 = {'ignore_auth': False, 'user': user['name']}
+    create_context1 = {'ignore_auth': False,
+                       'user': user['name'], 'api_version': 3}
 
     with pytest.raises(logic.ValidationError) as e:
         make_dataset(create_context1, owner_org, with_resource=False,
@@ -123,7 +128,8 @@ def test_dataset_license_restrict_cc():
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context1 = {'ignore_auth': False, 'user': user['name']}
+    create_context1 = {'ignore_auth': False,
+                       'user': user['name'], 'api_version': 3}
 
     with pytest.raises(logic.ValidationError) as e:
         make_dataset(create_context1, owner_org, with_resource=False,
@@ -142,12 +148,14 @@ def test_dataset_name_slug():
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context1 = {'ignore_auth': False, 'user': user['name']}
+    create_context1 = {'ignore_auth': False,
+                       'user': user['name'], 'api_version': 3}
     ds1 = make_dataset(create_context1, owner_org, with_resource=False,
                        activate=False, name="ignored")
     assert ds1["name"] != "ignored"
 
-    create_context2 = {'ignore_auth': False, 'user': user['name']}
+    create_context2 = {'ignore_auth': False,
+                       'user': user['name'], 'api_version': 3}
     ds2 = make_dataset(create_context2, owner_org, with_resource=False,
                        activate=False, name="ignored")
     assert ds2["name"] != ds1["name"]
@@ -164,7 +172,8 @@ def test_dataset_name_slug_empty():
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context1 = {'ignore_auth': False, 'user': user['name']}
+    create_context1 = {'ignore_auth': False,
+                       'user': user['name'], 'api_version': 3}
     ds1 = make_dataset(create_context1, owner_org, with_resource=False,
                        activate=False, title="")
     assert ds1["name"]
@@ -181,7 +190,8 @@ def test_dataset_name_slug_exists():
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context1 = {'ignore_auth': False, 'user': admin['name']}
+    create_context1 = {'ignore_auth': False,
+                       'user': admin['name'], 'api_version': 3}
 
     # Create all possible datasets with admin so that "user" has to
     # create one with a character more.
@@ -202,7 +212,8 @@ def test_dataset_name_slug_exists():
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context2 = {'ignore_auth': False, 'user': user['name']}
+    create_context2 = {'ignore_auth': False,
+                       'user': user['name'], 'api_version': 3}
     ds2 = make_dataset(create_context2, owner_org2, with_resource=False,
                        activate=False, title="existing-name")
     assert ds2["name"].startswith("existing-name-")
@@ -221,7 +232,8 @@ def test_dataset_name_slug_invalid():
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
     for name in ["edit", "new", "search"]:
-        create_context1 = {'ignore_auth': False, 'user': user['name']}
+        create_context1 = {'ignore_auth': False,
+                           'user': user['name'], 'api_version': 3}
         ds1 = make_dataset(create_context1, owner_org, with_resource=False,
                            activate=False, title=name)
         assert ds1["name"] != name
@@ -238,7 +250,8 @@ def test_dataset_name_slug_long():
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context1 = {'ignore_auth': False, 'user': user['name']}
+    create_context1 = {'ignore_auth': False,
+                       'user': user['name'], 'api_version': 3}
     ds1 = make_dataset(create_context1, owner_org, with_resource=False,
                        activate=False, title="a"*500)
     assert len(ds1["name"]) < 500
@@ -278,7 +291,8 @@ def test_dataset_name_slug_no_admin():
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context1 = {'ignore_auth': False, 'user': admin['name']}
+    create_context1 = {'ignore_auth': False,
+                       'user': admin['name'], 'api_version': 3}
     ds1 = make_dataset(create_context1, owner_org, with_resource=False,
                        activate=False, name="ignored")
     assert ds1["name"] == "ignored"
@@ -295,7 +309,8 @@ def test_dataset_name_slug_short():
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context1 = {'ignore_auth': False, 'user': user['name']}
+    create_context1 = {'ignore_auth': False,
+                       'user': user['name'], 'api_version': 3}
     ds1 = make_dataset(create_context1, owner_org, with_resource=False,
                        activate=False, title="z")
     assert len(ds1["name"]) >= 2
@@ -314,7 +329,7 @@ def test_dataset_name_slug_short_2():
     # create 1st dataset
     model.PACKAGE_NAME_MIN_LENGTH = 10
     create_context1 = {'ignore_auth': False, 'user': user['name'],
-                       'model': model}
+                       'model': model, 'api_version': 3}
     ds1 = make_dataset(create_context1, owner_org, with_resource=False,
                        activate=False, title="z")
     try:
@@ -339,7 +354,7 @@ def test_dataset_references():
     # create 1st dataset
     model.PACKAGE_NAME_MIN_LENGTH = 10
     create_context = {'ignore_auth': False, 'user': user['name'],
-                      'model': model}
+                      'model': model, 'api_version': 3}
     references = [
         "https://dx.doi.org/10.1186/s12859-020-03553-y",
         "http://dx.doi.org/10.1038/s41592-020-0831-y",

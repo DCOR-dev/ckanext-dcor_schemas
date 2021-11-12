@@ -24,8 +24,10 @@ def test_resource_create_id_forbidden():
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
-    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
     dataset = make_dataset(create_context, owner_org, with_resource=False,
                            activate=False)
@@ -57,8 +59,10 @@ def test_resource_create_in_other_users_dataset():
     factories.Group(users=[
         {'name': user_a['id'], 'capacity': 'admin'},
     ])
-    context_a = {'ignore_auth': False, 'user': user_a['name'], "model": model}
-    context_b = {'ignore_auth': False, 'user': user_b['name'], "model": model}
+    context_a = {'ignore_auth': False,
+                 'user': user_a['name'], 'model': model, 'api_version': 3}
+    context_b = {'ignore_auth': False,
+                 'user': user_b['name'], 'model': model, 'api_version': 3}
 
     dataset, _ = make_dataset(context_a, owner_org, with_resource=True,
                               activate=False)
@@ -78,8 +82,10 @@ def test_resource_delete_only_drafts():
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
-    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
     dataset = make_dataset(create_context, owner_org, with_resource=False)
     assert dataset["state"] == "draft", "dataset without res must be draft"
@@ -116,8 +122,10 @@ def test_resource_patch_only_description():
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
-    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
     ds, res = make_dataset(create_context, owner_org, with_resource=True,
                            activate=True)
@@ -163,8 +171,10 @@ def test_resource_patch_other_users_dataset():
     factories.Group(users=[
         {'name': user_a['id'], 'capacity': 'admin'},
     ])
-    context_a = {'ignore_auth': False, 'user': user_a['name'], "model": model}
-    context_b = {'ignore_auth': False, 'user': user_b['name'], "model": model}
+    context_a = {'ignore_auth': False,
+                 'user': user_a['name'], 'model': model, 'api_version': 3}
+    context_b = {'ignore_auth': False,
+                 'user': user_b['name'], 'model': model, 'api_version': 3}
 
     # create a dataset
     ds, res = make_dataset(context_a, owner_org, with_resource=True,

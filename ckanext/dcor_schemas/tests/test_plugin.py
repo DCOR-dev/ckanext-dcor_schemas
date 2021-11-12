@@ -25,8 +25,10 @@ def test_ipermissionlabels_user_group_see_privates():
         {'name': user_a['id'], 'capacity': 'admin'},
         {'name': user_b['id'], 'capacity': 'member'},
     ])
-    context_a = {'ignore_auth': False, 'user': user_a['name'], "model": model}
-    context_b = {'ignore_auth': False, 'user': user_b['name'], "model": model}
+    context_a = {'ignore_auth': False,
+                 'user': user_a['name'], 'model': model, 'api_version': 3}
+    context_b = {'ignore_auth': False,
+                 'user': user_b['name'], 'model': model, 'api_version': 3}
 
     dataset, _ = make_dataset(context_a, owner_org, with_resource=True,
                               activate=True,
@@ -52,8 +54,10 @@ def test_ipermissionlabels_user_group_see_privates_inverted():
     owner_group = factories.Group(users=[
         {'name': user_a['id'], 'capacity': 'admin'},
     ])
-    context_a = {'ignore_auth': False, 'user': user_a['name'], "model": model}
-    context_b = {'ignore_auth': False, 'user': user_b['name'], "model": model}
+    context_a = {'ignore_auth': False,
+                 'user': user_a['name'], 'model': model, 'api_version': 3}
+    context_b = {'ignore_auth': False,
+                 'user': user_b['name'], 'model': model, 'api_version': 3}
 
     dataset, _ = make_dataset(context_a, owner_org, with_resource=True,
                               activate=True,

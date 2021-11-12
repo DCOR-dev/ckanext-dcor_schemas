@@ -28,8 +28,8 @@ def test_check_units():
 def test_date_string(invalid_date):
     try:
         rss.SupplementItem.from_composite(
-                composite_key="sp:chip:production date",
-                composite_value=invalid_date)  # invalid date
+            composite_key="sp:chip:production date",
+            composite_value=invalid_date)  # invalid date
     except ValueError:
         pass
 

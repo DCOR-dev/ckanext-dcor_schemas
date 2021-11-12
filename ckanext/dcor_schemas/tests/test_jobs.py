@@ -52,7 +52,8 @@ def test_set_dc_config_job_fl(enqueue_job_mock, create_with_upload,
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context = {'ignore_auth': False, 'user': user['name']}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
     dataset = make_dataset(create_context, owner_org, with_resource=False,
                            activate=False)
     content = (data_dir / "calibration_beads_47.rtdc").read_bytes()
@@ -85,7 +86,8 @@ def test_set_format_job(enqueue_job_mock, create_with_upload, monkeypatch,
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context = {'ignore_auth': False, 'user': user['name']}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
     dataset = make_dataset(create_context, owner_org, with_resource=False,
                            activate=False)
     path = data_dir / "calibration_beads_47.rtdc"
@@ -121,7 +123,8 @@ def test_set_format_job_fl(enqueue_job_mock, create_with_upload, monkeypatch,
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context = {'ignore_auth': False, 'user': user['name']}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
     dataset = make_dataset(create_context, owner_org, with_resource=False,
                            activate=False)
     content = (data_dir / "calibration_beads_47.rtdc").read_bytes()
@@ -152,7 +155,8 @@ def test_set_sha256_job(enqueue_job_mock, create_with_upload, monkeypatch,
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context = {'ignore_auth': False, 'user': user['name']}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
     dataset = make_dataset(create_context, owner_org, with_resource=False,
                            activate=False)
     content = (data_dir / "calibration_beads_47.rtdc").read_bytes()
@@ -184,7 +188,8 @@ def test_set_sha256_job_empty_file(enqueue_job_mock, create_with_upload,
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context = {'ignore_auth': False, 'user': user['name']}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
     dataset = make_dataset(create_context, owner_org, with_resource=False,
                            activate=False)
     result = create_with_upload(

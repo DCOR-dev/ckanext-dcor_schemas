@@ -14,7 +14,8 @@ def test_login_user_create_datasets():
         'name': user['id'],
         'capacity': 'admin'
     }])
-    context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    context = {'ignore_auth': False,
+               'user': user['name'], 'model': model, 'api_version': 3}
     success = helpers.call_auth("package_create", context,
                                 title="test-group",
                                 authors="Peter Pan",
@@ -29,7 +30,8 @@ def test_login_user_create_datasets():
 def test_login_user_create_circles():
     """allow all logged-in users to create circles"""
     user = factories.User()
-    context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    context = {'ignore_auth': False,
+               'user': user['name'], 'model': model, 'api_version': 3}
     success = helpers.call_auth("organization_create", context,
                                 name="test-org")
     assert success
@@ -40,6 +42,7 @@ def test_login_user_create_circles():
 def test_login_user_create_collections():
     """allow all logged-in users to create collections"""
     user = factories.User()
-    context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    context = {'ignore_auth': False,
+               'user': user['name'], 'model': model, 'api_version': 3}
     success = helpers.call_auth("group_create", context, name="test-group")
     assert success

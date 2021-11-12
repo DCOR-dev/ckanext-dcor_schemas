@@ -25,7 +25,9 @@ def test_resource_create_configuration_metadata():
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context1 = {'ignore_auth': False, 'user': user['name']}
+    create_context1 = {'ignore_auth': False,
+                       'user': user['name'],
+                       'api_version': 3}
     dataset = make_dataset(create_context1, owner_org, with_resource=False,
                            activate=False)
     path = data_path / "calibration_beads_47.rtdc"
@@ -58,7 +60,9 @@ def test_resource_create_configuration_metadata_invalid():
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context1 = {'ignore_auth': False, 'user': user['name']}
+    create_context1 = {'ignore_auth': False,
+                       'user': user['name'],
+                       'api_version': 3}
     dataset = make_dataset(create_context1, owner_org, with_resource=False,
                            activate=False)
     path = data_path / "calibration_beads_47.rtdc"
@@ -88,7 +92,9 @@ def test_resource_create_configuration_supplement():
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context1 = {'ignore_auth': False, 'user': user['name']}
+    create_context1 = {'ignore_auth': False,
+                       'user': user['name'],
+                       'api_version': 3}
     dataset = make_dataset(create_context1, owner_org, with_resource=False,
                            activate=False)
     path = data_path / "calibration_beads_47.rtdc"
@@ -120,7 +126,9 @@ def test_resource_create_configuration_supplement_invalid_value():
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context1 = {'ignore_auth': False, 'user': user['name']}
+    create_context1 = {'ignore_auth': False,
+                       'user': user['name'],
+                       'api_version': 3}
     dataset = make_dataset(create_context1, owner_org, with_resource=False,
                            activate=False)
     path = data_path / "calibration_beads_47.rtdc"
@@ -151,7 +159,9 @@ def test_resource_create_custom_upload_name_overridden():
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context1 = {'ignore_auth': False, 'user': user['name']}
+    create_context1 = {'ignore_auth': False,
+                       'user': user['name'],
+                       'api_version': 3}
     dataset = make_dataset(create_context1, owner_org, with_resource=False,
                            activate=False)
     path = data_path / "calibration_beads_47.rtdc"
@@ -176,7 +186,8 @@ def test_resource_create_package_id_missing():
     user = factories.User()
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context = {'ignore_auth': False, 'user': user['name']}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
 
     path = data_path / "calibration_beads_47.rtdc"
     with path.open('rb') as fd:
@@ -202,7 +213,9 @@ def test_resource_create_restrict_extensions():
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context1 = {'ignore_auth': False, 'user': user['name']}
+    create_context1 = {'ignore_auth': False,
+                       'user': user['name'],
+                       'api_version': 3}
     dataset = make_dataset(create_context1, owner_org, with_resource=False,
                            activate=False)
     tdir = tempfile.mkdtemp(prefix="test_dcor_schemas_")
@@ -233,7 +246,9 @@ def test_resource_create_same_name_forbidden():
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context1 = {'ignore_auth': False, 'user': user['name']}
+    create_context1 = {'ignore_auth': False,
+                       'user': user['name'],
+                       'api_version': 3}
     dataset = make_dataset(create_context1, owner_org, with_resource=False,
                            activate=False)
     path = data_path / "calibration_beads_47.rtdc"
@@ -249,7 +264,8 @@ def test_resource_create_same_name_forbidden():
                             name=path.name,
                             )
     # attempt creation of second resource with same name
-    create_context2 = {'ignore_auth': False, 'user': user['name']}
+    create_context2 = {'ignore_auth': False,
+                       'user': user['name'], 'api_version': 3}
     with path.open('rb') as fd:
         upload = cgi.FieldStorage()
         upload.filename = path.name
@@ -274,7 +290,8 @@ def test_resource_create_weird_characters():
     }])
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
-    create_context1 = {'ignore_auth': False, 'user': user['name']}
+    create_context1 = {'ignore_auth': False,
+                       'user': user['name'], 'api_version': 3}
     dataset = make_dataset(create_context1, owner_org, with_resource=False,
                            activate=False)
     path = data_path / "calibration_beads_47.rtdc"

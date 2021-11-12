@@ -23,8 +23,10 @@ def test_dataset_add_resources_only_to_drafts():
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
-    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
     dataset, _ = make_dataset(create_context, owner_org, with_resource=True,
                               activate=True)
@@ -50,7 +52,8 @@ def test_dataset_add_resources_only_to_drafts():
 def test_dataset_create_anonymous():
     """anonymous cannot create dataset"""
     # Note: `call_action` bypasses authorization!
-    context = {'ignore_auth': False, 'user': None, "model": model}
+    context = {'ignore_auth': False, 'user': None,
+               'model': model, 'api_version': 3}
     # create a dataset
     with pytest.raises(
             logic.NotAuthorized,
@@ -64,7 +67,8 @@ def test_dataset_create_missing_org():
     """cannot create dataset in non-existent circle"""
     user = factories.User()
     # Note: `call_action` bypasses authorization!
-    context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    context = {'ignore_auth': False,
+               'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
     with pytest.raises(logic.NotAuthorized,
                        match="not authorized to add datasets to circle"):
@@ -90,7 +94,8 @@ def test_dataset_create_bad_collection():
     owner_group = factories.Group(users=[
         {'name': user_a['id'], 'capacity': 'admin'},
     ])
-    context_b = {'ignore_auth': False, 'user': user_b['name'], "model": model}
+    context_b = {'ignore_auth': False,
+                 'user': user_b['name'], 'model': model, 'api_version': 3}
 
     with pytest.raises(logic.NotAuthorized,
                        match="not authorized to edit these collections"):
@@ -109,8 +114,10 @@ def test_dataset_delete_only_drafts():
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
-    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
     dataset = make_dataset(create_context, owner_org, with_resource=False)
     assert dataset["state"] == "draft", "dataset without res must be draft"
@@ -144,8 +151,10 @@ def test_dataset_delete_other_user():
         'name': user_a['id'],
         'capacity': 'admin'
     }])
-    context_a = {'ignore_auth': False, 'user': user_a['name'], "model": model}
-    context_b = {'ignore_auth': False, 'user': user_b['name'], "model": model}
+    context_a = {'ignore_auth': False,
+                 'user': user_a['name'], 'model': model, 'api_version': 3}
+    context_b = {'ignore_auth': False,
+                 'user': user_b['name'], 'model': model, 'api_version': 3}
 
     dataset = make_dataset(context_a, owner_org, with_resource=False,
                            activate=False)
@@ -165,8 +174,10 @@ def test_dataset_delete_anonymous():
         'name': user_a['id'],
         'capacity': 'admin'
     }])
-    context_a = {'ignore_auth': False, 'user': user_a['name'], "model": model}
-    context_b = {'ignore_auth': False, 'user': None, "model": model}
+    context_a = {'ignore_auth': False,
+                 'user': user_a['name'], 'model': model, 'api_version': 3}
+    context_b = {'ignore_auth': False, 'user': None,
+                 'model': model, 'api_version': 3}
 
     dataset = make_dataset(context_a, owner_org, with_resource=False,
                            activate=False)
@@ -187,8 +198,10 @@ def test_dataset_edit_anonymous():
         'name': user_a['id'],
         'capacity': 'admin'
     }])
-    context_a = {'ignore_auth': False, 'user': user_a['name'], "model": model}
-    context_b = {'ignore_auth': False, 'user': None, "model": model}
+    context_a = {'ignore_auth': False,
+                 'user': user_a['name'], 'model': model, 'api_version': 3}
+    context_b = {'ignore_auth': False, 'user': None,
+                 'model': model, 'api_version': 3}
 
     dataset = make_dataset(context_a, owner_org, with_resource=False,
                            activate=False)
@@ -211,8 +224,10 @@ def test_dataset_license_more_restrictive_forbidden():
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
-    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
     dataset, res = make_dataset(create_context, owner_org, with_resource=True,
                                 activate=True, license_id="CC0-1.0")
@@ -235,8 +250,10 @@ def test_dataset_purge_anonymous():
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
-    test_context = {'ignore_auth': False, 'user': None, "model": model}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    test_context = {'ignore_auth': False,
+                    'user': None, 'model': model, 'api_version': 3}
     # create a dataset
     dataset = make_dataset(create_context, owner_org, with_resource=False)
     # delete a dataset
@@ -261,8 +278,10 @@ def test_dataset_purge_draft():
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
-    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
     dataset = make_dataset(create_context, owner_org, with_resource=False,
                            activate=False)
@@ -283,8 +302,10 @@ def test_dataset_purge_deleted():
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
-    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
     dataset = make_dataset(create_context, owner_org, with_resource=False)
     # delete a dataset
@@ -306,8 +327,10 @@ def test_dataset_slug_editing_forbidden():
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
-    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
     dataset, res = make_dataset(create_context, owner_org, with_resource=True,
                                 activate=True)
@@ -331,8 +354,10 @@ def test_dataset_state_from_active_to_draft_forbidden():
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
-    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
     dataset, res = make_dataset(create_context, owner_org, with_resource=True,
                                 activate=True)
@@ -354,8 +379,10 @@ def test_dataset_user_anonymous():
         'name': user_a['id'],
         'capacity': 'admin'
     }])
-    context_a = {'ignore_auth': False, 'user': user_a["name"], "model": model}
-    context_b = {'ignore_auth': False, 'user': None, "model": model}
+    context_a = {'ignore_auth': False,
+                 'user': user_a["name"], 'model': model, 'api_version': 3}
+    context_b = {'ignore_auth': False, 'user': None,
+                 'model': model, 'api_version': 3}
 
     with pytest.raises(
             logic.NotAuthorized,
@@ -390,7 +417,8 @@ def test_dataset_visibility_create_public_if_not_allowed():
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
     with pytest.raises(
             logic.NotAuthorized,
@@ -415,7 +443,8 @@ def test_dataset_visibility_create_public_if_not_allowed_control():
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
     assert helpers.call_auth("package_create", test_context,
                              authors="Peter Pan",
@@ -437,8 +466,10 @@ def test_dataset_visibility_update_1_private2public_allowed():
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
-    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
     dataset, res = make_dataset(create_context, owner_org, with_resource=True,
                                 activate=True, private=True)
@@ -459,8 +490,10 @@ def test_dataset_visibility_update_1_public2private_not_allowed():
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
-    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
     dataset, res = make_dataset(create_context, owner_org, with_resource=True,
                                 activate=True, private=False)
@@ -487,8 +520,10 @@ def test_dataset_visibility_update_2_private2public_not_allowed():
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
-    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset (no auth check done during testing, so we can create
     # a public dataset)
     dataset, res = make_dataset(create_context, owner_org, with_resource=True,
@@ -516,7 +551,8 @@ def test_dataset_visibility_update_2_public2private_allowed():
     }])
     # Note: `call_action` bypasses authorization!
     create_context = {'ignore_auth': True, 'user': user['name']}
-    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset (no auth check done during testing, so we can create
     # a public dataset)
     dataset, res = make_dataset(create_context, owner_org, with_resource=True,

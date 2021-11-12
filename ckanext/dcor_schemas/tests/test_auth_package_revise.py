@@ -24,8 +24,10 @@ def test_dataset_add_resources_only_to_drafts_package_revise():
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
-    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
     dataset, _ = make_dataset(create_context, owner_org, with_resource=True,
                               activate=True)
@@ -55,8 +57,10 @@ def test_dataset_add_resources_only_to_drafts_package_revise_control():
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
-    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
     dataset, _ = make_dataset(create_context, owner_org, with_resource=True,
                               activate=False)
@@ -84,8 +88,10 @@ def test_dataset_add_resources_set_id_not_allowed_package_revise():
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
-    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
     dataset, _ = make_dataset(create_context, owner_org, with_resource=True,
                               activate=False)
@@ -115,8 +121,10 @@ def test_dataset_update_resources_only_for_drafts_package_revise():
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
-    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
 
     # create a dataset
     dataset, _ = make_dataset(create_context, owner_org, with_resource=True,
@@ -169,8 +177,10 @@ def test_dataset_update_resources_only_for_drafts_package_revise_2():
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
-    test_context = {'ignore_auth': False, 'user': user['name'], "model": model}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
 
     # create a dataset
     dataset, _ = make_dataset(create_context, owner_org, with_resource=True,

@@ -57,7 +57,8 @@ def test_login_and_go_to_dataset_edit_page(app):
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
     # create a dataset
     dataset, _ = make_dataset(create_context, owner_org, with_resource=True,
                               activate=True)
@@ -85,7 +86,8 @@ def test_login_and_go_to_dataset_edit_page_and_view_license_options(app):
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
     # create a dataset
     dataset, _ = make_dataset(create_context, owner_org, with_resource=True,
                               activate=True, license_id="CC-BY-4.0")
@@ -133,7 +135,8 @@ def test_resource_view_references(app):
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
     # create a dataset
     references = [
         "https://dx.doi.org/10.1186/s12859-020-03553-y",

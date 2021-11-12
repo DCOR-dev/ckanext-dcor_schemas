@@ -45,7 +45,8 @@ def test_zombies_with_a_user_with_dataset(cli):
         'capacity': 'admin'
     }])
     # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False, 'user': user['name']}
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
     make_dataset(create_context, owner_org, with_resource=True,
                  activate=True)
 
