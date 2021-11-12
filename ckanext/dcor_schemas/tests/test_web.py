@@ -45,7 +45,6 @@ def test_login_and_browse_to_dataset_new_fails(app):
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_theme')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 @pytest.mark.parametrize("url", ["/dataset",
-                                 "/dataset/new",
                                  "/group",
                                  "/group/new",
                                  "/organization",
