@@ -1,6 +1,5 @@
 from email.utils import parseaddr
 
-import ckan.authz as authz
 from ckan.common import asbool, config
 from ckan import logic
 import ckan.plugins.toolkit as toolkit
