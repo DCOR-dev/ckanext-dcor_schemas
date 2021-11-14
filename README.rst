@@ -33,6 +33,8 @@ accordingly:
     if necessary (does not apply to admins)
   - datasets: a dataset without resources is considered to be a draft;
     it's state cannot be set to "active"
+  - datasets: the state of a dataset that does not contain at least one
+    valid .rtdc resource cannot be set to "active"
   - resources: do not allow uploading resources with the same name
     for a dataset (important for ckanext-dcor_depot)
   - resources: make sure the resource name matches the file name of the
