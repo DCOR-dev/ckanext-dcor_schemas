@@ -16,7 +16,8 @@ data_path = pathlib.Path(__file__).parent / "data"
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_add_resources_only_to_drafts_package_revise():
+def test_dataset_add_resources_only_to_drafts_package_revise(
+        create_with_upload):
     """do not allow adding resources to non-draft datasets"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -29,7 +30,8 @@ def test_dataset_add_resources_only_to_drafts_package_revise():
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset, _ = make_dataset(create_context, owner_org, with_resource=True,
+    dataset, _ = make_dataset(create_context, owner_org,
+                              create_with_upload=create_with_upload,
                               activate=True)
     # assert: adding resources to active datasets forbidden
     resources = copy.deepcopy(dataset["resources"])
@@ -49,7 +51,8 @@ def test_dataset_add_resources_only_to_drafts_package_revise():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_add_resources_only_to_drafts_package_revise_control():
+def test_dataset_add_resources_only_to_drafts_package_revise_control(
+        create_with_upload):
     """do not allow adding resources to non-draft datasets"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -62,7 +65,8 @@ def test_dataset_add_resources_only_to_drafts_package_revise_control():
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset, _ = make_dataset(create_context, owner_org, with_resource=True,
+    dataset, _ = make_dataset(create_context, owner_org,
+                              create_with_upload=create_with_upload,
                               activate=False)
     # assert: adding resources to draft datasets allowed
     resources = copy.deepcopy(dataset["resources"])
@@ -80,7 +84,8 @@ def test_dataset_add_resources_only_to_drafts_package_revise_control():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_add_resources_set_id_not_allowed_package_revise():
+def test_dataset_add_resources_set_id_not_allowed_package_revise(
+        create_with_upload):
     """do not allow adding resources to non-draft datasets"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -93,7 +98,8 @@ def test_dataset_add_resources_set_id_not_allowed_package_revise():
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset, _ = make_dataset(create_context, owner_org, with_resource=True,
+    dataset, _ = make_dataset(create_context, owner_org,
+                              create_with_upload=create_with_upload,
                               activate=False)
     # assert: adding resources to active datasets forbidden
     resources = copy.deepcopy(dataset["resources"])
@@ -113,7 +119,8 @@ def test_dataset_add_resources_set_id_not_allowed_package_revise():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_update_resources_only_for_drafts_package_revise():
+def test_dataset_update_resources_only_for_drafts_package_revise(
+        create_with_upload):
     """do not allow editing resources (except description)"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -127,7 +134,8 @@ def test_dataset_update_resources_only_for_drafts_package_revise():
                     'user': user['name'], 'model': model, 'api_version': 3}
 
     # create a dataset
-    dataset, _ = make_dataset(create_context, owner_org, with_resource=True,
+    dataset, _ = make_dataset(create_context, owner_org,
+                              create_with_upload=create_with_upload,
                               activate=False)
     # modifying the description should work
     helpers.call_auth(
@@ -169,7 +177,8 @@ def test_dataset_update_resources_only_for_drafts_package_revise():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_update_resources_only_for_drafts_package_revise_2():
+def test_dataset_update_resources_only_for_drafts_package_revise_2(
+        create_with_upload):
     """do not allow editing resources (except description)"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -183,7 +192,8 @@ def test_dataset_update_resources_only_for_drafts_package_revise_2():
                     'user': user['name'], 'model': model, 'api_version': 3}
 
     # create a dataset
-    dataset, _ = make_dataset(create_context, owner_org, with_resource=True,
+    dataset, _ = make_dataset(create_context, owner_org,
+                              create_with_upload=create_with_upload,
                               activate=True)
 
     # modifying the description should not work for active datasets

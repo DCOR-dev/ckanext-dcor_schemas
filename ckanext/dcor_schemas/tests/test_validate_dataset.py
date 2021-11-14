@@ -1,5 +1,8 @@
 import pathlib
+import shutil
+import tempfile
 
+import h5py
 import pytest
 
 import ckan.logic as logic
@@ -14,7 +17,7 @@ data_path = pathlib.Path(__file__).parent / "data"
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_authors_is_csv():
+def test_dataset_authors_is_csv(create_with_upload):
     """author list "authors" is CSV"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -26,7 +29,8 @@ def test_dataset_authors_is_csv():
     create_context1 = {'ignore_auth': False,
                        'user': user['name'], 'api_version': 3}
 
-    ds, _ = make_dataset(create_context1, owner_org, with_resource=True,
+    ds, _ = make_dataset(create_context1, owner_org,
+                         create_with_upload=create_with_upload,
                          activate=True,
                          authors="Peter Pan,Ben Elf,  Buddy Holly")  # [sic!]
     dataset = helpers.call_action("package_show",
@@ -50,14 +54,14 @@ def test_dataset_authors_mandatory():
                        'user': user['name'], 'api_version': 3}
 
     with pytest.raises(logic.ValidationError) as e:
-        make_dataset(create_context1, owner_org, with_resource=False,
+        make_dataset(create_context1, owner_org,
                      activate=False, authors="")
     assert "'authors': ['Missing value']" in str(e.value)
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_doi_remove_url():
+def test_dataset_doi_remove_url(create_with_upload):
     """parse DOI field (remove URL part)"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -69,7 +73,8 @@ def test_dataset_doi_remove_url():
     create_context1 = {'ignore_auth': False,
                        'user': user['name'], 'api_version': 3}
 
-    ds, _ = make_dataset(create_context1, owner_org, with_resource=True,
+    ds, _ = make_dataset(create_context1, owner_org,
+                         create_with_upload=create_with_upload,
                          activate=True,
                          doi="https://doi.org/10.1371/journal.pone.0088458"
                          )
@@ -77,24 +82,6 @@ def test_dataset_doi_remove_url():
                                   id=ds["id"],
                                   )
     assert dataset["doi"] == "10.1371/journal.pone.0088458"
-
-
-@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_draft_no_resources():
-    """a dataset without resources is cannot be activated"""
-    user = factories.User()
-    owner_org = factories.Organization(users=[{
-        'name': user['id'],
-        'capacity': 'admin'
-    }])
-    # Note: `call_action` bypasses authorization!
-    create_context = {'ignore_auth': False,
-                      'user': user['name'], 'api_version': 3}
-
-    with pytest.raises(logic.ValidationError):
-        make_dataset(create_context, owner_org, with_resource=False,
-                     activate=True)
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -112,7 +99,7 @@ def test_dataset_license_id_mandatory():
                        'user': user['name'], 'api_version': 3}
 
     with pytest.raises(logic.ValidationError) as e:
-        make_dataset(create_context1, owner_org, with_resource=False,
+        make_dataset(create_context1, owner_org,
                      activate=False, license_id="")
     assert "Please choose a license_id" in str(e.value)
 
@@ -132,7 +119,7 @@ def test_dataset_license_restrict_cc():
                        'user': user['name'], 'api_version': 3}
 
     with pytest.raises(logic.ValidationError) as e:
-        make_dataset(create_context1, owner_org, with_resource=False,
+        make_dataset(create_context1, owner_org,
                      activate=False, license_id="CC-BY-NE-4.0")
     assert "Please choose a license_id" in str(e.value)
 
@@ -150,13 +137,13 @@ def test_dataset_name_slug():
     # create 1st dataset
     create_context1 = {'ignore_auth': False,
                        'user': user['name'], 'api_version': 3}
-    ds1 = make_dataset(create_context1, owner_org, with_resource=False,
+    ds1 = make_dataset(create_context1, owner_org,
                        activate=False, name="ignored")
     assert ds1["name"] != "ignored"
 
     create_context2 = {'ignore_auth': False,
                        'user': user['name'], 'api_version': 3}
-    ds2 = make_dataset(create_context2, owner_org, with_resource=False,
+    ds2 = make_dataset(create_context2, owner_org,
                        activate=False, name="ignored")
     assert ds2["name"] != ds1["name"]
 
@@ -174,7 +161,7 @@ def test_dataset_name_slug_empty():
     # create 1st dataset
     create_context1 = {'ignore_auth': False,
                        'user': user['name'], 'api_version': 3}
-    ds1 = make_dataset(create_context1, owner_org, with_resource=False,
+    ds1 = make_dataset(create_context1, owner_org,
                        activate=False, title="")
     assert ds1["name"]
 
@@ -195,12 +182,12 @@ def test_dataset_name_slug_exists():
 
     # Create all possible datasets with admin so that "user" has to
     # create one with a character more.
-    ds1 = make_dataset(create_context1, owner_org1, with_resource=False,
+    ds1 = make_dataset(create_context1, owner_org1,
                        activate=False, name="existing-name")
     assert ds1["name"] == "existing-name", "sanity check"
     for ch in "0123456789abcdef":
         name = "existing-name-" + ch
-        ds1 = make_dataset(create_context1, owner_org1, with_resource=False,
+        ds1 = make_dataset(create_context1, owner_org1,
                            activate=False, name=name)
         assert ds1["name"] == name, "sanity check"
 
@@ -214,7 +201,7 @@ def test_dataset_name_slug_exists():
     # create 1st dataset
     create_context2 = {'ignore_auth': False,
                        'user': user['name'], 'api_version': 3}
-    ds2 = make_dataset(create_context2, owner_org2, with_resource=False,
+    ds2 = make_dataset(create_context2, owner_org2,
                        activate=False, title="existing-name")
     assert ds2["name"].startswith("existing-name-")
     assert len(ds2["name"]) == len("existing-name-") + 2
@@ -234,7 +221,7 @@ def test_dataset_name_slug_invalid():
     for name in ["edit", "new", "search"]:
         create_context1 = {'ignore_auth': False,
                            'user': user['name'], 'api_version': 3}
-        ds1 = make_dataset(create_context1, owner_org, with_resource=False,
+        ds1 = make_dataset(create_context1, owner_org,
                            activate=False, title=name)
         assert ds1["name"] != name
 
@@ -252,7 +239,7 @@ def test_dataset_name_slug_long():
     # create 1st dataset
     create_context1 = {'ignore_auth': False,
                        'user': user['name'], 'api_version': 3}
-    ds1 = make_dataset(create_context1, owner_org, with_resource=False,
+    ds1 = make_dataset(create_context1, owner_org,
                        activate=False, title="a"*500)
     assert len(ds1["name"]) < 500
 
@@ -269,7 +256,7 @@ def test_dataset_name_slug_long_2():
     model.PACKAGE_NAME_MAX_LENGTH = 10
     create_context1 = {'ignore_auth': False, 'user': user['name'],
                        'model': model, 'api_version': 3}
-    ds1 = make_dataset(create_context1, owner_org, with_resource=False,
+    ds1 = make_dataset(create_context1, owner_org,
                        activate=False, title="z"*15)
     try:
         assert len(ds1["name"]) <= 10
@@ -293,7 +280,7 @@ def test_dataset_name_slug_no_admin():
     # create 1st dataset
     create_context1 = {'ignore_auth': False,
                        'user': admin['name'], 'api_version': 3}
-    ds1 = make_dataset(create_context1, owner_org, with_resource=False,
+    ds1 = make_dataset(create_context1, owner_org,
                        activate=False, name="ignored")
     assert ds1["name"] == "ignored"
 
@@ -311,7 +298,7 @@ def test_dataset_name_slug_short():
     # create 1st dataset
     create_context1 = {'ignore_auth': False,
                        'user': user['name'], 'api_version': 3}
-    ds1 = make_dataset(create_context1, owner_org, with_resource=False,
+    ds1 = make_dataset(create_context1, owner_org,
                        activate=False, title="z")
     assert len(ds1["name"]) >= 2
 
@@ -330,7 +317,7 @@ def test_dataset_name_slug_short_2():
     model.PACKAGE_NAME_MIN_LENGTH = 10
     create_context1 = {'ignore_auth': False, 'user': user['name'],
                        'model': model, 'api_version': 3}
-    ds1 = make_dataset(create_context1, owner_org, with_resource=False,
+    ds1 = make_dataset(create_context1, owner_org,
                        activate=False, title="z")
     try:
         assert len(ds1["name"]) >= 10
@@ -343,7 +330,7 @@ def test_dataset_name_slug_short_2():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_references():
+def test_dataset_references(create_with_upload):
     """Test parsing of references"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -366,7 +353,8 @@ def test_dataset_references():
         "https://www.biorxiv.org/content/10.1101/862227v2.full.pdf+html",
         "biorxiv:10.1101/862227v2",
     ]
-    ds, _ = make_dataset(create_context, owner_org, with_resource=True,
+    ds, _ = make_dataset(create_context, owner_org,
+                         create_with_upload=create_with_upload,
                          activate=True,
                          references=",".join(references))
     refs = [r.strip() for r in ds["references"].split(",")]
@@ -379,3 +367,133 @@ def test_dataset_references():
     assert refs[6] == "bioRxiv:10.1101/862227v2"
     assert refs[7] == "bioRxiv:10.1101/862227v2"
     assert refs[8] == "bioRxiv:10.1101/862227v2"
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_state_draft_no_resources():
+    """a dataset without resources is cannot be activated"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+
+    with pytest.raises(logic.ValidationError,
+                       match="because it does not contain any resources"):
+        make_dataset(create_context, owner_org,
+                     activate=True)
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_state_from_draft_to_active_without_rtdc_forbidden(
+        create_with_upload):
+    """do not allow activating a dataset without a valid .rtdc file"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
+    # create a dataset
+    dataset = make_dataset(create_context, owner_org,
+                           activate=False, license_id="CC0-1.0")
+    # upload an invalid .rtdc File
+    path = pathlib.Path(tempfile.mkdtemp()) / "test_invalid_file_upload.rtdc"
+    path.write_bytes(b"This is not a valid HDF5 file!")
+    content = path.read_bytes()
+    create_with_upload(
+        content, 'test.rtdc',
+        url="upload",
+        package_id=dataset["id"],
+        context=create_context,
+    )
+    # assert: cannot activate dataset without valid .rtdc file
+    with pytest.raises(
+            logic.ValidationError,
+            match="make sure that it contains a valid .rtdc resource"):
+        helpers.call_action("package_patch", test_context,
+                            id=dataset["id"],
+                            state="active")
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_state_from_draft_to_active_without_rtdc_forbidden_2(
+        create_with_upload):
+    """do not allow activating a dataset without a valid .rtdc file"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
+    # create a dataset
+    dataset = make_dataset(create_context, owner_org,
+                           activate=False, license_id="CC0-1.0")
+    # upload an invalid .rtdc File
+    path_orig = data_path / "calibration_beads_47.rtdc"
+    path = pathlib.Path(tempfile.mkdtemp()) / "test_invalid_file_upload.rtdc"
+    # provoke sanity checks to fail
+    shutil.copy2(path_orig, path)
+    with h5py.File(path, "a") as h5:
+        deform_cropped = h5["events"]["deform"][:-4]
+        del h5["events"]["deform"]
+        h5["events"]["deform"] = deform_cropped
+    content = path.read_bytes()
+    create_with_upload(
+        content, 'test.rtdc',
+        url="upload",
+        package_id=dataset["id"],
+        context=create_context,
+    )
+    # assert: cannot activate dataset without valid .rtdc file
+    with pytest.raises(
+            logic.ValidationError,
+            match="make sure that it contains a valid .rtdc resource"):
+        helpers.call_action("package_patch", test_context,
+                            id=dataset["id"],
+                            state="active")
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_state_from_draft_to_active_without_rtdc_forbidden_control(
+        create_with_upload):
+    """negative control for previous test"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    # Note: `call_action` bypasses authorization!
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
+    # upload a *valid* [sic] .rtdc File (this is the control)
+    dataset = make_dataset(create_context, owner_org,
+                           activate=False)
+    content = (data_path / "calibration_beads_47.rtdc").read_bytes()
+    create_with_upload(
+        content, 'test.rtdc',
+        url="upload",
+        package_id=dataset["id"],
+        context=create_context,
+    )
+    # assert: *can* activate dataset *with* valid .rtdc file
+    helpers.call_action("package_patch", test_context,
+                        id=dataset["id"],
+                        state="active")

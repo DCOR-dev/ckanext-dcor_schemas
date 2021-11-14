@@ -71,7 +71,7 @@ def test_login_and_browse_to_main_locations(url, app):
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_theme')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_login_and_go_to_dataset_edit_page(app):
+def test_login_and_go_to_dataset_edit_page(app, create_with_upload):
     user = factories.User()
     owner_org = factories.Organization(users=[{
         'name': user['id'],
@@ -81,7 +81,8 @@ def test_login_and_go_to_dataset_edit_page(app):
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
     # create a dataset
-    dataset, _ = make_dataset(create_context, owner_org, with_resource=True,
+    dataset, _ = make_dataset(create_context, owner_org,
+                              create_with_upload=create_with_upload,
                               activate=True)
     # taken from ckanext/example_iapitoken/tests/test_plugin.py
     data = helpers.call_action(
@@ -99,7 +100,8 @@ def test_login_and_go_to_dataset_edit_page(app):
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_theme')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_login_and_go_to_dataset_edit_page_and_view_license_options(app):
+def test_login_and_go_to_dataset_edit_page_and_view_license_options(
+        app, create_with_upload):
     """Check whether the license options are correct"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -110,7 +112,8 @@ def test_login_and_go_to_dataset_edit_page_and_view_license_options(app):
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
     # create a dataset
-    dataset, _ = make_dataset(create_context, owner_org, with_resource=True,
+    dataset, _ = make_dataset(create_context, owner_org,
+                              create_with_upload=create_with_upload,
                               activate=True, license_id="CC-BY-4.0")
 
     # taken from ckanext/example_iapitoken/tests/test_plugin.py
@@ -148,7 +151,7 @@ def test_login_and_go_to_dataset_edit_page_and_view_license_options(app):
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_theme')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_resource_view_references(app):
+def test_resource_view_references(app, create_with_upload):
     """Test whether the references links render correctly"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -165,7 +168,8 @@ def test_resource_view_references(app):
         "https://www.biorxiv.org/content/10.1101/862227v2.full.pdf+html",
         "https://dc.readthedocs.io/en/latest/",
     ]
-    dataset, _ = make_dataset(create_context, owner_org, with_resource=True,
+    dataset, _ = make_dataset(create_context, owner_org,
+                              create_with_upload=create_with_upload,
                               activate=True, references=",".join(references))
 
     # taken from ckanext/example_iapitoken/tests/test_plugin.py

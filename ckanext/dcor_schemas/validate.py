@@ -7,6 +7,7 @@ import ckan.model as model
 import ckan.plugins.toolkit as toolkit
 
 import dclab
+import dcor_shared
 from slugify import slugify
 
 from . import resource_schema_supplements as rss
@@ -176,14 +177,35 @@ def dataset_state(key, data, errors, context):
     """If a dataset does not have any resources, it must be a draft"""
     data_dict = df.unflatten(data)
 
-    if (data[key] == "active"
-        and ("resources" not in data_dict
-             or len(data_dict["resources"]) == 0)):
-        # The user wants to activate the dataset although it does not
-        # contain any resources. This is not possible!
-        raise toolkit.Invalid(
-            "Cannot set state of dataset to 'active', because it does not "
-            "contain any resources!")
+    if data[key] == "active":
+        if "resources" not in data_dict or len(data_dict["resources"]) == 0:
+            # The user wants to activate the dataset although it does not
+            # contain any resources. This is not possible!
+            raise toolkit.Invalid(
+                "Cannot set state of dataset to 'active', because it does not "
+                "contain any resources!")
+        else:
+            # Do not allow activating a dataset without at least one valid
+            # .rtdc resource.
+            # Note that DCOR-Aid first checks whether resource upload is
+            # complete before uploading. If someone writes their own script
+            # for uploading, they also have to use package_revise *after*
+            # uploading the resources to set the state to "active".
+            for res in data_dict["resources"]:
+                if res["mimetype"] == "RT-DC":
+                    rp = dcor_shared.get_resource_path(res["id"])
+                    try:
+                        with dclab.IntegrityChecker(rp) as ic:
+                            insane = ic.sanity_check()
+                            if not insane:
+                                break
+                    except ValueError:
+                        # Unknown file format
+                        pass
+            else:
+                raise toolkit.Invalid(
+                    "Before activating a dataset, make sure that it contains "
+                    "a valid .rtdc resource!")
 
 
 def resource_dc_config(key, data, errors, context):

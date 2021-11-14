@@ -38,7 +38,7 @@ def test_zombies_with_a_user(cli):
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_zombies_with_a_user_with_dataset(cli):
+def test_zombies_with_a_user_with_dataset(cli, create_with_upload):
     user = factories.User()
     owner_org = factories.Organization(users=[{
         'name': user['id'],
@@ -47,7 +47,8 @@ def test_zombies_with_a_user_with_dataset(cli):
     # Note: `call_action` bypasses authorization!
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
-    make_dataset(create_context, owner_org, with_resource=True,
+    make_dataset(create_context, owner_org,
+                 create_with_upload=create_with_upload,
                  activate=True)
 
     result = cli.invoke(ckan, ["list-zombie-users", "--last-activity-weeks",

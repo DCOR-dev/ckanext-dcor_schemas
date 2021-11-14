@@ -1,5 +1,7 @@
 0.16.1
  - tests: add authfunction test for collaborators (#10)
+ - enh: only allow datasets with at least one valid .rtdc file (#5)
+ - tests: use create_with_upload fixture for resource creation
 0.16.0
  - fix: disable browser-based uploads (#20)
  - ref: use the original auth function for package_create to

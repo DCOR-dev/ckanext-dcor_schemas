@@ -15,7 +15,7 @@ data_path = pathlib.Path(__file__).parent / "data"
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_add_resources_only_to_drafts():
+def test_dataset_add_resources_only_to_drafts(create_with_upload):
     """do not allow adding resources to non-draft datasets"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -28,7 +28,8 @@ def test_dataset_add_resources_only_to_drafts():
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset, _ = make_dataset(create_context, owner_org, with_resource=True,
+    dataset, _ = make_dataset(create_context, owner_org,
+                              create_with_upload=create_with_upload,
                               activate=True)
     # assert: adding resources to active datasets forbidden
     path = data_path / "calibration_beads_47.rtdc"
@@ -83,7 +84,7 @@ def test_dataset_create_missing_org():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_create_bad_collection():
+def test_dataset_create_bad_collection(create_with_upload):
     """cannot create dataset in other user's collection"""
     user_a = factories.User()
     user_b = factories.User()
@@ -99,14 +100,15 @@ def test_dataset_create_bad_collection():
 
     with pytest.raises(logic.NotAuthorized,
                        match="not authorized to create packages"):
-        make_dataset(context_b, owner_org, with_resource=True,
+        make_dataset(context_b, owner_org,
+                     create_with_upload=create_with_upload,
                      activate=True,
                      groups=[{"id": owner_group["id"]}])
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_delete_only_drafts():
+def test_dataset_delete_only_drafts(create_with_upload):
     """do not allow deleting datasets unless they are drafts"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -119,13 +121,13 @@ def test_dataset_delete_only_drafts():
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset = make_dataset(create_context, owner_org, with_resource=False)
+    dataset = make_dataset(create_context, owner_org)
     assert dataset["state"] == "draft", "dataset without res must be draft"
     # assert: draft datasets may be deleted
     assert helpers.call_auth("package_delete", test_context,
                              id=dataset["id"])
     # upload resource
-    make_resource(create_context, dataset_id=dataset["id"])
+    make_resource(create_with_upload, create_context, dataset_id=dataset["id"])
     # set dataset state to active
     helpers.call_action("package_patch", create_context,
                         id=dataset["id"],
@@ -156,8 +158,7 @@ def test_dataset_delete_other_user():
     context_b = {'ignore_auth': False,
                  'user': user_b['name'], 'model': model, 'api_version': 3}
 
-    dataset = make_dataset(context_a, owner_org, with_resource=False,
-                           activate=False)
+    dataset = make_dataset(context_a, owner_org, activate=False)
     # assert: other users cannot delete your drafts
     with pytest.raises(logic.NotAuthorized,
                        match="not authorized to edit package"):
@@ -179,8 +180,7 @@ def test_dataset_delete_anonymous():
     context_b = {'ignore_auth': False, 'user': None,
                  'model': model, 'api_version': 3}
 
-    dataset = make_dataset(context_a, owner_org, with_resource=False,
-                           activate=False)
+    dataset = make_dataset(context_a, owner_org, activate=False)
     # assert: other users cannot delete your drafts
     with pytest.raises(
             logic.NotAuthorized,
@@ -203,8 +203,7 @@ def test_dataset_edit_anonymous():
     context_b = {'ignore_auth': False, 'user': None,
                  'model': model, 'api_version': 3}
 
-    dataset = make_dataset(context_a, owner_org, with_resource=False,
-                           activate=False)
+    dataset = make_dataset(context_a, owner_org, activate=False)
     # assert: other users cannot delete your drafts
     with pytest.raises(
             logic.NotAuthorized,
@@ -216,7 +215,7 @@ def test_dataset_edit_anonymous():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_edit_collaborator():
+def test_dataset_edit_collaborator(create_with_upload):
     """collaborator cannot edit dataset"""
     user_a = factories.User()
     user_b = factories.User()
@@ -229,7 +228,8 @@ def test_dataset_edit_collaborator():
     context_b = {'ignore_auth': False, 'user': user_b['name'],
                  'model': model, 'api_version': 3}
 
-    dataset, _ = make_dataset(context_a, owner_org, with_resource=True,
+    dataset, _ = make_dataset(context_a, owner_org,
+                              create_with_upload=create_with_upload,
                               activate=True, private=True)
     helpers.call_action("package_collaborator_create",
                         id=dataset["id"],
@@ -238,7 +238,7 @@ def test_dataset_edit_collaborator():
     # make sure the collaborator can read the private package
     helpers.call_auth("package_show", context_b,
                       id=dataset["id"])
-    # assert: other users cannot delete your drafts
+    # assert: collaborators cannot edit your datasets
     with pytest.raises(
             logic.NotAuthorized,
             match="Changing 'title' not allowed for non-draft datasets!"):
@@ -249,7 +249,7 @@ def test_dataset_edit_collaborator():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_license_more_restrictive_forbidden():
+def test_dataset_license_more_restrictive_forbidden(create_with_upload):
     """do not allow switching to a more restrictive license"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -262,7 +262,8 @@ def test_dataset_license_more_restrictive_forbidden():
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset, res = make_dataset(create_context, owner_org, with_resource=True,
+    dataset, res = make_dataset(create_context, owner_org,
+                                create_with_upload=create_with_upload,
                                 activate=True, license_id="CC0-1.0")
     # assert: cannot set license id to something less restrictive
     with pytest.raises(
@@ -288,7 +289,7 @@ def test_dataset_purge_anonymous():
     test_context = {'ignore_auth': False,
                     'user': None, 'model': model, 'api_version': 3}
     # create a dataset
-    dataset = make_dataset(create_context, owner_org, with_resource=False)
+    dataset = make_dataset(create_context, owner_org)
     # delete a dataset
     helpers.call_action("package_delete", create_context,
                         id=dataset["id"]
@@ -316,8 +317,7 @@ def test_dataset_purge_draft():
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset = make_dataset(create_context, owner_org, with_resource=False,
-                           activate=False)
+    dataset = make_dataset(create_context, owner_org, activate=False)
     with pytest.raises(logic.NotAuthorized,
                        match="Only deleted datasets can be purged"):
         # assert: cannot purge a draft
@@ -340,7 +340,7 @@ def test_dataset_purge_deleted():
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset = make_dataset(create_context, owner_org, with_resource=False)
+    dataset = make_dataset(create_context, owner_org)
     # delete a dataset
     helpers.call_action("package_delete", create_context,
                         id=dataset["id"]
@@ -352,7 +352,7 @@ def test_dataset_purge_deleted():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_slug_editing_forbidden():
+def test_dataset_slug_editing_forbidden(create_with_upload):
     """do not allow changing the name (slug)"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -365,7 +365,8 @@ def test_dataset_slug_editing_forbidden():
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset, res = make_dataset(create_context, owner_org, with_resource=True,
+    dataset, res = make_dataset(create_context, owner_org,
+                                create_with_upload=create_with_upload,
                                 activate=True)
     assert dataset["state"] == "active"
     # assert: cannot set state back to draft
@@ -379,7 +380,7 @@ def test_dataset_slug_editing_forbidden():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_state_from_active_to_draft_forbidden():
+def test_dataset_state_from_active_to_draft_forbidden(create_with_upload):
     """do not allow setting the dataset state from active to draft"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -392,7 +393,8 @@ def test_dataset_state_from_active_to_draft_forbidden():
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset, res = make_dataset(create_context, owner_org, with_resource=True,
+    dataset, res = make_dataset(create_context, owner_org,
+                                create_with_upload=create_with_upload,
                                 activate=True)
     assert dataset["state"] == "active"
     # assert: cannot set state back to draft
@@ -420,11 +422,9 @@ def test_dataset_user_anonymous():
     with pytest.raises(
             logic.NotAuthorized,
             match="Action package_create requires an authenticated user"):
-        make_dataset(context_b, owner_org, with_resource=False,
-                     activate=False)
+        make_dataset(context_b, owner_org, activate=False)
 
-    ds = make_dataset(context_a, owner_org, with_resource=False,
-                      activate=False)
+    ds = make_dataset(context_a, owner_org, activate=False)
 
     with pytest.raises(
             logic.NotAuthorized,
@@ -491,7 +491,8 @@ def test_dataset_visibility_create_public_if_not_allowed_control():
 @pytest.mark.ckan_config('ckanext.dcor_schemas.allow_public_datasets', "true")
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_visibility_update_1_private2public_allowed():
+def test_dataset_visibility_update_1_private2public_allowed(
+        create_with_upload):
     """allow changing visibility from private to public"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -504,7 +505,8 @@ def test_dataset_visibility_update_1_private2public_allowed():
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset, res = make_dataset(create_context, owner_org, with_resource=True,
+    dataset, res = make_dataset(create_context, owner_org,
+                                create_with_upload=create_with_upload,
                                 activate=True, private=True)
     # assert: user should be able to make private dataset public
     assert helpers.call_auth("package_patch", test_context,
@@ -515,7 +517,8 @@ def test_dataset_visibility_update_1_private2public_allowed():
 @pytest.mark.ckan_config('ckanext.dcor_schemas.allow_public_datasets', "true")
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_visibility_update_1_public2private_not_allowed():
+def test_dataset_visibility_update_1_public2private_not_allowed(
+        create_with_upload):
     """do not allow to set the visibility of a public dataset to private"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -528,7 +531,8 @@ def test_dataset_visibility_update_1_public2private_not_allowed():
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset, res = make_dataset(create_context, owner_org, with_resource=True,
+    dataset, res = make_dataset(create_context, owner_org,
+                                create_with_upload=create_with_upload,
                                 activate=True, private=False)
     # assert: cannot set private to True for active datasets
     with pytest.raises(
@@ -542,7 +546,8 @@ def test_dataset_visibility_update_1_public2private_not_allowed():
 @pytest.mark.ckan_config('ckanext.dcor_schemas.allow_public_datasets', "false")
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_visibility_update_2_private2public_not_allowed():
+def test_dataset_visibility_update_2_private2public_not_allowed(
+        create_with_upload):
     """
     do not allow to change visibility from private to public if
     ckanext.dcor_schemas.allow_public_datasets is false
@@ -559,7 +564,8 @@ def test_dataset_visibility_update_2_private2public_not_allowed():
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset (no auth check done during testing, so we can create
     # a public dataset)
-    dataset, res = make_dataset(create_context, owner_org, with_resource=True,
+    dataset, res = make_dataset(create_context, owner_org,
+                                create_with_upload=create_with_upload,
                                 activate=True, private=True)
     # assert: changing private to public should not work
     with pytest.raises(logic.NotAuthorized,
@@ -572,7 +578,8 @@ def test_dataset_visibility_update_2_private2public_not_allowed():
 @pytest.mark.ckan_config('ckanext.dcor_schemas.allow_public_datasets', "false")
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_visibility_update_2_public2private_allowed():
+def test_dataset_visibility_update_2_public2private_allowed(
+        create_with_upload):
     """
     allow to change visibility from public to private if
     ckanext.dcor_schemas.allow_public_datasets is false
@@ -588,7 +595,8 @@ def test_dataset_visibility_update_2_public2private_allowed():
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset (no auth check done during testing, so we can create
     # a public dataset)
-    dataset, res = make_dataset(create_context, owner_org, with_resource=True,
+    dataset, res = make_dataset(create_context, owner_org,
+                                create_with_upload=create_with_upload,
                                 activate=True, private=False, name="test")
     # assert: changing public to private should work
     assert helpers.call_auth("package_patch", test_context,

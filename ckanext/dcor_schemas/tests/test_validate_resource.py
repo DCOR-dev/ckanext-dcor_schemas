@@ -28,7 +28,7 @@ def test_resource_create_configuration_metadata():
     create_context1 = {'ignore_auth': False,
                        'user': user['name'],
                        'api_version': 3}
-    dataset = make_dataset(create_context1, owner_org, with_resource=False,
+    dataset = make_dataset(create_context1, owner_org,
                            activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     with path.open('rb') as fd:
@@ -63,7 +63,7 @@ def test_resource_create_configuration_metadata_invalid():
     create_context1 = {'ignore_auth': False,
                        'user': user['name'],
                        'api_version': 3}
-    dataset = make_dataset(create_context1, owner_org, with_resource=False,
+    dataset = make_dataset(create_context1, owner_org,
                            activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     with path.open('rb') as fd:
@@ -95,7 +95,7 @@ def test_resource_create_configuration_supplement():
     create_context1 = {'ignore_auth': False,
                        'user': user['name'],
                        'api_version': 3}
-    dataset = make_dataset(create_context1, owner_org, with_resource=False,
+    dataset = make_dataset(create_context1, owner_org,
                            activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     with path.open('rb') as fd:
@@ -129,7 +129,7 @@ def test_resource_create_configuration_supplement_invalid_value():
     create_context1 = {'ignore_auth': False,
                        'user': user['name'],
                        'api_version': 3}
-    dataset = make_dataset(create_context1, owner_org, with_resource=False,
+    dataset = make_dataset(create_context1, owner_org,
                            activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     with path.open('rb') as fd:
@@ -162,7 +162,7 @@ def test_resource_create_custom_upload_name_overridden():
     create_context1 = {'ignore_auth': False,
                        'user': user['name'],
                        'api_version': 3}
-    dataset = make_dataset(create_context1, owner_org, with_resource=False,
+    dataset = make_dataset(create_context1, owner_org,
                            activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     # create the first resource
@@ -216,7 +216,7 @@ def test_resource_create_restrict_extensions():
     create_context1 = {'ignore_auth': False,
                        'user': user['name'],
                        'api_version': 3}
-    dataset = make_dataset(create_context1, owner_org, with_resource=False,
+    dataset = make_dataset(create_context1, owner_org,
                            activate=False)
     tdir = tempfile.mkdtemp(prefix="test_dcor_schemas_")
     path = pathlib.Path(tdir) / "bad_extension.docx"
@@ -249,7 +249,7 @@ def test_resource_create_same_name_forbidden():
     create_context1 = {'ignore_auth': False,
                        'user': user['name'],
                        'api_version': 3}
-    dataset = make_dataset(create_context1, owner_org, with_resource=False,
+    dataset = make_dataset(create_context1, owner_org,
                            activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     # create the first resource
@@ -292,7 +292,7 @@ def test_resource_create_weird_characters():
     # create 1st dataset
     create_context1 = {'ignore_auth': False,
                        'user': user['name'], 'api_version': 3}
-    dataset = make_dataset(create_context1, owner_org, with_resource=False,
+    dataset = make_dataset(create_context1, owner_org,
                            activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     tdir = tempfile.mkdtemp(prefix="test_dcor_schemas_")

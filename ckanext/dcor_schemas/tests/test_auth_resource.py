@@ -29,8 +29,7 @@ def test_resource_create_id_forbidden():
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset = make_dataset(create_context, owner_org, with_resource=False,
-                           activate=False)
+    dataset = make_dataset(create_context, owner_org, activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     with path.open('rb') as fd:
         upload = cgi.FieldStorage()
@@ -48,7 +47,7 @@ def test_resource_create_id_forbidden():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_resource_create_in_other_users_dataset():
+def test_resource_create_in_other_users_dataset(create_with_upload):
     """User is not allowed to create a resource in another user's dataset"""
     user_a = factories.User()
     user_b = factories.User()
@@ -64,7 +63,8 @@ def test_resource_create_in_other_users_dataset():
     context_b = {'ignore_auth': False,
                  'user': user_b['name'], 'model': model, 'api_version': 3}
 
-    dataset, _ = make_dataset(context_a, owner_org, with_resource=True,
+    dataset, _ = make_dataset(context_a, owner_org,
+                              create_with_upload=create_with_upload,
                               activate=False)
 
     with pytest.raises(logic.NotAuthorized):
@@ -74,7 +74,7 @@ def test_resource_create_in_other_users_dataset():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_resource_delete_only_drafts():
+def test_resource_delete_only_drafts(create_with_upload):
     """do not allow deleting resources unless they are drafts"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -87,13 +87,14 @@ def test_resource_delete_only_drafts():
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset = make_dataset(create_context, owner_org, with_resource=False)
+    dataset = make_dataset(create_context, owner_org)
     assert dataset["state"] == "draft", "dataset without res must be draft"
     # assert: draft datasets may be deleted
     assert helpers.call_auth("package_delete", test_context,
                              id=dataset["id"])
     # upload resource
-    res = make_resource(create_context, dataset_id=dataset["id"])
+    res = make_resource(create_with_upload, create_context,
+                        dataset_id=dataset["id"])
     # set dataset state to active
     helpers.call_action("package_patch", create_context,
                         id=dataset["id"],
@@ -114,7 +115,7 @@ def test_resource_delete_only_drafts():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_resource_patch_only_description():
+def test_resource_patch_only_description(create_with_upload):
     """only allow changing the description"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -127,7 +128,8 @@ def test_resource_patch_only_description():
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    ds, res = make_dataset(create_context, owner_org, with_resource=True,
+    ds, res = make_dataset(create_context, owner_org,
+                           create_with_upload=create_with_upload,
                            activate=True)
     # assert: allow updating the description
     assert helpers.call_auth("resource_patch", test_context,
@@ -160,7 +162,7 @@ def test_resource_patch_only_description():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_resource_patch_other_users_dataset():
+def test_resource_patch_other_users_dataset(create_with_upload):
     """User is not allowed to patch other user's datasets"""
     user_a = factories.User()
     user_b = factories.User()
@@ -177,7 +179,8 @@ def test_resource_patch_other_users_dataset():
                  'user': user_b['name'], 'model': model, 'api_version': 3}
 
     # create a dataset
-    ds, res = make_dataset(context_a, owner_org, with_resource=True,
+    ds, res = make_dataset(context_a, owner_org,
+                           create_with_upload=create_with_upload,
                            activate=True)
 
     with pytest.raises(logic.NotAuthorized):

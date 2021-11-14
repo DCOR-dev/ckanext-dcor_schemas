@@ -37,7 +37,7 @@ def synchronous_enqueue_job(job_func, args=None, kwargs=None, title=None,
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
-@pytest.mark.usefixtures('clean_db', 'with_request_context')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
 def test_set_dc_config_job_fl(enqueue_job_mock, create_with_upload,
@@ -54,8 +54,7 @@ def test_set_dc_config_job_fl(enqueue_job_mock, create_with_upload,
     # create 1st dataset
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
-    dataset = make_dataset(create_context, owner_org, with_resource=False,
-                           activate=False)
+    dataset = make_dataset(create_context, owner_org, activate=False)
     content = (data_dir / "calibration_beads_47.rtdc").read_bytes()
     result = create_with_upload(
         content, 'test.rtdc',
@@ -88,8 +87,7 @@ def test_set_format_job(enqueue_job_mock, create_with_upload, monkeypatch,
     # create 1st dataset
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
-    dataset = make_dataset(create_context, owner_org, with_resource=False,
-                           activate=False)
+    dataset = make_dataset(create_context, owner_org, activate=False)
     path = data_dir / "calibration_beads_47.rtdc"
     # create dataset without fluorescence
     tmppath = pathlib.Path(tmpdir) / "calibratino_beads_nofl.rtdc"
@@ -125,8 +123,7 @@ def test_set_format_job_fl(enqueue_job_mock, create_with_upload, monkeypatch,
     # create 1st dataset
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
-    dataset = make_dataset(create_context, owner_org, with_resource=False,
-                           activate=False)
+    dataset = make_dataset(create_context, owner_org, activate=False)
     content = (data_dir / "calibration_beads_47.rtdc").read_bytes()
     result = create_with_upload(
         content, 'test.rtdc',
@@ -157,8 +154,7 @@ def test_set_sha256_job(enqueue_job_mock, create_with_upload, monkeypatch,
     # create 1st dataset
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
-    dataset = make_dataset(create_context, owner_org, with_resource=False,
-                           activate=False)
+    dataset = make_dataset(create_context, owner_org, activate=False)
     content = (data_dir / "calibration_beads_47.rtdc").read_bytes()
     result = create_with_upload(
         content, 'test.rtdc',
@@ -190,8 +186,7 @@ def test_set_sha256_job_empty_file(enqueue_job_mock, create_with_upload,
     # create 1st dataset
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
-    dataset = make_dataset(create_context, owner_org, with_resource=False,
-                           activate=False)
+    dataset = make_dataset(create_context, owner_org, activate=False)
     result = create_with_upload(
         b"", 'test.ini',
         url="upload",

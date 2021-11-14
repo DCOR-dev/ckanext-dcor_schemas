@@ -10,7 +10,7 @@ from .helper_methods import make_dataset
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_org_admin_bulk_update_delete_forbidden():
+def test_org_admin_bulk_update_delete_forbidden(create_with_upload):
     """do not allow bulk_update_delete"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -20,11 +20,13 @@ def test_org_admin_bulk_update_delete_forbidden():
     # create a datasets
     create_context1 = {'ignore_auth': False,
                        'user': user['name'], 'api_version': 3}
-    ds1, _ = make_dataset(create_context1, owner_org, with_resource=True,
+    ds1, _ = make_dataset(create_context1, owner_org,
+                          create_with_upload=create_with_upload,
                           activate=True)
     create_context2 = {'ignore_auth': False,
                        'user': user['name'], 'api_version': 3}
-    ds2, _ = make_dataset(create_context2, owner_org, with_resource=True,
+    ds2, _ = make_dataset(create_context2, owner_org,
+                          create_with_upload=create_with_upload,
                           activate=True)
     # assert: bulk_update_delete is should be forbidden
     test_context = {'ignore_auth': False,
