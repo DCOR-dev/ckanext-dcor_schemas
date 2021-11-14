@@ -216,6 +216,39 @@ def test_dataset_edit_anonymous():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_edit_collaborator():
+    """collaborator cannot edit dataset"""
+    user_a = factories.User()
+    user_b = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user_a['id'],
+        'capacity': 'admin'
+    }])
+    context_a = {'ignore_auth': False, 'user': user_a['name'],
+                 'model': model, 'api_version': 3}
+    context_b = {'ignore_auth': False, 'user': user_b['name'],
+                 'model': model, 'api_version': 3}
+
+    dataset, _ = make_dataset(context_a, owner_org, with_resource=True,
+                              activate=True, private=True)
+    helpers.call_action("package_collaborator_create",
+                        id=dataset["id"],
+                        user_id=user_b["id"],
+                        capacity="editor")
+    # make sure the collaborator can read the private package
+    helpers.call_auth("package_show", context_b,
+                      id=dataset["id"])
+    # assert: other users cannot delete your drafts
+    with pytest.raises(
+            logic.NotAuthorized,
+            match="Changing 'title' not allowed for non-draft datasets!"):
+        helpers.call_auth("package_update", context_b,
+                          id=dataset["id"],
+                          title="Hans Peter")
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_dataset_license_more_restrictive_forbidden():
     """do not allow switching to a more restrictive license"""
     user = factories.User()
