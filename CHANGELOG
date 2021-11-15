@@ -1,3 +1,5 @@
+0.16.4
+ - fix: typo in run_jobs_dcor_schemas CLI cause OSError
 0.16.3
  - fix: handle errors during run_jobs_dcor_schemas CLI operations
 0.16.2
