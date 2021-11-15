@@ -1,3 +1,5 @@
+0.16.2
+ - fix: displaying dataset failed when user not logged-in
 0.16.1
  - tests: add authfunction test for collaborators (#10)
  - enh: only allow datasets with at least one valid .rtdc file (#5)

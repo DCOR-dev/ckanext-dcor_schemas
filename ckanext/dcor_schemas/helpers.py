@@ -1,3 +1,4 @@
+import ckan.logic as logic
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
 
@@ -33,8 +34,14 @@ def get_reference_dict(value):
 
 
 def get_user_name(user_id):
-    usr = toolkit.get_action('user_show')(data_dict={'id': user_id})
-    return usr["name"], usr["display_name"]
+    try:
+        usr = toolkit.get_action('user_show')(data_dict={'id': user_id})
+        name = usr["name"]
+        display_name = usr["name"]
+    except logic.NotAuthorized:
+        name = user_id
+        display_name = user_id
+    return name, display_name
 
 
 def get_valid_licenses(license_id):
