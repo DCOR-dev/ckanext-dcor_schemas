@@ -1,5 +1,6 @@
 import datetime
 import time
+import traceback
 
 import ckan.model as model
 
@@ -53,24 +54,30 @@ def run_jobs_dcor_schemas(modified_days=-1):
 
     nl = False  # new line character
     for dataset in datasets:
-        nl = False
-        click.echo(f"Checking dataset {dataset.id}\r", nl=False)
-        for resource in dataset.resources:
-            res_dict = resource.as_dict()
-            if jobs.set_format_job(res_dict):
-                if not nl:
-                    click.echo("")
-                    nl = True
-                click.echo(f"Updated format for {resource.name}")
-            if jobs.set_sha256_job(res_dict):
-                if not nl:
-                    click.echo("")
-                    nl = True
-                click.echo(f"Updated SHA256 for {resource.name}")
-            if jobs.set_dc_config_job(res_dict):
-                if not nl:
-                    click.echo("")
-                click.echo(f"Updated config for {resource.name}")
+        try:
+            nl = False
+            click.echo(f"Checking dataset {dataset.id}\r", nl=False)
+            for resource in dataset.resources:
+                res_dict = resource.as_dict()
+                if jobs.set_format_job(res_dict):
+                    if not nl:
+                        click.echo("")
+                        nl = True
+                    click.echo(f"Updated format for {resource.name}")
+                if jobs.set_sha256_job(res_dict):
+                    if not nl:
+                        click.echo("")
+                        nl = True
+                    click.echo(f"Updated SHA256 for {resource.name}")
+                if jobs.set_dc_config_job(res_dict):
+                    if not nl:
+                        click.echo("")
+                    click.echo(f"Updated config for {resource.name}")
+        except BaseException as e:
+            click.echo(
+                f"\nEncountered {e.__class__.__name___} for {dataset.id}!",
+                err=True)
+            click.echo(traceback.format_exc(), err=True)
     if not nl:
         click.echo("")
     click.echo("Done!")

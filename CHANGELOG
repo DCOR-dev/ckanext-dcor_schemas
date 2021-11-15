@@ -1,3 +1,5 @@
+0.16.3
+ - fix: handle errors during run_jobs_dcor_schemas CLI operations
 0.16.2
  - fix: displaying dataset failed when user not logged-in
 0.16.1
