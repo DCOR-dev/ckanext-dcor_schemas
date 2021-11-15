@@ -37,10 +37,10 @@ def get_user_name(user_id):
     try:
         usr = toolkit.get_action('user_show')(data_dict={'id': user_id})
         name = usr["name"]
-        display_name = usr["name"]
+        display_name = usr["display_name"] or usr["name"]
     except logic.NotAuthorized:
         name = user_id
-        display_name = user_id
+        display_name = ""  # do not display user
     return name, display_name
 
 
