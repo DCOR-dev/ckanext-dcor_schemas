@@ -75,7 +75,7 @@ def run_jobs_dcor_schemas(modified_days=-1):
                     click.echo(f"Updated config for {resource.name}")
         except BaseException as e:
             click.echo(
-                f"\nEncountered {e.__class__.__name___} for {dataset.id}!",
+                f"\nEncountered {e.__class__.__name__} for {dataset.id}!",
                 err=True)
             click.echo(traceback.format_exc(), err=True)
     if not nl:
