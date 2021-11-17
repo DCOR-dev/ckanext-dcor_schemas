@@ -1,0 +1,58 @@
+{% ckan_extends %}
+
+{# Add custom metadata fields #}
+
+	{% block package_basic_fields_custom %}
+	  {{ form.input('authors', label=_('Authors'), id='field-authors', placeholder=_('Guybrush Threepwood, John Cleese'), value=data.authors, error=errors.authors, classes=['control-required']) }}
+	  {{ form.input('doi', label=_('DOI'), id='field-doi', placeholder=_('Only if published elsewhere; e.g. 10.6084/m9.figshare.11662773'), value=data.doi, error=errors.doi, classes=['control-medium']) }}
+	  {{ form.input('references', label=_('References'), id='field-references', placeholder=_('arXiv:1704.00572, bioRxiv:10.1101/862227, doi:10.6084/m9.figshare.11662773, https://dclab.readthedocs.io'), value=data.references, error=errors.references, classes=['control-medium']) }}
+	{% endblock %}
+
+
+{# Make 'private=False' the default #}
+
+    {% block package_metadata_fields_visibility %}
+    <div class="form-group control-medium">
+      <label for="field-private" class="control-label">{{ _('Visibility') }}</label>
+      <div class="controls">
+        <select id="field-private" name="private" class="form-control">
+          {% for option in [('True', _('Private')), ('False', _('Public'))] %}
+          <option value="{{ option[0] }}" {% if option[0] == data.get('private', 'False')|trim %}selected="selected"{% endif %}>{{ option[1] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    {% endblock %}
+
+
+{# Modify license fields only to less-restrictive ones #}
+
+	{% block package_basic_fields_license %}
+	<div class="form-group">
+	  {% set error = errors.license_id %}
+	  <label class="control-label control-required" for="field-license">{{ _("License") }}</label>
+	  <div class="controls">
+	    <div class="row">
+	      <div class="col-md-6">
+	        <select id="field-license" name="license_id" data-module="autocomplete">
+	          {% set existing_license_id = data.get('license_id', 'none') %}
+	          {% for license_id, license_desc in h.dcor_schemas_license_options(existing_license_id) %}
+	          <option value="{{ license_id }}" {% if existing_license_id == license_id %}selected="selected"{% endif %}>{{ license_desc }}</option>
+	          {% endfor %}
+	        </select>
+	        {% if error %}<span class="error-block">{{ error }}</span>{% endif %}
+	      </div>
+	      <div class="col-md-6">
+	        <span class="info-block info-inline">
+	          <i class="fa fa-info-circle"></i>
+	          {% trans %}
+	          Please find a comparison of the licenses at
+	          <a href="https://en.wikipedia.org/wiki/Creative_Commons_license#Seven_regularly_used_licenses">Wikipedia</a>.
+	          You may always switch to a less restrictive license.
+	          {% endtrans %}
+	        </span>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	{% endblock %}
