@@ -1,0 +1,3 @@
+hide_unused_elements:
+  contents:
+    - hide_unused_elements.css
