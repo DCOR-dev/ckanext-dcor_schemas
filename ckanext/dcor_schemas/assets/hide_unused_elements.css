@@ -15,3 +15,10 @@ Hide the "Link" button when creating a new resource (Only uploads are supported)
  visibility: hidden;
 }
 
+
+/*
+Hide the "Delete" button in the bulk view for datasets (not authorized anyway)
+*/
+.btn-danger[name="bulk_action.delete"]{
+  display:none;
+}
