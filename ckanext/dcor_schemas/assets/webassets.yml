@@ -1,3 +1,7 @@
 hide_unused_elements:
   contents:
     - hide_unused_elements.css
+
+hide_for_nonadmin:
+  contents:
+    - hide_for_non_admin.css

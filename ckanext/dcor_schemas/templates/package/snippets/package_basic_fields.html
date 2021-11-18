@@ -1,13 +1,22 @@
 {% ckan_extends %}
 
-{# Add custom metadata fields #}
+{# Add custom metadata fields (only show to admins) #}
 
 	{% block package_basic_fields_custom %}
-	  {{ form.input('authors', label=_('Authors'), id='field-authors', placeholder=_('Guybrush Threepwood, John Cleese'), value=data.authors, error=errors.authors, classes=['control-required']) }}
-	  {{ form.input('doi', label=_('DOI'), id='field-doi', placeholder=_('Only if published elsewhere; e.g. 10.6084/m9.figshare.11662773'), value=data.doi, error=errors.doi, classes=['control-medium']) }}
-	  {{ form.input('references', label=_('References'), id='field-references', placeholder=_('arXiv:1704.00572, bioRxiv:10.1101/862227, doi:10.6084/m9.figshare.11662773, https://dclab.readthedocs.io'), value=data.references, error=errors.references, classes=['control-medium']) }}
+          {{ form.input('authors', label=_('Authors'), id='field-authors', placeholder=_('Guybrush Threepwood, John Cleese'), value=data.authors, error=errors.authors, classes=['control-required', 'only-for-admin']) }}
+          {{ form.input('doi', label=_('DOI'), id='field-doi', placeholder=_('Only if published elsewhere; e.g. 10.6084/m9.figshare.11662773'), value=data.doi, error=errors.doi, classes=['control-medium', 'only-for-admin']) }}
+          {{ form.input('references', label=_('References'), id='field-references', placeholder=_('arXiv:1704.00572, bioRxiv:10.1101/862227, doi:10.6084/m9.figshare.11662773, https://dclab.readthedocs.io'), value=data.references, error=errors.references, classes=['control-medium', 'only-for-admin']) }}
 	{% endblock %}
 
+
+{# Only show other fields to admins #}
+
+   {% if not c.userobj.sysadmin %}
+        {% block package_basic_fields_title %} {% endblock %}
+        {% block package_basic_fields_url %} {% endblock %}
+        {% block package_basic_fields_description %} {% endblock %}
+        {% block package_basic_fields_tags %} {% endblock %}
+   {% endif %}
 
 {# Make 'private=False' the default #}
 

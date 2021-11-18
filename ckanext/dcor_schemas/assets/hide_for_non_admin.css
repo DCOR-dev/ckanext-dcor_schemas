@@ -1,0 +1,7 @@
+/*
+Hide these classes
+*/
+.only-for-admin {
+ display: none;
+ visibility: hidden;
+}
