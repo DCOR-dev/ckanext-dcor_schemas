@@ -3,4 +3,10 @@
 {% block styles %}
   {{ super() }}
   {% asset 'dcor_schemas/hide_unused_elements' %}
+
+  {# Only admins can see those elements (kind of a workaround) #}
+  {% if not c.userobj.sysadmin %}
+     {% asset 'dcor_schemas/hide_for_non_admin' %}
+  {% endif %}
+
 {% endblock %}
