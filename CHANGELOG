@@ -1,4 +1,5 @@
 0.17.0
+ - fix: disallow bulk menu for making datasets private (#23)
  - ref: removed templates related to data upload via the web
    interface which has been disabled in 0.16.0 (commit bd5461e)
 0.16.4

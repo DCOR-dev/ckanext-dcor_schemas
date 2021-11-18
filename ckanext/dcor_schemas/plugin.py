@@ -68,6 +68,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         #   flag. So we just leave it at the defaults.
         return {
             'bulk_update_delete': dcor_auth.deny,
+            'bulk_update_private': dcor_auth.deny,
             'dataset_purge': dcor_auth.dataset_purge,
             'package_create': dcor_auth.package_create,
             'package_delete': dcor_auth.package_delete,

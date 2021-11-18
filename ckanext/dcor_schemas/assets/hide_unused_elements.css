@@ -13,3 +13,11 @@ Hide the "Delete" button in the bulk view for datasets (not authorized anyway)
 .btn-danger[name="bulk_action.delete"]{
   display:none;
 }
+
+
+/*
+Hide the "Make private" button in the bulk view for datasets (not authorized anyway)
+*/
+.btn-default[name="bulk_action.private"]{
+  display:none;
+}
