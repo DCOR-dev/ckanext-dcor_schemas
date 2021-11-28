@@ -1,4 +1,5 @@
 from email.utils import parseaddr
+import re
 
 from ckan.common import asbool, config
 from ckan import logic
@@ -332,6 +333,19 @@ def user_create(context, data_dict=None):
     if data_dict is None:
         data_dict = {}
 
+    for name in ["fullname", "name", "display_name", "email"]:
+        if data_dict.get(name, "").lower().count("xx"):
+            # script kiddies
+            return {'success': False,
+                    'msg': f'SPAM registration detected!'}
+
+    if "image_url" in data_dict:
+        imgu = data_dict.get("image_url", "").lower()
+        if imgu:
+            if not re.search(r"\.(png|jpg|jpeg)$", imgu):
+                return {'success': False,
+                        'msg': f'SPAM registration detected!'}
+
     if "email" in data_dict:
         # somebody is attempting to create a user
         email = data_dict.get("email", "").strip()
@@ -349,6 +363,6 @@ def user_create(context, data_dict=None):
             domain = email.split("@")[1]
             if domain in ["gmail.com"]:
                 return {'success': False,
-                        'msg': f'Domain not allowed due to spam: {domain}!'}
+                        'msg': f'SPAM registration detected!'}
 
     return {'success': True}

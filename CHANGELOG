@@ -1,3 +1,5 @@
+0.17.1
+ - enh: next escalation step against spam registration (#14)
 0.17.0
  - fix: disallow bulk menu for making datasets private (#23)
  - enh: don't show package editing options to users who don't
