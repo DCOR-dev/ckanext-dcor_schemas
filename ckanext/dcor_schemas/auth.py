@@ -337,14 +337,14 @@ def user_create(context, data_dict=None):
         if data_dict.get(name, "").lower().count("xx"):
             # script kiddies
             return {'success': False,
-                    'msg': f'SPAM registration detected!'}
+                    'msg': 'SPAM registration detected!'}
 
     if "image_url" in data_dict:
         imgu = data_dict.get("image_url", "").lower()
         if imgu:
             if not re.search(r"\.(png|jpg|jpeg)$", imgu):
                 return {'success': False,
-                        'msg': f'SPAM registration detected!'}
+                        'msg': 'SPAM registration detected!'}
 
     if "email" in data_dict:
         # somebody is attempting to create a user
@@ -363,6 +363,6 @@ def user_create(context, data_dict=None):
             domain = email.split("@")[1]
             if domain in ["gmail.com"]:
                 return {'success': False,
-                        'msg': f'SPAM registration detected!'}
+                        'msg': 'SPAM registration detected!'}
 
     return {'success': True}
