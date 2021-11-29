@@ -342,7 +342,7 @@ def user_create(context, data_dict=None):
     if "image_url" in data_dict:
         imgu = data_dict.get("image_url", "").lower()
         if imgu:
-            if not re.search(r"\.(png|jpg|jpeg)$", imgu):
+            if not re.search(r"\.(png|jpe?g)$", imgu):
                 return {'success': False,
                         'msg': 'SPAM registration detected!'}
 
