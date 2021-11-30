@@ -40,7 +40,7 @@
     <td class="dataset-details">{% snippet "snippets/license.html", pkg_dict=pkg_dict, text_only=True %}</td>
   </tr>
   <tr>
-    <th scope="row" class="dataset-label">{{ _("Package ID") }}</th>
+    <th scope="row" class="dataset-label">{{ _("Dataset ID") }}</th>
     <td class="dataset-details">{{ pkg_dict.id }}</td>
   </tr>
   {% set user, user_display = h.dcor_schemas_get_user_name(pkg_dict.creator_user_id) %}

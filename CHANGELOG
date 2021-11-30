@@ -1,5 +1,6 @@
 0.17.2
  - ref: minor regexp optimization
+ - ref: change "Package ID" to "Dataset ID" in dataset view
 0.17.1
  - enh: next escalation step against spam registration (#14)
 0.17.0
