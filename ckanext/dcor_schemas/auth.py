@@ -330,25 +330,30 @@ def user_create(context, data_dict=None):
     if not ao["success"]:
         return ao
 
+    collected_data = {}
+    spam_score = 0
+
     if data_dict is None:
         data_dict = {}
 
-    for name in ["fullname", "name", "display_name", "email"]:
-        if data_dict.get(name, "").lower().count("xx"):
+    for name_key in ["fullname", "name", "display_name", "email"]:
+        name_val = data_dict.get(name_key, "").lower()
+        collected_data[name_key] = name_val
+        if name_val.count("xx"):
             # script kiddies
-            return {'success': False,
-                    'msg': 'SPAM registration detected!'}
+            spam_score += 1
 
     if "image_url" in data_dict:
         imgu = data_dict.get("image_url", "").lower()
+        collected_data["image_url"] = imgu
         if imgu:
-            if not re.search(r"\.(png|jpe?g)$", imgu):
-                return {'success': False,
-                        'msg': 'SPAM registration detected!'}
+            if not re.search(r"\.(png|jpe?g)$", imgu):  # clearly abuse
+                spam_score += 1
 
     if "email" in data_dict:
         # somebody is attempting to create a user
         email = data_dict.get("email", "").strip()
+        collected_data["email"] = email
         if not email:
             return {'success': False,
                     'msg': 'No email address provided!'}
@@ -361,8 +366,11 @@ def user_create(context, data_dict=None):
                 return {'success': False,
                         'msg': 'Invalid email address provided!'}
             domain = email.split("@")[1]
-            if domain in ["gmail.com"]:
-                return {'success': False,
-                        'msg': 'SPAM registration detected!'}
+            if domain in ["gmail.com"]:  # this might be a little harsh
+                spam_score += 1
+
+    if spam_score:
+        return {'success': False,
+                'msg': f'Spam bot{spam_score * "*"} {collected_data}'}
 
     return {'success': True}
