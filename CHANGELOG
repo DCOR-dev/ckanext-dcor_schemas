@@ -1,6 +1,6 @@
 0.17.2
  - enh: make bot registration detection more verbose
- - ref: minor regexp optimization
+ - ref: minor regex optimization
  - ref: change "Package ID" to "Dataset ID" in dataset view
 0.17.1
  - enh: next escalation step against spam registration (#14)
