@@ -42,8 +42,9 @@ accordingly:
     (IResourceController) and not in validate.py
   - resources: custom resource name is overridden during upload
   - resources: do not allow weird characters in resource names
-  - resources: restrict upload data extensions to .rtdc, .csv, .tsv, .pdf,
-    .txt, .png, .jpg, .tif, .py, .ipynb, .ini
+  - resources: restrict upload data extensions to .'.rtdc', '.ini', '.csv',
+    '.tsv', '.pdf', '.txt', '.jpg', '.png', '.tif', '.py', '.ipynb', '.poly',
+    '.sof', '.so2'
   - resources: configuration metadata (using `dclab.dfn.config_funcs`)
 
 - IPermissionLabels (plugin.py)
