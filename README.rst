@@ -145,7 +145,7 @@ following commands in the root of this repository:
 
 .. |PyPI Version| image:: https://img.shields.io/pypi/v/ckanext.dcor_schemas.svg
    :target: https://pypi.python.org/pypi/ckanext.dcor_schemas
-.. |Build Status| image:: https://img.shields.io/github/workflow/status/DCOR-dev/ckanext-dcor_schemas/Checks
+.. |Build Status| image:: https://img.shields.io/github/actions/workflow/status/DCOR-dev/ckanext-dcor_schemas/check.yml
    :target: https://github.com/DCOR-dev/ckanext-dcor_schemas/actions?query=workflow%3AChecks
 .. |Coverage Status| image:: https://img.shields.io/codecov/c/github/DCOR-dev/ckanext-dcor_schemas
    :target: https://codecov.io/gh/DCOR-dev/ckanext-dcor_schemas
