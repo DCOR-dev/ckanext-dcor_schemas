@@ -267,7 +267,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         """
         labels = super(DCORDatasetFormPlugin, self
                        ).get_user_dataset_labels(user_obj)
-        if user_obj:
+        if user_obj and hasattr(user_obj, "id"):
             grps = logic.get_action("group_list_authz")(
                 {u'user': user_obj.id}, {})
             labels.extend(u'group-%s' % o['id'] for o in grps)
