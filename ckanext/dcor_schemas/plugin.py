@@ -273,15 +273,9 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             labels.extend(u'group-%s' % o['id'] for o in grps)
         return labels
 
-    # IResourceController and IPackageController
-    def after_create(self, context, resource):
+    # IResourceController
+    def after_resource_create(self, context, resource):
         """Add custom jobs"""
-        if resource.get("package_id") is None:
-            # `resource` is a package dictionary, because we implemented
-            # both IResourceController and IPackageController. Stop here.
-            # https://github.com/ckan/ckan/issues/2949
-            return
-
         depends_on = []
         extensions = [config.get("ckan.plugins")]
 
@@ -331,15 +325,9 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                                     "job_id": jid_sha256,
                                     "depends_on": copy.copy(depends_on)})
 
-    def after_update(self, context, pkg_dict):
-        if pkg_dict.get("package_id") is not None:
-            # `pkg_dict` is a resource dictionary, because we implemented
-            # both IResourceController and IPackageController. Stop here.
-            # https://github.com/ckan/ckan/issues/2949
-            return
-
+    def after_resource_update(self, context, pkg_dict):
         for ii, resource in enumerate(pkg_dict.get('resources', [])):
-            # Run all jobs that should be ran after resource creation.
+            # Run all jobs that should be run after resource creation.
             # Note that some of the jobs are added twice, because rq
             # does not do job uniqueness. But the implementation of the
             # jobs is such that this should not be a problem.
@@ -374,8 +362,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                  'package': pkg_dict
                  })
 
-    def before_create(self, context, resource):
-        # IPackageController does not implement before_create
+    def before_resource_create(self, context, resource):
         if "upload" in resource:
             # set/override the filename
             upload = resource["upload"]

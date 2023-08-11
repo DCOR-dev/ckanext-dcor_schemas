@@ -43,7 +43,7 @@ def synchronous_enqueue_job(job_func, args=None, kwargs=None, title=None,
 def test_set_dc_config_job_fl(enqueue_job_mock, create_with_upload,
                               monkeypatch, ckan_config, tmpdir):
     monkeypatch.setitem(ckan_config, 'ckan.storage_path', str(tmpdir))
-    monkeypatch.setattr(ckan.lib.uploader, '_storage_path', str(tmpdir))
+    monkeypatch.setattr(ckan.lib.uploader, 'get_storage_path', lambda: str(tmpdir))
 
     user = factories.User()
     owner_org = factories.Organization(users=[{

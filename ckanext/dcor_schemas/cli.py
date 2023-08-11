@@ -2,6 +2,7 @@ import datetime
 import time
 import traceback
 
+from ckanext import activity
 import ckan.model as model
 
 import click
@@ -25,7 +26,7 @@ def list_zombie_users(last_activity_weeks=12):
             # don't delete users with datasets
             continue
         # user has activities?
-        activity_objects = model.activity.user_activity_list(
+        activity_objects = activity.model.activity.user_activity_list(
             user.id, limit=1, offset=0)
         if activity_objects:
             stamp = activity_objects[0].timestamp.timestamp()

@@ -1,6 +1,9 @@
+import uuid
+
 import pytest
 
 from ckan.cli.cli import ckan
+from ckan import model
 import ckan.tests.factories as factories
 
 from .helper_methods import make_dataset
@@ -15,14 +18,16 @@ def test_zombies_basic_clean_db(cli):
             continue
         elif line.count("INFO"):
             continue
+        elif line.count("WARNI"):
+            continue
         else:
-            assert False, "clean_db -> no users -> no output"
+            assert False, f"clean_db -> no users -> no output, got '{line}'"
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_zombies_with_a_user(cli):
-    factories.User()
+    factories.User(name=f"test_user_{uuid.uuid4()}")
     result = cli.invoke(ckan, ["list-zombie-users", "--last-activity-weeks",
                                "0"])
     for line in result.output.split("\n"):
@@ -30,8 +35,12 @@ def test_zombies_with_a_user(cli):
             continue
         elif line.count("INFO"):
             continue
+        elif line.count("WARNI"):
+            continue
         elif line.count("test_user_"):
             break
+        else:
+            print(f"Encountered line {line}")
     else:
         assert False, "test_user should have been found"
 
@@ -58,6 +67,8 @@ def test_zombies_with_a_user_with_dataset(cli, create_with_upload):
             continue
         elif line.count("INFO"):
             continue
+        elif line.count("WARNI"):
+            continue
         else:
             assert False, "user with dataset should have been ignored"
 
@@ -65,7 +76,16 @@ def test_zombies_with_a_user_with_dataset(cli, create_with_upload):
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_zombies_with_active_user(cli):
-    factories.User()
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    context = {'ignore_auth': False,
+                 'user': user['name'], 'model': model, 'api_version': 3}
+    # create recent activity
+    make_dataset(context, owner_org, activate=False)
+
     result = cli.invoke(ckan, ["list-zombie-users", "--last-activity-weeks",
                                "12"])
     for line in result.output.split("\n"):
@@ -73,8 +93,10 @@ def test_zombies_with_active_user(cli):
             continue
         elif line.count("INFO"):
             continue
+        elif line.count("WARNI"):
+            continue
         else:
-            assert False, "active user should have been ignored"
+            assert False, f"active user should have been ignored, got '{line}'"
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -87,6 +109,8 @@ def test_zombies_with_admin(cli):
         if not line.strip():
             continue
         elif line.count("INFO"):
+            continue
+        elif line.count("WARNI"):
             continue
         else:
             assert False, "sysadmin should have been ignored"
