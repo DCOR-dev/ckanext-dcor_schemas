@@ -82,7 +82,7 @@ def test_zombies_with_active_user(cli):
         'capacity': 'admin'
     }])
     context = {'ignore_auth': False,
-                 'user': user['name'], 'model': model, 'api_version': 3}
+               'user': user['name'], 'model': model, 'api_version': 3}
     # create recent activity
     make_dataset(context, owner_org, activate=False)
 
