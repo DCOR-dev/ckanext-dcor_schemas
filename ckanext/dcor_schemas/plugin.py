@@ -349,7 +349,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                     # This might be because somehow the dcor_depot plugin
                     # is active even though it is not selected.
                     # Related to https://github.com/ckan/ckan/issues/6472
-                    plugin.after_create(context, resource)
+                    plugin.after_resource_create(context, resource)
 
             # Create default resource views
             # https://github.com/ckan/ckan/issues/6472#issuecomment-944067114
@@ -370,6 +370,9 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                 filename = upload.filename
             elif hasattr(upload, "name"):
                 filename = pathlib.Path(upload.name).name
+            else:
+                raise ValueError(
+                    f"Could not determine filename for {resource}")
             resource["name"] = filename
 
     # ITemplateHelpers

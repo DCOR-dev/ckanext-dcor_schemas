@@ -179,7 +179,7 @@ def load_schema_supplements():
 
     If "ckanext.dcor_schemas.json_resource_schema_dir" in ckan.ini
     is set to a directory on disk, then json files will be loaded from
-    there. Otherwise (or if it is set to "package"), the schema shipped
+    there. Otherwise, (or if it is set to "package"), the schema shipped
     with this extension is loaded.
     """
     # determine the directory from which to load json files
