@@ -23,7 +23,7 @@ def list_zombie_users(last_activity_weeks=12):
             continue
         # user has datasets?
         if user.number_created_packages(include_private_and_draft=True) != 0:
-            # don't delete users with datasets
+            # don't list users with datasets
             continue
         # user has activities?
         activity_objects = activity.model.activity.user_activity_list(
