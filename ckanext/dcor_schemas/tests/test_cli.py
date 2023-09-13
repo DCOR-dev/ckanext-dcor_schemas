@@ -25,7 +25,9 @@ def test_zombies_basic_clean_db(cli):
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+# We are not testing 'with_plugings', because otherwise the "activities"
+# plugin is loaded which will create activities for our factory user.
+@pytest.mark.usefixtures('clean_db', 'with_request_context')
 def test_zombies_with_a_user(cli):
     factories.User(name=f"test_user_{uuid.uuid4()}")
     result = cli.invoke(ckan, ["list-zombie-users", "--last-activity-weeks",

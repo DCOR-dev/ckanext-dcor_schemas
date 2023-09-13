@@ -27,10 +27,12 @@ data_dir = pathlib.Path(__file__).parent / "data"
 
 
 def synchronous_enqueue_job(job_func, args=None, kwargs=None, title=None,
-                            queue=None, rq_kwargs={}):
+                            queue=None, rq_kwargs=None):
     """
     Synchronous mock for ``ckan.plugins.toolkit.enqueue_job``.
     """
+    if rq_kwargs is None:
+        rq_kwargs = {}
     args = args or []
     kwargs = kwargs or {}
     job_func(*args, **kwargs)
@@ -55,7 +57,8 @@ def test_set_dc_config_job_fl(enqueue_job_mock, create_with_upload,
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
     create_context = {'ignore_auth': False,
-                      'user': user['name'], 'api_version': 3}
+                      'user': user['name'],
+                      'api_version': 3}
     dataset = make_dataset(create_context, owner_org, activate=False)
     content = (data_dir / "calibration_beads_47.rtdc").read_bytes()
     result = create_with_upload(
