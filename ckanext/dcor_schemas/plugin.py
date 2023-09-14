@@ -24,6 +24,10 @@ from . import resource_schema_supplements as rss
 from . import validate as dcor_validate
 
 
+# This is used for job testing. Set it to True if you need concurrent
+# background jobs and are using resource_create and the likes.
+DISABLE_AFTER_DATASET_CREATE_FOR_CONCURRENT_JOB_TESTS = False
+
 #: ignored schema fields (see default_create_package_schema in
 #: https://github.com/ckan/ckan/blob/master/ckan/logic/schema.py)
 REMOVE_PACKAGE_FIELDS = [
@@ -251,6 +255,11 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
 
     # IPackageController
     def after_dataset_update(self, context, data_dict):
+        if DISABLE_AFTER_DATASET_CREATE_FOR_CONCURRENT_JOB_TESTS:
+            # Used in concurrent job testing that do not involve
+            # `package_update` and `package_revise`.
+            return
+
         # Check for resources that have been added (e.g. using package_revise)
         # during this dataset update.
         for resource in data_dict.get('resources', []):
