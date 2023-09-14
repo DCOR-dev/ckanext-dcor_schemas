@@ -1,7 +1,8 @@
+0.18.2
+ - tests: don't use the new `after_dataset_update` during concurrent job tests
 0.18.1
  - fix: call `after_resource_create` via custom `after_dataset_update` for
    all plugins (because this is not done by CKAN)
- - tests: don't use the new `after_dataset_update` during concurrent job tests
  - tests: fix cli tests
 0.18.0
  - ref: migration to CKAN 2.10
