@@ -261,7 +261,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                 # a better solution (https://github.com/ckan/ckan/issues/6472).
                 for plugin in plugins.PluginImplementations(
                         plugins.IResourceController):
-                    # get the full resource dict (contains e.g. also "position")
+                    # get full resource dict (contains e.g. also "position")
                     res_dict = logic.get_action("resource_show")(
                         context=context,
                         data_dict={"id": resource["id"]})
