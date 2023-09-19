@@ -366,7 +366,8 @@ def user_create(context, data_dict=None):
                 return {'success': False,
                         'msg': 'Invalid email address provided!'}
             domain = email.split("@")[1]
-            if domain in ["gmail.com"]:  # this might be a little harsh
+            # this might be a little harsh
+            if domain in ["gmail.com", "mailto.plus"]:
                 spam_score += 1
 
     if spam_score:
