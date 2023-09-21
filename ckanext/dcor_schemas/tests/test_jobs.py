@@ -20,6 +20,7 @@ from ckan.tests import helpers
 
 import dcor_shared
 import ckanext.dcor_schemas.plugin
+import ckanext.dcor_schemas.jobs
 
 from .helper_methods import make_dataset
 
@@ -37,6 +38,14 @@ def synchronous_enqueue_job(job_func, args=None, kwargs=None, title=None,
     args = args or []
     kwargs = kwargs or {}
     job_func(*args, **kwargs)
+
+
+def test_sha256sum(tmp_path):
+    p = tmp_path / "test.txt"
+    p.write_text("Sum this up!")
+    ist = ckanext.dcor_schemas.jobs.sha256sum(p)
+    soll = "d00df55b97a60c78bbb137540e1b60647a5e6b216262a95ab96cafd4519bcf6a"
+    assert ist == soll
 
 
 # dcor_depot must come first, because jobs are run in sequence and the

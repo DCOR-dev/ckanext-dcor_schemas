@@ -69,17 +69,18 @@ def set_sha256_job(resource):
     if len(sha) != 64:  # only compute if necessary
         path = get_resource_path(resource["id"])
         wait_for_resource(path)
-        file_hash = hashlib.sha256()
-        with open(path, "rb") as fd:
-            while True:
-                data = fd.read(2**20)
-                if not data:
-                    break
-                file_hash.update(data)
-        sha256sum = file_hash.hexdigest()
         patch_resource_noauth(
             package_id=resource["package_id"],
             resource_id=resource["id"],
-            data_dict={"sha256": sha256sum})
+            data_dict={"sha256": sha256sum(path)})
         return True
     return False
+
+
+def sha256sum(path):
+    """Compute the SHA256 hash of a file in 1MB chunks"""
+    file_hash = hashlib.sha256()
+    with open(path, "rb") as fd:
+        while data := fd.read(2 ** 20):
+            file_hash.update(data)
+    return file_hash.hexdigest()
