@@ -3,7 +3,8 @@ import hashlib
 from ckan import logic
 
 import dclab
-from dcor_shared import DC_MIME_TYPES, get_resource_path, wait_for_resource
+from dcor_shared import (
+    DC_MIME_TYPES, get_resource_path, sha256sum,  wait_for_resource)
 
 
 def admin_context():
@@ -75,12 +76,3 @@ def set_sha256_job(resource):
             data_dict={"sha256": sha256sum(path)})
         return True
     return False
-
-
-def sha256sum(path):
-    """Compute the SHA256 hash of a file in 1MB chunks"""
-    file_hash = hashlib.sha256()
-    with open(path, "rb") as fd:
-        while data := fd.read(2 ** 20):
-            file_hash.update(data)
-    return file_hash.hexdigest()

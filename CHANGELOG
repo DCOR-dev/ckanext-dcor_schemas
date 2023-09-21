@@ -1,3 +1,5 @@
+0.18.5
+ - ref: 
 0.18.4
  - enh: update the resource schema with 's3_available' and 's3_url'
  - ref: make sha256sum available as separate method
