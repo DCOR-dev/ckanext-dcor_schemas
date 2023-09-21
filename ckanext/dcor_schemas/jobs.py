@@ -1,5 +1,3 @@
-import hashlib
-
 from ckan import logic
 
 import dclab

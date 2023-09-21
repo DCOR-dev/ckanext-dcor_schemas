@@ -1,5 +1,5 @@
 0.18.5
- - ref: 
+ - ref: move sha256sum to dcor_shared
 0.18.4
  - enh: update the resource schema with 's3_available' and 's3_url'
  - ref: make sha256sum available as separate method
