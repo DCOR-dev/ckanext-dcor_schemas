@@ -46,6 +46,8 @@ accordingly:
     '.tsv', '.pdf', '.txt', '.jpg', '.png', '.tif', '.py', '.ipynb', '.poly',
     '.sof', '.so2'
   - resources: configuration metadata (using `dclab.dfn.config_funcs`)
+  - resources: 's3_available' and 's3_url' for identifying objects that
+    are available on S3 and for downloading public datasets.
 
 - IPermissionLabels (plugin.py)
 

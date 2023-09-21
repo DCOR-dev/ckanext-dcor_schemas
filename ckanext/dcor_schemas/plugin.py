@@ -156,13 +156,26 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             ],
         })
         schema['resources'].update({
-            'sha256': [
-                toolkit.get_validator('ignore_missing'),
-            ],
             'name': [
                 toolkit.get_validator('ignore_missing'),
                 toolkit.get_validator('unicode_safe'),
                 dcor_validate.resource_name,
+            ],
+            'sha256': [
+                toolkit.get_validator('ignore_missing'),
+            ],
+            # Whether the resource is available in an S3-compatible object
+            # store.
+            's3_available': [
+                toolkit.get_validator('ignore_missing'),
+                toolkit.get_validator('boolean_validator'),
+            ],
+            # The URL to the resource in the object store. This only makes
+            # sense for public datasets. For private datasets, the URL to the
+            # resource must be obtained via the API.
+            's3_url': [
+                toolkit.get_validator('ignore_missing'),
+                toolkit.get_validator('url_validator'),
             ],
         })
         # Add dclab configuration parameters
