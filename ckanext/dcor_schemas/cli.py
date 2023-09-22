@@ -11,6 +11,24 @@ import click
 from . import jobs
 
 
+@click.command()
+def list_circles():
+    """List all circles/organizations"""
+    groups = model.Group.all()
+    for grp in groups:
+        if grp.is_organization:
+            click.echo(f"{grp.id}\t{grp.name}\t({grp.title})")
+
+
+@click.command()
+def list_collections():
+    """List all circles/organizations"""
+    groups = model.Group.all()
+    for grp in groups:
+        if not grp.is_organization:
+            click.echo(f"{grp.id}\t{grp.name}\t({grp.title})")
+
+
 @click.option('--last-activity-weeks', default=12,
               help='Only list users with no activity for X weeks')
 @click.command()
@@ -85,5 +103,8 @@ def run_jobs_dcor_schemas(modified_days=-1):
 
 
 def get_commands():
-    return [list_zombie_users,
-            run_jobs_dcor_schemas]
+    return [
+        list_circles,
+        list_collections,
+        list_zombie_users,
+        run_jobs_dcor_schemas]

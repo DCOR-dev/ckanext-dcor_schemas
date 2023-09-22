@@ -1,5 +1,6 @@
 0.18.5
  - enh: add `url_with_port_validator` validator
+ - enh: add CLI `list-circles` and `list-collections`
  - ref: move sha256sum to dcor_shared
 0.18.4
  - enh: update the resource schema with 's3_available' and 's3_url'
