@@ -268,26 +268,26 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
 
     # IPackageController
     def after_dataset_update(self, context, data_dict):
-        if DISABLE_AFTER_DATASET_CREATE_FOR_CONCURRENT_JOB_TESTS:
-            # Used in concurrent job testing that do not involve
-            # `package_update` and `package_revise`.
-            return
-
-        # Check for resources that have been added (e.g. using package_revise)
-        # during this dataset update.
-        for resource in data_dict.get('resources', []):
-            if "created" not in resource:
-                # If "created" is in `resource`, this means that the resource
-                # already existed. Since in DCOR, we do not allow updating
-                # resources, this should be fine. However, there might be
-                # a better solution (https://github.com/ckan/ckan/issues/6472).
-                for plugin in plugins.PluginImplementations(
-                        plugins.IResourceController):
-                    # get full resource dict (contains e.g. also "position")
-                    res_dict = logic.get_action("resource_show")(
-                        context=context,
-                        data_dict={"id": resource["id"]})
-                    plugin.after_resource_create(context, res_dict)
+        # `DISABLE_AFTER_DATASET_CREATE_FOR_CONCURRENT_JOB_TESTS` is used in
+        # concurrent job testing that do not involve `package_update` and
+        # `package_revise`.
+        if not DISABLE_AFTER_DATASET_CREATE_FOR_CONCURRENT_JOB_TESTS:
+            # Check for resources that have been added (e.g. using
+            # package_revise) during this dataset update.
+            for resource in data_dict.get('resources', []):
+                if "created" not in resource:
+                    # If "created" is in `resource`, this means that the
+                    # resource already existed. Since in DCOR, we do not allow
+                    # updating resources, this should be fine. However, there
+                    # might be a better solution
+                    # (https://github.com/ckan/ckan/issues/6472).
+                    for plugin in plugins.PluginImplementations(
+                            plugins.IResourceController):
+                        # get full resource dict, contains e.g. also "position"
+                        res_dict = logic.get_action("resource_show")(
+                            context=context,
+                            data_dict={"id": resource["id"]})
+                        plugin.after_resource_create(context, res_dict)
 
     # IPermissionLabels
     def get_dataset_labels(self, dataset_obj):
