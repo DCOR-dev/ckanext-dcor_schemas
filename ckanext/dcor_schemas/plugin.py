@@ -175,7 +175,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             # resource must be obtained via the API.
             's3_url': [
                 toolkit.get_validator('ignore_missing'),
-                toolkit.get_validator('url_validator'),
+                dcor_validate.url_with_port_validator,
             ],
         })
         # Add dclab configuration parameters

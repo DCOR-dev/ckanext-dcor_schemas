@@ -1,3 +1,5 @@
+import string
+from urllib.parse import urlparse
 import uuid
 
 import ckan.authz as authz
@@ -11,7 +13,6 @@ import dcor_shared
 from slugify import slugify
 
 from . import resource_schema_supplements as rss
-
 
 RESOURCE_CHARS = "abcdefghijklmnopqrstuvwxyz" \
                  + "ABCDEFGHIJKLMNOPQRSTUVWXYZ" \
@@ -131,7 +132,7 @@ def dataset_name_create(key, data, errors, context):
             slug += rand[:(model.PACKAGE_NAME_MIN_LENGTH - len(slug))]
         elif len(slug) > model.PACKAGE_NAME_MAX_LENGTH:
             # change the last character to have more options
-            slug = slug[:model.PACKAGE_NAME_MAX_LENGTH-10] + "-" + rand[ii]
+            slug = slug[:model.PACKAGE_NAME_MAX_LENGTH - 10] + "-" + rand[ii]
 
         # Check if the slug/name exists
         query = session.query(model.Package.state).filter_by(name=slug)
@@ -292,3 +293,32 @@ def resource_name(key, data, errors, context):
             if key[1] != item["position"] and item["name"] == name:
                 raise toolkit.Invalid(
                     "Resource with name '{}' already exists!".format(name))
+
+
+def url_with_port_validator(key, data, errors, context):
+    """Checks that the provided value (if it is present) is a valid URL
+
+    Compared to the CKAN `url_validator`, this validator also supports
+    port numbers in the `netloc` part of the URL.
+
+    See Also https://github.com/ckan/ckan/issues/7812
+    """
+
+    url = data.get(key, None)
+    if not url:
+        return
+
+    try:
+        pieces = urlparse(url)
+        host, port = pieces.netloc.split(":", 1)
+        if all([pieces.scheme, pieces.netloc]) and \
+                set(host) <= set(
+            string.ascii_letters + string.digits + '-.') and \
+                set(port) <= set(string.digits) and \
+                pieces.scheme in ['http', 'https']:
+            return
+    except ValueError:
+        # url is invalid
+        pass
+
+    errors[key].append('Please provide a valid URL')
