@@ -1,3 +1,5 @@
+0.18.6
+ - fix: deprecation in dclab.dfn
 0.18.5
  - enh: add `url_with_port_validator` validator
  - enh: add CLI `list-circles` and `list-collections`

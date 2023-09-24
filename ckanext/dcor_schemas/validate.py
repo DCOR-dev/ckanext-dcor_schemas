@@ -212,8 +212,8 @@ def dataset_state(key, data, errors, context):
 def resource_dc_config(key, data, errors, context):
     """Parse configuration parameters"""
     value = data[key]
-    _, sec, val = key[-1].split(":")
-    func = dclab.dfn.config_funcs[sec][val]
+    _, sec, key = key[-1].split(":")
+    func = dclab.dfn.get_config_value_func(sec, key)
     try:
         value = func(value)
     except BaseException:
