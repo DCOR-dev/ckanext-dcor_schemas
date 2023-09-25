@@ -310,7 +310,10 @@ def url_with_port_validator(key, data, errors, context):
 
     try:
         pieces = urlparse(url)
-        host, port = pieces.netloc.split(":", 1)
+        hostport = pieces.netloc.split(":", 1)
+        if len(hostport) == 1:
+            hostport.append("")
+        host, port = hostport
         if all([pieces.scheme, pieces.netloc]) and \
                 set(host) <= set(
             string.ascii_letters + string.digits + '-.') and \
@@ -321,4 +324,4 @@ def url_with_port_validator(key, data, errors, context):
         # url is invalid
         pass
 
-    errors[key].append('Please provide a valid URL')
+    errors[key].append(f"Please provide a valid URL, got '{url}'")
