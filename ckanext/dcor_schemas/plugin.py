@@ -4,6 +4,7 @@ import pathlib
 import sys
 
 from ckan.common import config
+import ckan.lib.datapreview as datapreview
 from ckan.lib.plugins import DefaultPermissionLabels
 from ckan.lib.jobs import _connect as ckan_redis_connect
 from ckan import common, logic
@@ -364,6 +365,10 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                                     "timeout": 3600,
                                     "job_id": jid_sha256,
                                     "depends_on": copy.copy(depends_on)})
+
+        # https://github.com/ckan/ckan/issues/7837
+        datapreview.add_views_to_resource(context={"ignore_auth": True},
+                                          resource_dict=resource)
 
     def after_resource_update(self, context, pkg_dict):
         for ii, resource in enumerate(pkg_dict.get('resources', [])):
