@@ -180,7 +180,7 @@ def dataset_state(key, data, errors, context):
 
     if data[key] == "active":
         if "resources" not in data_dict or len(data_dict["resources"]) == 0:
-            # The user wants to activate the dataset although it does not
+            # The user wants to activate the dataset, although it does not
             # contain any resources. This is not possible!
             raise toolkit.Invalid(
                 "Cannot set state of dataset to 'active', because it does not "
