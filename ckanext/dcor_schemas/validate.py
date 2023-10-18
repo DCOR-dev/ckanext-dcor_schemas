@@ -185,6 +185,11 @@ def dataset_state(key, data, errors, context):
             raise toolkit.Invalid(
                 "Cannot set state of dataset to 'active', because it does not "
                 "contain any resources!")
+        elif context["ignore_auth"]:
+            # The admin user can activate datasets, even if they don't
+            # contain valid resources.
+            # TODO: Need to sort out what is validate and what is auth here.
+            pass
         else:
             # Do not allow activating a dataset without at least one valid
             # .rtdc resource.
@@ -205,8 +210,8 @@ def dataset_state(key, data, errors, context):
                         pass
             else:
                 raise toolkit.Invalid(
-                    "Before activating a dataset, make sure that it contains "
-                    "a valid .rtdc resource!")
+                    "Before activating a dataset, make sure that it "
+                    "contains a valid .rtdc resource!")
 
 
 def resource_dc_config(key, data, errors, context):
