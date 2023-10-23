@@ -25,7 +25,6 @@ def test_zombies_basic_clean_db(cli):
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
-# Test with the 'activity' plugin present.
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_zombies_with_a_user(cli):
     factories.User(name=f"test_user_{uuid.uuid4()}")
