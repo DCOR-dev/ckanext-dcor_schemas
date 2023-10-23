@@ -44,7 +44,7 @@ def list_zombie_users(last_activity_weeks=12):
             continue
         # user has been active?
         if (user.last_active is not None
-                and user.last_active.timestamp >= (
+                and user.last_active.timestamp() >= (
                         time.time() - 60*60*24*7*last_activity_weeks)):
             # don't delete users that did things
             continue
