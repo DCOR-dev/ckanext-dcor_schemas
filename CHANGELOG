@@ -1,3 +1,5 @@
+0.18.9
+ - fix: invalid validator check for context keyword
 0.18.8
  - fix: list-zombie-users still relied on activities
 0.18.7

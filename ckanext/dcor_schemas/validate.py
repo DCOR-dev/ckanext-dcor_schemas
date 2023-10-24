@@ -185,7 +185,7 @@ def dataset_state(key, data, errors, context):
             raise toolkit.Invalid(
                 "Cannot set state of dataset to 'active', because it does not "
                 "contain any resources!")
-        elif context["ignore_auth"]:
+        elif context.get("ignore_auth", False):
             # The admin user can activate datasets, even if they don't
             # contain valid resources.
             # TODO: Need to sort out what is validate and what is auth here.
