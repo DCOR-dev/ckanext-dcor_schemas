@@ -1,5 +1,3 @@
-import string
-from urllib.parse import urlparse
 import uuid
 
 import ckan.authz as authz
@@ -298,35 +296,3 @@ def resource_name(key, data, errors, context):
             if key[1] != item["position"] and item["name"] == name:
                 raise toolkit.Invalid(
                     "Resource with name '{}' already exists!".format(name))
-
-
-def url_with_port_validator(key, data, errors, context):
-    """Checks that the provided value (if it is present) is a valid URL
-
-    Compared to the CKAN `url_validator`, this validator also supports
-    port numbers in the `netloc` part of the URL.
-
-    See Also https://github.com/ckan/ckan/issues/7812
-    """
-
-    url = data.get(key, None)
-    if not url:
-        return
-
-    try:
-        pieces = urlparse(url)
-        hostport = pieces.netloc.split(":", 1)
-        if len(hostport) == 1:
-            hostport.append("")
-        host, port = hostport
-        if all([pieces.scheme, pieces.netloc]) and \
-                set(host) <= set(
-            string.ascii_letters + string.digits + '-.') and \
-                set(port) <= set(string.digits) and \
-                pieces.scheme in ['http', 'https']:
-            return
-    except ValueError:
-        # url is invalid
-        pass
-
-    errors[key].append(f"Please provide a valid URL, got '{url}'")

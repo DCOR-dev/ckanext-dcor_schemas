@@ -1,3 +1,5 @@
+0.18.10
+ - ref: use `url_validator` that works with ports in CKAN 2.10.3
 0.18.9
  - fix: invalid validator check for context keyword
 0.18.8
