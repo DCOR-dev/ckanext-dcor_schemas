@@ -28,7 +28,6 @@ Vagrant.configure("2") do |config|
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine and only allow access
   # via 127.0.0.1 to disable public access
-  # config.vm.network "forwarded_port", guest: 8983, host: 8983
   # config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
 
   # Create a private network, which allows host-only access to the machine
@@ -45,7 +44,7 @@ Vagrant.configure("2") do |config|
   # the path on the guest to mount the folder. And the optional third
   # argument is a set of non-required options.
   # config.vm.synced_folder "../data", "/vagrant_data"
-  config.vm.synced_folder ".", "/vagrant", disabled: true
+  # config.vm.synced_folder ".", "/vagrant", disabled: true
   config.vm.synced_folder ".", "/testing", type: "rsync",
     rsync__args: ["-vzra", "--delete"],
     rsync__exclude: ["*.pyc", "__pycache__"],
@@ -54,7 +53,7 @@ Vagrant.configure("2") do |config|
   # backing providers for Vagrant. These expose provider-specific options.
   # Reduce requirements so everythin runs on GitHub Actions
   config.vm.provider "virtualbox" do |v|
-    v.memory = 4096
+    v.memory = 2048
     v.cpus = 1
   end
 
@@ -69,5 +68,5 @@ Vagrant.configure("2") do |config|
 
   # Prevent reinstallation of guest additinos on every vagrant up
   # (Uncomment the next line in your CI tests)
-  config.vbguest.auto_update = false
+  # config.vbguest.auto_update = false
 end
