@@ -22,7 +22,7 @@ def set_dc_config_job(resource):
     if (resource.get('mimetype') in DC_MIME_TYPES
             and resource.get("dc:setup:channel width", None) is None):
         path = get_resource_path(resource["id"])
-        wait_for_resource(path)
+        wait_for_resource(resource["id"])
         data_dict = {}
         with dclab.new_dataset(path) as ds:
             for sec in dclab.dfn.CFG_METADATA:
@@ -47,7 +47,7 @@ def set_format_job(resource):
     if mimetype in DC_MIME_TYPES and rformat in [mimetype, None]:
         # (if format is already something like RT-FDC then we don't do this)
         path = get_resource_path(resource["id"])
-        wait_for_resource(path)
+        wait_for_resource(resource["id"])
         with dclab.rtdc_dataset.check.IntegrityChecker(path) as ic:
             if ic.has_fluorescence:
                 fmt = "RT-FDC"
@@ -67,7 +67,7 @@ def set_sha256_job(resource):
     sha = str(resource.get("sha256", ""))  # can be bool sometimes
     if len(sha) != 64:  # only compute if necessary
         path = get_resource_path(resource["id"])
-        wait_for_resource(path)
+        wait_for_resource(resource["id"])
         patch_resource_noauth(
             package_id=resource["package_id"],
             resource_id=resource["id"],
