@@ -145,6 +145,13 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                 toolkit.get_validator('unicode_safe'),
                 toolkit.get_converter('convert_to_extras'),
             ],
+            'id': [
+                toolkit.get_validator('empty_if_not_sysadmin'),
+                toolkit.get_validator('ignore_missing'),
+                toolkit.get_validator('unicode_safe'),
+                dcor_validate.dataset_id,
+                toolkit.get_validator('package_id_does_not_exist'),
+            ],
             'license_id': [
                 dcor_validate.dataset_license_id,
             ],
@@ -160,6 +167,12 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             ],
         })
         schema['resources'].update({
+            'id': [
+                toolkit.get_validator('ignore_missing'),
+                toolkit.get_validator('unicode_safe'),
+                dcor_validate.resource_id,
+                toolkit.get_validator('resource_id_does_not_exist'),
+            ],
             'name': [
                 toolkit.get_validator('ignore_missing'),
                 toolkit.get_validator('unicode_safe'),

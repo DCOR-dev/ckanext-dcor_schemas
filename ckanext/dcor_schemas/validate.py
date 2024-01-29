@@ -1,3 +1,4 @@
+import re
 import uuid
 
 import ckan.authz as authz
@@ -11,6 +12,7 @@ import dcor_shared
 from slugify import slugify
 
 from . import resource_schema_supplements as rss
+
 
 RESOURCE_CHARS = "abcdefghijklmnopqrstuvwxyz" \
                  + "ABCDEFGHIJKLMNOPQRSTUVWXYZ" \
@@ -42,6 +44,9 @@ RESOURCE_EXTS = [
     ".so2",
 ]
 
+UUID_REGEXP = re.compile("^[0-9a-f]{8}\b-[0-9a-f]{4}\b-[0-9a-f]{4}"
+                         "\b-[0-9a-f]{4}\b-[0-9a-f]{12}$")
+
 
 def dataset_authors(value):
     authors = [a.strip() for a in value.split(",") if a.strip()]
@@ -53,6 +58,11 @@ def dataset_doi(value):
         value = value.split("://")[1].split("/", 1)[1]
     value = value.strip(" /")
     return value
+
+
+def dataset_id(value):
+    """Check resource IDs for UUID"""
+    return UUID_REGEXP.match(value)
 
 
 def dataset_license_id(key, data, errors, context):
@@ -238,6 +248,13 @@ def resource_dc_supplement(key, data, errors, context):
             "Invalid value for '{}': '{}'!".format(key[-1], value)
         )
     data[key] = composite_value
+
+
+def resource_id(key, data, errors, context):
+    """Check resource IDs for UUID"""
+    assert key[0] == "resources"
+    assert key[2] == "id"
+    return UUID_REGEXP.match(key)
 
 
 def resource_name(key, data, errors, context):
