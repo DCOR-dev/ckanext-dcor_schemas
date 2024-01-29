@@ -1,5 +1,6 @@
-0.19.12
- - ref: migrate to dcor_shared 0.6.0
+0.19.0
+ - feat: implement resource_upload_s3_url API method
+ - ref: migrate to dcor_shared 0.7.0
 0.18.11
  - maintenance release
 0.18.10

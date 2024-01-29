@@ -45,7 +45,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                             toolkit.DefaultDatasetForm,
                             DefaultPermissionLabels):
     """This plugin makes views of DC data"""
-    plugins.implements(plugins.IActions)
+    plugins.implements(plugins.IActions, inherit=True)
     plugins.implements(plugins.IAuthFunctions)
     plugins.implements(plugins.IClick)
     plugins.implements(plugins.IConfigurer, inherit=True)
@@ -58,6 +58,8 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
     # IActions
     def get_actions(self):
         return {
+            "resource_upload_s3_url":
+                actions.get_resource_upload_s3_url,
             "resource_schema_supplements":
                 actions.get_resource_schema_supplements,
             "supported_resource_suffixes":
@@ -81,6 +83,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             'resource_create': dcor_auth.resource_create,
             'resource_delete': dcor_auth.deny,
             'resource_update': dcor_auth.resource_update,
+            'resource_upload_s3_url':  dcor_auth.resource_upload_s3_url,
             'user_create': dcor_auth.user_create,
         }
 

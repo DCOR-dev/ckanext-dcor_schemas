@@ -2,7 +2,7 @@ from email.utils import parseaddr
 import re
 
 from ckan.common import asbool, config
-from ckan import logic
+from ckan import authz, logic
 import ckan.plugins.toolkit as toolkit
 
 from . import helpers as dcor_helpers
@@ -304,6 +304,24 @@ def resource_update_check(context, new_dict):
         return {'success': False,
                 'msg': f'Editing not allowed: {", ".join(invalid)}'}
 
+    return {'success': True}
+
+
+def resource_upload_s3_url(context, data_dict):
+    """Check whether the user is allowed to upload a resource to S3"""
+    if not data_dict or data_dict.get("organization_id") is None:
+        return {'success': False,
+                'msg': 'No `organization_id` provided'}
+    org_id = data_dict["organization_id"]
+    # Check whether the user can create a resource in the organization
+    org_dicts = logic.get_action('organization_list_for_user')(
+        context,
+        {'id': authz.get_user_id_for_username(context["user"]),
+         'permission': "create_dataset"})
+    if org_id not in [od["id"] for od in org_dicts]:
+        return {'success': False,
+                'msg': f'User {context["user"]} not a member of '
+                       f'the circle {org_id} or circle does not exist'}
     return {'success': True}
 
 
