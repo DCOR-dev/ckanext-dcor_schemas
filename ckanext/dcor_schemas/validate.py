@@ -254,7 +254,7 @@ def resource_id(key, data, errors, context):
     """Check resource IDs for UUID"""
     assert key[0] == "resources"
     assert key[2] == "id"
-    return UUID_REGEXP.match(key)
+    return UUID_REGEXP.match(data[key])
 
 
 def resource_name(key, data, errors, context):
