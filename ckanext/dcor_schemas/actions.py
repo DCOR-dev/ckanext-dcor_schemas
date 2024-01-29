@@ -22,8 +22,16 @@ def get_resource_upload_s3_url(context, data_dict):
     bucket_name = get_ckan_config_option(
         "dcor_object_store.bucket_name").format(
         organization_id=org_id)
-    # Create a random resource identifier
-    rid = str(uuid.uuid4())
+    # Create a random resource identifier and make sure it does not exist
+    model = context['model']
+    session = context['session']
+    for ii in range(20):
+        rid = str(uuid.uuid4())
+        result = session.query(model.Resource).get(rid)
+        if not result:
+            break
+    else:
+        raise KeyError("Could not allocate a free UUID for a new resource")
     object_name = f"resource/{rid[:3]}/{rid[3:6]}/{rid[6:]}"
     url, fields = s3.create_presigned_upload_url(
         bucket_name=bucket_name,
