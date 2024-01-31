@@ -22,10 +22,18 @@ def set_dc_config_job(resource):
     """Store all DC config metadata"""
     if (resource.get('mimetype') in DC_MIME_TYPES
             and resource.get("dc:setup:channel width", None) is None):
-        path = get_resource_path(resource["id"])
-        wait_for_resource(resource["id"])
+        rid = resource["id"]
+        wait_for_resource(rid)
+        path = get_resource_path(rid)
+        if path.exists():
+            # The file exists locally on block storage
+            ds = dclab.new_dataset(path)
+        else:
+            # The file exists on S3 object storage
+            ds = s3.get_s3_dc_handle(rid)
+
         data_dict = {}
-        with dclab.new_dataset(path) as ds:
+        with ds:
             for sec in dclab.dfn.CFG_METADATA:
                 if sec in ds.config:
                     for key in dclab.dfn.config_keys[sec]:
@@ -46,14 +54,22 @@ def set_format_job(resource):
     mimetype = resource.get("mimetype")
     rformat = resource.get("format")
     if mimetype in DC_MIME_TYPES and rformat in [mimetype, None]:
+        rid = resource["id"]
         # (if format is already something like RT-FDC then we don't do this)
-        path = get_resource_path(resource["id"])
         wait_for_resource(resource["id"])
-        with dclab.rtdc_dataset.check.IntegrityChecker(path) as ic:
-            if ic.has_fluorescence:
-                fmt = "RT-FDC"
-            else:
-                fmt = "RT-DC"
+        path = get_resource_path(rid)
+        if path.exists():
+            # The file exists locally on block storage
+            ds = dclab.new_dataset(path)
+        else:
+            # The file exists on S3 object storage
+            ds = s3.get_s3_dc_handle(rid)
+        with ds:
+            with dclab.rtdc_dataset.check.IntegrityChecker(ds) as ic:
+                if ic.has_fluorescence:
+                    fmt = "RT-FDC"
+                else:
+                    fmt = "RT-DC"
         if rformat != fmt:  # only update if necessary
             patch_resource_noauth(
                 package_id=resource["package_id"],
@@ -104,8 +120,10 @@ def set_sha256_job(resource):
         wait_for_resource(rid)
         path = get_resource_path(rid)
         if path.exists():
+            # The file exists locally on block storage
             rhash = sha256sum(path)
         else:
+            # The file exists on S3 object storage
             rhash = s3.compute_checksum(
                 *s3.get_s3_bucket_object_for_artifact(rid))
         patch_resource_noauth(
