@@ -2,7 +2,7 @@ from ckan import logic
 
 import dclab
 from dcor_shared import (
-    DC_MIME_TYPES, get_resource_path, s3, sha256sum, wait_for_resource
+    DC_MIME_TYPES, get_resource_path, s3cc, sha256sum, wait_for_resource
 )
 
 
@@ -30,7 +30,7 @@ def set_dc_config_job(resource):
             ds = dclab.new_dataset(path)
         else:
             # The file exists on S3 object storage
-            ds = s3.get_s3_dc_handle(rid)
+            ds = s3cc.get_s3_dc_handle(rid)
 
         data_dict = {}
         with ds:
@@ -63,7 +63,7 @@ def set_format_job(resource):
             ds = dclab.new_dataset(path)
         else:
             # The file exists on S3 object storage
-            ds = s3.get_s3_dc_handle(rid)
+            ds = s3cc.get_s3_dc_handle(rid)
         with ds:
             with dclab.rtdc_dataset.check.IntegrityChecker(ds) as ic:
                 if ic.has_fluorescence:
@@ -81,11 +81,9 @@ def set_format_job(resource):
 
 def set_s3_resource_metadata(resource):
     """Set the s3_url and s3_available metadata for the resource"""
-    bucket_name, object_name = s3.get_s3_bucket_object_for_artifact(
-        resource_id=resource["id"], artifact="resource")
-    if s3.object_exists(bucket_name=bucket_name, object_name=object_name):
-        s3_url = s3.get_s3_url_for_artifact(
-            resource_id=resource["id"], artifact="resource")
+    rid = resource["id"]
+    if s3cc.object_exists(resouce_id=rid):
+        s3_url = s3cc.get_s3_url_for_artifact(resource_id=rid)
         patch_resource_noauth(
             package_id=resource["package_id"],
             resource_id=resource["id"],
@@ -101,11 +99,8 @@ def set_s3_resource_public_tag(resource):
         {'id': resource["package_id"]})
     private = ds_dict.get("private")
     if private is not None and not private:
-        bucket_name, object_name = s3.get_s3_bucket_object_for_artifact(
-            resource_id=resource["id"], artifact="resource")
-        s3.make_object_public(
-            bucket_name=bucket_name,
-            object_name=object_name,
+        s3cc.make_resource_public(
+            resource_id=resource["id"],
             # The resource might not be there, because it was uploaded
             # using the API and not to S3.
             missing_ok=True,
@@ -124,8 +119,7 @@ def set_sha256_job(resource):
             rhash = sha256sum(path)
         else:
             # The file exists on S3 object storage
-            rhash = s3.compute_checksum(
-                *s3.get_s3_bucket_object_for_artifact(rid))
+            rhash = s3cc.compute_checksum(rid)
         patch_resource_noauth(
             package_id=resource["package_id"],
             resource_id=resource["id"],
