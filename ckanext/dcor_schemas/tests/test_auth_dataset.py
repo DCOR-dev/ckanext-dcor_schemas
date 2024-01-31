@@ -28,9 +28,11 @@ def test_dataset_add_resources_only_to_drafts(create_with_upload):
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset, _ = make_dataset(create_context, owner_org,
-                              create_with_upload=create_with_upload,
-                              activate=True)
+    ds_dict, _ = make_dataset(
+        create_context, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True)
     # assert: adding resources to active datasets forbidden
     path = data_path / "calibration_beads_47.rtdc"
     with path.open('rb') as fd:
@@ -41,7 +43,7 @@ def test_dataset_add_resources_only_to_drafts(create_with_upload):
                 logic.NotAuthorized,
                 match="Adding resources to non-draft datasets not allowed"):
             helpers.call_auth("resource_create", test_context,
-                              package_id=dataset["id"],
+                              package_id=ds_dict["id"],
                               upload=upload,
                               url="upload",
                               name=path.name,
@@ -102,6 +104,7 @@ def test_dataset_create_bad_collection(create_with_upload):
                        match="not authorized to create packages"):
         make_dataset(context_b, owner_org,
                      create_with_upload=create_with_upload,
+                     resource_path=data_path / "calibration_beads_47.rtdc",
                      activate=True,
                      groups=[{"id": owner_group["id"]}])
 
@@ -121,29 +124,29 @@ def test_dataset_delete_only_drafts(create_with_upload):
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset = make_dataset(create_context, owner_org)
-    assert dataset["state"] == "draft", "dataset without res must be draft"
+    ds_dict = make_dataset(create_context, owner_org)
+    assert ds_dict["state"] == "draft", "dataset without res must be draft"
     # assert: draft datasets may be deleted
     assert helpers.call_auth("package_delete", test_context,
-                             id=dataset["id"])
+                             id=ds_dict["id"])
     # upload resource
-    make_resource(data_path=data_path / "calibration_beads_47.rtdc",
+    make_resource(resource_path=data_path / "calibration_beads_47.rtdc",
                   create_with_upload=create_with_upload,
                   create_context=create_context,
-                  dataset_id=dataset["id"])
+                  dataset_id=ds_dict["id"])
     # set dataset state to active
     helpers.call_action("package_patch", create_context,
-                        id=dataset["id"],
+                        id=ds_dict["id"],
                         state="active")
     # check dataset state
     dataset2 = helpers.call_action("package_show", create_context,
-                                   id=dataset["id"])
+                                   id=ds_dict["id"])
     assert dataset2["state"] == "active"
     # assert: active datasets may not be deleted
     with pytest.raises(logic.NotAuthorized,
                        match="Only draft datasets can be deleted"):
         helpers.call_auth("package_delete", test_context,
-                          id=dataset["id"])
+                          id=ds_dict["id"])
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -161,12 +164,12 @@ def test_dataset_delete_other_user():
     context_b = {'ignore_auth': False,
                  'user': user_b['name'], 'model': model, 'api_version': 3}
 
-    dataset = make_dataset(context_a, owner_org, activate=False)
+    ds_dict = make_dataset(context_a, owner_org, activate=False)
     # assert: other users cannot delete your drafts
     with pytest.raises(logic.NotAuthorized,
                        match="not authorized to edit package"):
         helpers.call_auth("package_delete", context_b,
-                          id=dataset["id"])
+                          id=ds_dict["id"])
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -183,13 +186,13 @@ def test_dataset_delete_anonymous():
     context_b = {'ignore_auth': False, 'user': None,
                  'model': model, 'api_version': 3}
 
-    dataset = make_dataset(context_a, owner_org, activate=False)
+    ds_dict = make_dataset(context_a, owner_org, activate=False)
     # assert: other users cannot delete your drafts
     with pytest.raises(
             logic.NotAuthorized,
             match="Action package_delete requires an authenticated user"):
         helpers.call_auth("package_delete", context_b,
-                          id=dataset["id"])
+                          id=ds_dict["id"])
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -206,13 +209,13 @@ def test_dataset_edit_anonymous():
     context_b = {'ignore_auth': False, 'user': None,
                  'model': model, 'api_version': 3}
 
-    dataset = make_dataset(context_a, owner_org, activate=False)
+    ds_dict = make_dataset(context_a, owner_org, activate=False)
     # assert: other users cannot delete your drafts
     with pytest.raises(
             logic.NotAuthorized,
             match="Action package_update requires an authenticated user"):
         helpers.call_auth("package_update", context_b,
-                          id=dataset["id"],
+                          id=ds_dict["id"],
                           title="Hans Peter")
 
 
@@ -231,22 +234,24 @@ def test_dataset_edit_collaborator(create_with_upload):
     context_b = {'ignore_auth': False, 'user': user_b['name'],
                  'model': model, 'api_version': 3}
 
-    dataset, _ = make_dataset(context_a, owner_org,
-                              create_with_upload=create_with_upload,
-                              activate=True, private=True)
+    ds_dict, _ = make_dataset(
+        context_a, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True, private=True)
     helpers.call_action("package_collaborator_create",
-                        id=dataset["id"],
+                        id=ds_dict["id"],
                         user_id=user_b["id"],
                         capacity="editor")
     # make sure the collaborator can read the private package
     helpers.call_auth("package_show", context_b,
-                      id=dataset["id"])
+                      id=ds_dict["id"])
     # assert: collaborators cannot edit your datasets
     with pytest.raises(
             logic.NotAuthorized,
             match="Changing 'title' not allowed for non-draft datasets!"):
         helpers.call_auth("package_update", context_b,
-                          id=dataset["id"],
+                          id=ds_dict["id"],
                           title="Hans Peter")
 
 
@@ -265,9 +270,12 @@ def test_dataset_license_more_restrictive_forbidden(create_with_upload):
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset, res = make_dataset(create_context, owner_org,
-                                create_with_upload=create_with_upload,
-                                activate=True, license_id="CC0-1.0")
+    dataset, res = make_dataset(
+        create_context, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True,
+        license_id="CC0-1.0")
     # assert: cannot set license id to something less restrictive
     with pytest.raises(
             logic.NotAuthorized,
@@ -292,17 +300,17 @@ def test_dataset_purge_anonymous():
     test_context = {'ignore_auth': False,
                     'user': None, 'model': model, 'api_version': 3}
     # create a dataset
-    dataset = make_dataset(create_context, owner_org)
+    ds_dict = make_dataset(create_context, owner_org)
     # delete a dataset
     helpers.call_action("package_delete", create_context,
-                        id=dataset["id"]
+                        id=ds_dict["id"]
                         )
     # assert: check that anonymous cannot purge it
     with pytest.raises(
             logic.NotAuthorized,
             match="Action dataset_purge requires an authenticated user"):
         helpers.call_auth("dataset_purge", test_context,
-                          id=dataset["id"])
+                          id=ds_dict["id"])
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -320,12 +328,12 @@ def test_dataset_purge_draft():
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset = make_dataset(create_context, owner_org, activate=False)
+    ds_dict = make_dataset(create_context, owner_org, activate=False)
     with pytest.raises(logic.NotAuthorized,
                        match="Only deleted datasets can be purged"):
         # assert: cannot purge a draft
         helpers.call_auth("dataset_purge", test_context,
-                          id=dataset["id"])
+                          id=ds_dict["id"])
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -343,14 +351,14 @@ def test_dataset_purge_deleted():
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset = make_dataset(create_context, owner_org)
+    ds_dict = make_dataset(create_context, owner_org)
     # delete a dataset
     helpers.call_action("package_delete", create_context,
-                        id=dataset["id"]
+                        id=ds_dict["id"]
                         )
     # assert: check that we can purge it
     assert helpers.call_auth("dataset_purge", test_context,
-                             id=dataset["id"])
+                             id=ds_dict["id"])
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -368,16 +376,18 @@ def test_dataset_slug_editing_forbidden(create_with_upload):
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset, res = make_dataset(create_context, owner_org,
-                                create_with_upload=create_with_upload,
-                                activate=True)
-    assert dataset["state"] == "active"
+    ds_dict, res_dict = make_dataset(
+        create_context, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True)
+    assert ds_dict["state"] == "active"
     # assert: cannot set state back to draft
     with pytest.raises(
             logic.NotAuthorized,
             match="Changing 'name' not allowed for non-draft datasets"):
         helpers.call_auth("package_patch", test_context,
-                          id=dataset["id"],
+                          id=ds_dict["id"],
                           name="peterpan1234")
 
 
@@ -396,16 +406,18 @@ def test_dataset_state_from_active_to_draft_forbidden(create_with_upload):
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset, res = make_dataset(create_context, owner_org,
-                                create_with_upload=create_with_upload,
-                                activate=True)
-    assert dataset["state"] == "active"
+    ds_dict, res_dict = make_dataset(
+        create_context, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True)
+    assert ds_dict["state"] == "active"
     # assert: cannot set state back to draft
     with pytest.raises(
             logic.NotAuthorized,
             match="Changing dataset state to draft not allowed"):
         helpers.call_auth("package_patch", test_context,
-                          id=dataset["id"],
+                          id=ds_dict["id"],
                           state="draft")
 
 
@@ -508,12 +520,15 @@ def test_dataset_visibility_update_1_private2public_allowed(
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset, res = make_dataset(create_context, owner_org,
-                                create_with_upload=create_with_upload,
-                                activate=True, private=True)
+    ds_dict, res_dict = make_dataset(
+        create_context, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True,
+        private=True)
     # assert: user should be able to make private dataset public
     assert helpers.call_auth("package_patch", test_context,
-                             id=dataset["id"],
+                             id=ds_dict["id"],
                              private=False)
 
 
@@ -534,15 +549,17 @@ def test_dataset_visibility_update_1_public2private_not_allowed(
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset, res = make_dataset(create_context, owner_org,
-                                create_with_upload=create_with_upload,
-                                activate=True, private=False)
+    ds_dict, res_dict = make_dataset(
+        create_context, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True, private=False)
     # assert: cannot set private to True for active datasets
     with pytest.raises(
             logic.NotAuthorized,
             match="Changing visibility to private not allowed"):
         helpers.call_auth("package_patch", test_context,
-                          id=dataset["id"],
+                          id=ds_dict["id"],
                           private=True)
 
 
@@ -567,14 +584,17 @@ def test_dataset_visibility_update_2_private2public_not_allowed(
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset (no auth check done during testing, so we can create
     # a public dataset)
-    dataset, res = make_dataset(create_context, owner_org,
-                                create_with_upload=create_with_upload,
-                                activate=True, private=True)
+    ds_dict, res_dict = make_dataset(
+        create_context, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True,
+        private=True)
     # assert: changing private to public should not work
     with pytest.raises(logic.NotAuthorized,
                        match="Public datasets have been disabled"):
         helpers.call_auth("package_patch", test_context,
-                          id=dataset["id"],
+                          id=ds_dict["id"],
                           private=False)
 
 
@@ -598,10 +618,14 @@ def test_dataset_visibility_update_2_public2private_allowed(
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset (no auth check done during testing, so we can create
     # a public dataset)
-    dataset, res = make_dataset(create_context, owner_org,
-                                create_with_upload=create_with_upload,
-                                activate=True, private=False, name="test")
+    ds_dict, res_dict = make_dataset(
+        create_context, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True,
+        private=False,
+        name="test")
     # assert: changing public to private should work
     assert helpers.call_auth("package_patch", test_context,
-                             id=dataset["id"],
+                             id=ds_dict["id"],
                              private=True)

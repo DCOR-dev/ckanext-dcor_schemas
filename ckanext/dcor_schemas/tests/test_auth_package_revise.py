@@ -30,21 +30,23 @@ def test_dataset_add_resources_only_to_drafts_package_revise(
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset, _ = make_dataset(create_context, owner_org,
-                              create_with_upload=create_with_upload,
-                              activate=True)
+    ds_dict, _ = make_dataset(
+        create_context, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True)
     # assert: adding resources to active datasets forbidden
-    resources = copy.deepcopy(dataset["resources"])
+    resources = copy.deepcopy(ds_dict["resources"])
     resources.append({"name": "peter.rtdc",
                       "url": "upload",
-                      "package_id": dataset["id"]})
+                      "package_id": ds_dict["id"]})
     with pytest.raises(
             logic.NotAuthorized,
             match="Adding resources to non-draft datasets not allowed"):
         helpers.call_auth(
             "package_revise", test_context,
             **{"update": {
-                "id": dataset["id"],
+                "id": ds_dict["id"],
                 "resources": resources}
                })
 
@@ -65,19 +67,21 @@ def test_dataset_add_resources_only_to_drafts_package_revise_control(
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset, _ = make_dataset(create_context, owner_org,
-                              create_with_upload=create_with_upload,
-                              activate=False)
+    ds_dict, _ = make_dataset(
+        create_context, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=False)
     # assert: adding resources to draft datasets allowed
-    resources = copy.deepcopy(dataset["resources"])
+    resources = copy.deepcopy(ds_dict["resources"])
     resources.append({"name": "peter.rtdc",
                       "url": "upload",
                       "sp:chip:channel width": 21.0,  # this must be supported
-                      "package_id": dataset["id"]})
+                      "package_id": ds_dict["id"]})
     helpers.call_auth(
         "package_revise", test_context,
         **{"update": {
-            "id": dataset["id"],
+            "id": ds_dict["id"],
             "resources": resources}
            })
 
@@ -98,20 +102,22 @@ def test_dataset_add_resources_set_id_not_allowed_package_revise(
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset, _ = make_dataset(create_context, owner_org,
-                              create_with_upload=create_with_upload,
-                              activate=False)
+    ds_dict, _ = make_dataset(
+        create_context, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=False)
     # assert: adding resources to active datasets forbidden
-    resources = copy.deepcopy(dataset["resources"])
+    resources = copy.deepcopy(ds_dict["resources"])
     resources.append({"name": "peter.rtdc",
                       "url": "upload",
-                      "package_id": dataset["id"],
+                      "package_id": ds_dict["id"],
                       "id": str(uuid.uuid4())})
     with pytest.raises(logic.NotAuthorized, match="Invalid resource ID"):
         helpers.call_auth(
             "package_revise", test_context,
             **{"update": {
-                "id": dataset["id"],
+                "id": ds_dict["id"],
                 "resources": resources,
             }},
         )
@@ -134,16 +140,18 @@ def test_dataset_update_resources_only_for_drafts_package_revise(
                     'user': user['name'], 'model': model, 'api_version': 3}
 
     # create a dataset
-    dataset, _ = make_dataset(create_context, owner_org,
-                              create_with_upload=create_with_upload,
-                              activate=False)
+    ds_dict, _ = make_dataset(
+        create_context, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=False)
     # modifying the description should work
     helpers.call_auth(
         "package_revise", test_context,
         **{"update": {
-            "id": dataset["id"],
+            "id": ds_dict["id"],
             "resources": [{
-                "id": dataset["resources"][0]["id"],
+                "id": ds_dict["resources"][0]["id"],
                 "description": "A new description",
                 "sp:chip:channel width": 21.0,  # this must be supported
             }
@@ -151,13 +159,13 @@ def test_dataset_update_resources_only_for_drafts_package_revise(
         }})
     helpers.call_action(
         "package_revise", test_context,
-        **{"match__id": dataset["id"],
+        **{"match__id": ds_dict["id"],
            "update__resources__0": {"description": "A new description",
                                     "sp:chip:channel width": 21.0}
            })
     # make sure that worked
     dataset2 = helpers.call_action("package_show", create_context,
-                                   id=dataset["id"])
+                                   id=ds_dict["id"])
     assert dataset2["resources"][-1]["description"] == "A new description"
     assert dataset2["resources"][-1]["sp:chip:channel width"] == 21.0
 
@@ -168,9 +176,9 @@ def test_dataset_update_resources_only_for_drafts_package_revise(
         helpers.call_auth(
             "package_revise", test_context,
             **{"update": {
-                "id": dataset["id"],
+                "id": ds_dict["id"],
                 "resources": [{
-                    "id": dataset["resources"][0]["id"],
+                    "id": ds_dict["resources"][0]["id"],
                     "dc:experiment:date": "2017-02-09"}],
             }})
 
@@ -192,9 +200,11 @@ def test_dataset_update_resources_only_for_drafts_package_revise_2(
                     'user': user['name'], 'model': model, 'api_version': 3}
 
     # create a dataset
-    dataset, _ = make_dataset(create_context, owner_org,
-                              create_with_upload=create_with_upload,
-                              activate=True)
+    ds_dict, _ = make_dataset(
+        create_context, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True)
 
     # modifying the description should not work for active datasets
     with pytest.raises(
@@ -203,9 +213,9 @@ def test_dataset_update_resources_only_for_drafts_package_revise_2(
         helpers.call_auth(
             "package_revise", test_context,
             **{"update": {
-                "id": dataset["id"],
+                "id": ds_dict["id"],
                 "resources": [{
-                    "id": dataset["resources"][0]["id"],
+                    "id": ds_dict["resources"][0]["id"],
                     "description": "A new description",
                 }
                 ],
@@ -218,9 +228,9 @@ def test_dataset_update_resources_only_for_drafts_package_revise_2(
         helpers.call_auth(
             "package_revise", test_context,
             **{"update": {
-                "id": dataset["id"],
+                "id": ds_dict["id"],
                 "resources": [{
-                    "id": dataset["resources"][0]["id"],
+                    "id": ds_dict["resources"][0]["id"],
                     "sp:chip:channel width": 21.0,
                 }
                 ],

@@ -1,3 +1,4 @@
+import pathlib
 import pytest
 
 import ckan.model as model
@@ -5,6 +6,9 @@ import ckan.tests.factories as factories
 import ckan.tests.helpers as helpers
 
 from dcor_shared.testing import make_dataset
+
+
+data_path = pathlib.Path(__file__).parent / "data"
 
 
 @pytest.mark.parametrize("url", ["/dataset",
@@ -81,9 +85,11 @@ def test_login_and_go_to_dataset_edit_page(app, create_with_upload):
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
     # create a dataset
-    dataset, _ = make_dataset(create_context, owner_org,
-                              create_with_upload=create_with_upload,
-                              activate=True)
+    ds_dict, _ = make_dataset(
+        create_context, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True)
     # taken from ckanext/example_iapitoken/tests/test_plugin.py
     data = helpers.call_action(
         u"api_token_create",
@@ -91,7 +97,7 @@ def test_login_and_go_to_dataset_edit_page(app, create_with_upload):
         user=user[u"name"],
         name=u"token-name",
     )
-    app.get("/dataset/edit/" + dataset["id"],
+    app.get("/dataset/edit/" + ds_dict["id"],
             params={u"id": user[u"id"]},
             headers={u"authorization": data["token"]},
             status=200
@@ -112,9 +118,11 @@ def test_login_and_go_to_dataset_edit_page_and_view_license_options(
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
     # create a dataset
-    dataset, _ = make_dataset(create_context, owner_org,
-                              create_with_upload=create_with_upload,
-                              activate=True, license_id="CC-BY-4.0")
+    ds_dict, _ = make_dataset(
+        create_context, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True, license_id="CC-BY-4.0")
 
     # taken from ckanext/example_iapitoken/tests/test_plugin.py
     data = helpers.call_action(
@@ -125,7 +133,7 @@ def test_login_and_go_to_dataset_edit_page_and_view_license_options(
     )
 
     # get the dataset page
-    resp = app.get("/dataset/edit/" + dataset["id"],
+    resp = app.get("/dataset/edit/" + ds_dict["id"],
                    params={u"id": user[u"id"]},
                    headers={u"authorization": data["token"]},
                    status=200
@@ -168,9 +176,12 @@ def test_resource_view_references(app, create_with_upload):
         "https://www.biorxiv.org/content/10.1101/862227v2.full.pdf+html",
         "https://dc.readthedocs.io/en/latest/",
     ]
-    dataset, _ = make_dataset(create_context, owner_org,
-                              create_with_upload=create_with_upload,
-                              activate=True, references=",".join(references))
+    ds_dict, _ = make_dataset(
+        create_context, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True,
+        references=",".join(references))
 
     # taken from ckanext/example_iapitoken/tests/test_plugin.py
     data = helpers.call_action(
@@ -181,7 +192,7 @@ def test_resource_view_references(app, create_with_upload):
     )
 
     # get the dataset page
-    resp = app.get("/dataset/" + dataset["id"],
+    resp = app.get("/dataset/" + ds_dict["id"],
                    params={u"id": user[u"id"]},
                    headers={u"authorization": data["token"]},
                    status=200

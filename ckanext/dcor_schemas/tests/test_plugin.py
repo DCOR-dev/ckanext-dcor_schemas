@@ -1,3 +1,5 @@
+import pathlib
+
 import pytest
 
 import ckan.logic as logic
@@ -6,6 +8,9 @@ import ckan.tests.factories as factories
 import ckan.tests.helpers as helpers
 
 from dcor_shared.testing import make_dataset
+
+
+data_path = pathlib.Path(__file__).parent / "data"
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -30,14 +35,16 @@ def test_ipermissionlabels_user_group_see_privates(create_with_upload):
     context_b = {'ignore_auth': False,
                  'user': user_b['name'], 'model': model, 'api_version': 3}
 
-    dataset, _ = make_dataset(context_a, owner_org,
-                              create_with_upload=create_with_upload,
-                              activate=True,
-                              groups=[{"id": owner_group["id"]}],
-                              private=True)
+    ds_dict, _ = make_dataset(
+        context_a, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True,
+        groups=[{"id": owner_group["id"]}],
+        private=True)
 
     success = helpers.call_auth("package_show", context_b,
-                                id=dataset["id"]
+                                id=ds_dict["id"]
                                 )
     assert success
 
@@ -61,13 +68,15 @@ def test_ipermissionlabels_user_group_see_privates_inverted(
     context_b = {'ignore_auth': False,
                  'user': user_b['name'], 'model': model, 'api_version': 3}
 
-    dataset, _ = make_dataset(context_a, owner_org,
-                              create_with_upload=create_with_upload,
-                              activate=True,
-                              groups=[{"id": owner_group["id"]}],
-                              private=True)
+    ds_dict, _ = make_dataset(
+        context_a, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True,
+        groups=[{"id": owner_group["id"]}],
+        private=True)
 
     with pytest.raises(logic.NotAuthorized):
         helpers.call_auth("package_show", context_b,
-                          id=dataset["id"]
+                          id=ds_dict["id"]
                           )

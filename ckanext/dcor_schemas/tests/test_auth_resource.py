@@ -30,7 +30,7 @@ def test_resource_create_id_forbidden():
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset = make_dataset(create_context, owner_org, activate=False)
+    ds_dict = make_dataset(create_context, owner_org, activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     with path.open('rb') as fd:
         upload = cgi.FieldStorage()
@@ -38,7 +38,7 @@ def test_resource_create_id_forbidden():
         upload.file = fd
         with pytest.raises(logic.NotAuthorized):
             helpers.call_auth("resource_create", test_context,
-                              package_id=dataset["id"],
+                              package_id=ds_dict["id"],
                               upload=upload,
                               url="upload",
                               name=path.name,
@@ -64,13 +64,15 @@ def test_resource_create_in_other_users_dataset(create_with_upload):
     context_b = {'ignore_auth': False,
                  'user': user_b['name'], 'model': model, 'api_version': 3}
 
-    dataset, _ = make_dataset(context_a, owner_org,
-                              create_with_upload=create_with_upload,
-                              activate=False)
+    ds_dict, _ = make_dataset(
+        context_a, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=False)
 
     with pytest.raises(logic.NotAuthorized):
         helpers.call_auth("resource_create", context_b,
-                          package_id=dataset["id"])
+                          package_id=ds_dict["id"])
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -88,23 +90,23 @@ def test_resource_delete_only_drafts(create_with_upload):
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset = make_dataset(create_context, owner_org)
-    assert dataset["state"] == "draft", "dataset without res must be draft"
+    ds_dict = make_dataset(create_context, owner_org)
+    assert ds_dict["state"] == "draft", "dataset without res must be draft"
     # assert: draft datasets may be deleted
     assert helpers.call_auth("package_delete", test_context,
-                             id=dataset["id"])
+                             id=ds_dict["id"])
     # upload resource
-    res = make_resource(data_path=data_path / "calibration_beads_47.rtdc",
+    res = make_resource(resource_path=data_path / "calibration_beads_47.rtdc",
                         create_with_upload=create_with_upload,
                         create_context=create_context,
-                        dataset_id=dataset["id"])
+                        dataset_id=ds_dict["id"])
     # set dataset state to active
     helpers.call_action("package_patch", create_context,
-                        id=dataset["id"],
+                        id=ds_dict["id"],
                         state="active")
     # check dataset state
     dataset2 = helpers.call_action("package_show", create_context,
-                                   id=dataset["id"])
+                                   id=ds_dict["id"])
     assert dataset2["state"] == "active"
     # check resource state
     res2 = helpers.call_action("resource_show", create_context,
@@ -131,35 +133,37 @@ def test_resource_patch_only_description(create_with_upload):
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    ds, res = make_dataset(create_context, owner_org,
-                           create_with_upload=create_with_upload,
-                           activate=True)
+    ds_dict, res_dict = make_dataset(
+        create_context, owner_org,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        create_with_upload=create_with_upload,
+        activate=True)
     # assert: allow updating the description
     assert helpers.call_auth("resource_patch", test_context,
-                             id=res["id"],
-                             package_id=ds["id"],
+                             id=res_dict["id"],
+                             package_id=ds_dict["id"],
                              description="my nice text")
     # assert: do not allow updating other things
     with pytest.raises(logic.NotAuthorized):
         helpers.call_auth("resource_patch", test_context,
-                          id=res["id"],
-                          package_id=ds["id"],
+                          id=res_dict["id"],
+                          package_id=ds_dict["id"],
                           name="hans.rtdc")
     with pytest.raises(logic.NotAuthorized):
         helpers.call_auth("resource_patch", test_context,
-                          id=res["id"],
-                          package_id=ds["id"],
+                          id=res_dict["id"],
+                          package_id=ds_dict["id"],
                           format="UnknownDC")
     with pytest.raises(logic.NotAuthorized):
         helpers.call_auth("resource_patch", test_context,
-                          id=res["id"],
-                          package_id=ds["id"],
+                          id=res_dict["id"],
+                          package_id=ds_dict["id"],
                           hash="doesntmakesense")
     sha = "490efdf5d9bb4cd4b2a6bcf2fe54d4dc201c38530140bcb168980bf8bf846c72"
     with pytest.raises(logic.NotAuthorized):
         helpers.call_auth("resource_patch", test_context,
-                          id=res["id"],
-                          package_id=ds["id"],
+                          id=res_dict["id"],
+                          package_id=ds_dict["id"],
                           sha256=sha)
 
 
@@ -182,12 +186,14 @@ def test_resource_patch_other_users_dataset(create_with_upload):
                  'user': user_b['name'], 'model': model, 'api_version': 3}
 
     # create a dataset
-    ds, res = make_dataset(context_a, owner_org,
-                           create_with_upload=create_with_upload,
-                           activate=True)
+    ds_dict, res_dict = make_dataset(
+        context_a, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True)
 
     with pytest.raises(logic.NotAuthorized):
         assert helpers.call_auth("resource_patch", context_b,
-                                 id=res["id"],
-                                 package_id=ds["id"],
+                                 id=res_dict["id"],
+                                 package_id=ds_dict["id"],
                                  description="my nice text")

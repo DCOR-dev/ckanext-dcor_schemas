@@ -28,7 +28,7 @@ def test_resource_create_configuration_metadata():
     create_context1 = {'ignore_auth': False,
                        'user': user['name'],
                        'api_version': 3}
-    dataset = make_dataset(create_context1, owner_org,
+    ds_dict = make_dataset(create_context1, owner_org,
                            activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     with path.open('rb') as fd:
@@ -36,7 +36,7 @@ def test_resource_create_configuration_metadata():
         upload.filename = path.name
         upload.file = fd
         res = helpers.call_action("resource_create", create_context1,
-                                  package_id=dataset["id"],
+                                  package_id=ds_dict["id"],
                                   upload=upload,
                                   url="upload",
                                   name=path.name,
@@ -63,7 +63,7 @@ def test_resource_create_configuration_metadata_invalid():
     create_context1 = {'ignore_auth': False,
                        'user': user['name'],
                        'api_version': 3}
-    dataset = make_dataset(create_context1, owner_org,
+    ds_dict = make_dataset(create_context1, owner_org,
                            activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     with path.open('rb') as fd:
@@ -72,7 +72,7 @@ def test_resource_create_configuration_metadata_invalid():
         upload.file = fd
         with pytest.raises(logic.ValidationError):
             helpers.call_action("resource_create", create_context1,
-                                package_id=dataset["id"],
+                                package_id=ds_dict["id"],
                                 upload=upload,
                                 url="upload",
                                 name=path.name,
@@ -95,7 +95,7 @@ def test_resource_create_configuration_supplement():
     create_context1 = {'ignore_auth': False,
                        'user': user['name'],
                        'api_version': 3}
-    dataset = make_dataset(create_context1, owner_org,
+    ds_dict = make_dataset(create_context1, owner_org,
                            activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     with path.open('rb') as fd:
@@ -103,7 +103,7 @@ def test_resource_create_configuration_supplement():
         upload.filename = path.name
         upload.file = fd
         res = helpers.call_action("resource_create", create_context1,
-                                  package_id=dataset["id"],
+                                  package_id=ds_dict["id"],
                                   upload=upload,
                                   url="upload",
                                   name=path.name,
@@ -129,7 +129,7 @@ def test_resource_create_configuration_supplement_invalid_value():
     create_context1 = {'ignore_auth': False,
                        'user': user['name'],
                        'api_version': 3}
-    dataset = make_dataset(create_context1, owner_org,
+    ds_dict = make_dataset(create_context1, owner_org,
                            activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     with path.open('rb') as fd:
@@ -138,7 +138,7 @@ def test_resource_create_configuration_supplement_invalid_value():
         upload.file = fd
         with pytest.raises(logic.ValidationError):
             helpers.call_action("resource_create", create_context1,
-                                package_id=dataset["id"],
+                                package_id=ds_dict["id"],
                                 upload=upload,
                                 url="upload",
                                 name=path.name,
@@ -162,7 +162,7 @@ def test_resource_create_custom_upload_name_overridden():
     create_context1 = {'ignore_auth': False,
                        'user': user['name'],
                        'api_version': 3}
-    dataset = make_dataset(create_context1, owner_org,
+    ds_dict = make_dataset(create_context1, owner_org,
                            activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     # create the first resource
@@ -171,7 +171,7 @@ def test_resource_create_custom_upload_name_overridden():
         upload.filename = path.name
         upload.file = fd
         res = helpers.call_action("resource_create", create_context1,
-                                  package_id=dataset["id"],
+                                  package_id=ds_dict["id"],
                                   upload=upload,
                                   url="upload",
                                   name=path.name + "something_else.rtdc",
@@ -216,7 +216,7 @@ def test_resource_create_restrict_extensions():
     create_context1 = {'ignore_auth': False,
                        'user': user['name'],
                        'api_version': 3}
-    dataset = make_dataset(create_context1, owner_org,
+    ds_dict = make_dataset(create_context1, owner_org,
                            activate=False)
     tdir = tempfile.mkdtemp(prefix="test_dcor_schemas_")
     path = pathlib.Path(tdir) / "bad_extension.docx"
@@ -228,7 +228,7 @@ def test_resource_create_restrict_extensions():
         upload.file = fd
         with pytest.raises(logic.ValidationError):
             helpers.call_action("resource_create", create_context1,
-                                package_id=dataset["id"],
+                                package_id=ds_dict["id"],
                                 upload=upload,
                                 url="upload",
                                 name=path.name,
@@ -249,7 +249,7 @@ def test_resource_create_same_name_forbidden():
     create_context1 = {'ignore_auth': False,
                        'user': user['name'],
                        'api_version': 3}
-    dataset = make_dataset(create_context1, owner_org,
+    ds_dict = make_dataset(create_context1, owner_org,
                            activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     # create the first resource
@@ -258,7 +258,7 @@ def test_resource_create_same_name_forbidden():
         upload.filename = path.name
         upload.file = fd
         helpers.call_action("resource_create", create_context1,
-                            package_id=dataset["id"],
+                            package_id=ds_dict["id"],
                             upload=upload,
                             url="upload",
                             name=path.name,
@@ -272,7 +272,7 @@ def test_resource_create_same_name_forbidden():
         upload.file = fd
         with pytest.raises(logic.ValidationError):
             helpers.call_action("resource_create", create_context2,
-                                package_id=dataset["id"],
+                                package_id=ds_dict["id"],
                                 upload=upload,
                                 url="upload",
                                 name=path.name,
@@ -292,7 +292,7 @@ def test_resource_create_weird_characters():
     # create 1st dataset
     create_context1 = {'ignore_auth': False,
                        'user': user['name'], 'api_version': 3}
-    dataset = make_dataset(create_context1, owner_org,
+    ds_dict = make_dataset(create_context1, owner_org,
                            activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     tdir = tempfile.mkdtemp(prefix="test_dcor_schemas_")
@@ -305,7 +305,7 @@ def test_resource_create_weird_characters():
         upload.file = fd
         with pytest.raises(logic.ValidationError):
             helpers.call_action("resource_create", create_context1,
-                                package_id=dataset["id"],
+                                package_id=ds_dict["id"],
                                 upload=upload,
                                 url="upload",
                                 name=path2.name,

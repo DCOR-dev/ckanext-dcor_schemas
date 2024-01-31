@@ -1,3 +1,4 @@
+import pathlib
 import uuid
 
 import pytest
@@ -7,6 +8,9 @@ from ckan import model
 import ckan.tests.factories as factories
 
 from dcor_shared.testing import make_dataset
+
+
+data_path = pathlib.Path(__file__).parent / "data"
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -57,9 +61,11 @@ def test_zombies_with_a_user_with_dataset(cli, create_with_upload):
     # Note: `call_action` bypasses authorization!
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
-    make_dataset(create_context, owner_org,
-                 create_with_upload=create_with_upload,
-                 activate=True)
+    make_dataset(
+        create_context, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True)
 
     result = cli.invoke(ckan, ["list-zombie-users", "--last-activity-weeks",
                                "0"])

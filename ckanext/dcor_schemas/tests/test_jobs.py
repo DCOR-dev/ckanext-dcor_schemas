@@ -65,14 +65,14 @@ def test_symlink_user_dataset(enqueue_job_mock, create_with_upload,
     create_context = {'ignore_auth': False,
                       'user': user['name'],
                       'api_version': 3}
-    dataset = make_dataset(create_context, owner_org,
+    ds_dict = make_dataset(create_context, owner_org,
                            activate=False)
 
     content = (data_dir / "calibration_beads_47.rtdc").read_bytes()
     result = create_with_upload(
         content, 'test.rtdc',
         url="upload",
-        package_id=dataset["id"],
+        package_id=ds_dict["id"],
         context=create_context,
     )
 
@@ -107,7 +107,7 @@ def test_set_format_job(enqueue_job_mock, create_with_upload, monkeypatch,
     # create 1st dataset
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
-    dataset = make_dataset(create_context, owner_org, activate=False)
+    ds_dict = make_dataset(create_context, owner_org, activate=False)
     path = data_dir / "calibration_beads_47.rtdc"
     # create dataset without fluorescence
     tmppath = pathlib.Path(tmpdir) / "calibratino_beads_nofl.rtdc"
@@ -117,7 +117,7 @@ def test_set_format_job(enqueue_job_mock, create_with_upload, monkeypatch,
     result = create_with_upload(
         content, 'test.rtdc',
         url="upload",
-        package_id=dataset["id"],
+        package_id=ds_dict["id"],
         context=create_context,
     )
     resource = helpers.call_action("resource_show", id=result["id"])
@@ -149,12 +149,12 @@ def test_set_format_job_fl(enqueue_job_mock, create_with_upload, monkeypatch,
     # create 1st dataset
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
-    dataset = make_dataset(create_context, owner_org, activate=False)
+    ds_dict = make_dataset(create_context, owner_org, activate=False)
     content = (data_dir / "calibration_beads_47.rtdc").read_bytes()
     result = create_with_upload(
         content, 'test.rtdc',
         url="upload",
-        package_id=dataset["id"],
+        package_id=ds_dict["id"],
         context=create_context,
     )
     resource = helpers.call_action("resource_show", id=result["id"])
@@ -186,12 +186,12 @@ def test_set_sha256_job(enqueue_job_mock, create_with_upload, monkeypatch,
     # create 1st dataset
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
-    dataset = make_dataset(create_context, owner_org, activate=False)
+    ds_dict = make_dataset(create_context, owner_org, activate=False)
     content = (data_dir / "calibration_beads_47.rtdc").read_bytes()
     result = create_with_upload(
         content, 'test.rtdc',
         url="upload",
-        package_id=dataset["id"],
+        package_id=ds_dict["id"],
         context=create_context,
     )
     resource = helpers.call_action("resource_show", id=result["id"])
@@ -224,11 +224,11 @@ def test_set_sha256_job_empty_file(enqueue_job_mock, create_with_upload,
     # create 1st dataset
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
-    dataset = make_dataset(create_context, owner_org, activate=False)
+    ds_dict = make_dataset(create_context, owner_org, activate=False)
     result = create_with_upload(
         b"", 'test.ini',
         url="upload",
-        package_id=dataset["id"],
+        package_id=ds_dict["id"],
         context=create_context,
     )
     resource = helpers.call_action("resource_show", id=result["id"])

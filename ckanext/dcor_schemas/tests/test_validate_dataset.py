@@ -29,14 +29,16 @@ def test_dataset_authors_is_csv(create_with_upload):
     create_context1 = {'ignore_auth': False,
                        'user': user['name'], 'api_version': 3}
 
-    ds, _ = make_dataset(create_context1, owner_org,
-                         create_with_upload=create_with_upload,
-                         activate=True,
-                         authors="Peter Pan,Ben Elf,  Buddy Holly")  # [sic!]
-    dataset = helpers.call_action("package_show",
-                                  id=ds["id"],
+    ds_dict, _ = make_dataset(
+        create_context1, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True,
+        authors="Peter Pan,Ben Elf,  Buddy Holly")  # [sic!]
+    ds_dict = helpers.call_action("package_show",
+                                  id=ds_dict["id"],
                                   )
-    assert dataset["authors"] == "Peter Pan, Ben Elf, Buddy Holly"
+    assert ds_dict["authors"] == "Peter Pan, Ben Elf, Buddy Holly"
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -73,15 +75,17 @@ def test_dataset_doi_remove_url(create_with_upload):
     create_context1 = {'ignore_auth': False,
                        'user': user['name'], 'api_version': 3}
 
-    ds, _ = make_dataset(create_context1, owner_org,
-                         create_with_upload=create_with_upload,
-                         activate=True,
-                         doi="https://doi.org/10.1371/journal.pone.0088458"
-                         )
-    dataset = helpers.call_action("package_show",
-                                  id=ds["id"],
+    ds_dict, _ = make_dataset(
+        create_context1, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True,
+        doi="https://doi.org/10.1371/journal.pone.0088458"
+        )
+    ds_dict = helpers.call_action("package_show",
+                                  id=ds_dict["id"],
                                   )
-    assert dataset["doi"] == "10.1371/journal.pone.0088458"
+    assert ds_dict["doi"] == "10.1371/journal.pone.0088458"
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -353,11 +357,13 @@ def test_dataset_references(create_with_upload):
         "https://www.biorxiv.org/content/10.1101/862227v2.full.pdf+html",
         "biorxiv:10.1101/862227v2",
     ]
-    ds, _ = make_dataset(create_context, owner_org,
-                         create_with_upload=create_with_upload,
-                         activate=True,
-                         references=",".join(references))
-    refs = [r.strip() for r in ds["references"].split(",")]
+    ds_dict, _ = make_dataset(
+        create_context, owner_org,
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True,
+        references=",".join(references))
+    refs = [r.strip() for r in ds_dict["references"].split(",")]
     assert refs[0] == "doi:10.1186/s12859-020-03553-y"
     assert refs[1] == "doi:10.1038/s41592-020-0831-y"
     assert refs[2] == "doi:10.1186/s12859-019-3010-3"
@@ -404,7 +410,7 @@ def test_dataset_state_from_draft_to_active_without_rtdc_forbidden(
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset = make_dataset(create_context, owner_org,
+    ds_dict = make_dataset(create_context, owner_org,
                            activate=False, license_id="CC0-1.0")
     # upload an invalid .rtdc File
     path = pathlib.Path(tempfile.mkdtemp()) / "test_invalid_file_upload.rtdc"
@@ -413,7 +419,7 @@ def test_dataset_state_from_draft_to_active_without_rtdc_forbidden(
     create_with_upload(
         content, 'test.rtdc',
         url="upload",
-        package_id=dataset["id"],
+        package_id=ds_dict["id"],
         context=create_context,
     )
     # assert: cannot activate dataset without valid .rtdc file
@@ -421,7 +427,7 @@ def test_dataset_state_from_draft_to_active_without_rtdc_forbidden(
             logic.ValidationError,
             match="make sure that it contains a valid .rtdc resource"):
         helpers.call_action("package_patch", test_context,
-                            id=dataset["id"],
+                            id=ds_dict["id"],
                             state="active")
 
 
@@ -441,7 +447,7 @@ def test_dataset_state_from_draft_to_active_without_rtdc_forbidden_2(
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset = make_dataset(create_context, owner_org,
+    ds_dict = make_dataset(create_context, owner_org,
                            activate=False, license_id="CC0-1.0")
     # upload an invalid .rtdc File
     path_orig = data_path / "calibration_beads_47.rtdc"
@@ -456,7 +462,7 @@ def test_dataset_state_from_draft_to_active_without_rtdc_forbidden_2(
     create_with_upload(
         content, 'test.rtdc',
         url="upload",
-        package_id=dataset["id"],
+        package_id=ds_dict["id"],
         context=create_context,
     )
     # assert: cannot activate dataset without valid .rtdc file
@@ -464,7 +470,7 @@ def test_dataset_state_from_draft_to_active_without_rtdc_forbidden_2(
             logic.ValidationError,
             match="make sure that it contains a valid .rtdc resource"):
         helpers.call_action("package_patch", test_context,
-                            id=dataset["id"],
+                            id=ds_dict["id"],
                             state="active")
 
 
@@ -484,16 +490,16 @@ def test_dataset_state_from_draft_to_active_without_rtdc_forbidden_control(
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # upload a *valid* [sic] .rtdc File (this is the control)
-    dataset = make_dataset(create_context, owner_org,
+    ds_dict = make_dataset(create_context, owner_org,
                            activate=False)
     content = (data_path / "calibration_beads_47.rtdc").read_bytes()
     create_with_upload(
         content, 'test.rtdc',
         url="upload",
-        package_id=dataset["id"],
+        package_id=ds_dict["id"],
         context=create_context,
     )
     # assert: *can* activate dataset *with* valid .rtdc file
     helpers.call_action("package_patch", test_context,
-                        id=dataset["id"],
+                        id=ds_dict["id"],
                         state="active")
