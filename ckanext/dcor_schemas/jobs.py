@@ -2,7 +2,8 @@ from ckan import logic
 
 import dclab
 from dcor_shared import (
-    DC_MIME_TYPES, get_resource_path, sha256sum,  wait_for_resource)
+    DC_MIME_TYPES, get_resource_path, s3, sha256sum, wait_for_resource
+)
 
 
 def admin_context():
@@ -60,6 +61,39 @@ def set_format_job(resource):
                 data_dict={"format": fmt})
             return True
     return False
+
+
+def set_s3_resource_metadata(resource):
+    """Set the s3_url and s3_available metadata for the resource"""
+    bucket_name, object_name = s3.get_s3_bucket_object_for_artifact(
+        resource_id=resource["id"], artifact="resource")
+    if s3.object_exists(bucket_name=bucket_name, object_name=object_name):
+        s3_url = s3.get_s3_url_for_artifact(
+            resource_id=resource["id"], artifact="resource")
+        patch_resource_noauth(
+            package_id=resource["package_id"],
+            resource_id=resource["id"],
+            data_dict={"s3_available": True,
+                       "s3_url": s3_url})
+
+
+def set_s3_resource_public_tag(resource):
+    """Set the public=True tag to an S3 object if the dataset is public"""
+    # Determine whether the resource is public
+    ds_dict = logic.get_action('package_show')(
+        admin_context(),
+        {'id': resource["package_id"]})
+    private = ds_dict.get("private")
+    if private is not None and not private:
+        bucket_name, object_name = s3.get_s3_bucket_object_for_artifact(
+            resource_id=resource["id"], artifact="resource")
+        s3.make_object_public(
+            bucket_name=bucket_name,
+            object_name=object_name,
+            # The resource might not be there, because it was uploaded
+            # using the API and not to S3.
+            missing_ok=True,
+        )
 
 
 def set_sha256_job(resource):

@@ -130,8 +130,6 @@ def package_update(context, data_dict=None):
         show_context,
         {'id': get_package_id(context, data_dict)})
 
-    resource_ids = [r["id"] for r in pkg_dict.get("resources", [])]
-
     # run resource check functions
     for res_dict in data_dict.get("resources", []):
         # Note that on DCOR, you are not allowed to specify the ID
@@ -155,6 +153,8 @@ def package_update(context, data_dict=None):
                     "dcor_object_store.bucket_name").format(
                         organization_id=pkg_dict["organization"]["id"]),
                 object_name=f"resource/{rid[:3]}/{rid[3:6]}/{rid[6:]}"):
+            # The resource has been uploaded to S3 but is not yet in the
+            # database.
             return {"success": True}
         else:
             # Somebody is trying something nasty

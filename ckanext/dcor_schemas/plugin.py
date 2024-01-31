@@ -343,9 +343,37 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             jid_sl = package_job_id + "symlink"
             depends_on.append(jid_sl)
 
-        redis_connect = ckan_redis_connect()
         # Add the fast jobs first.
+        redis_connect = ckan_redis_connect()
+
+        # Add the "s3_url" and "s3_available" metadata if applicable
+        jid_s3meta = package_job_id + "s3resourcemeta"
+        if not Job.exists(jid_s3meta, connection=redis_connect):
+            toolkit.enqueue_job(jobs.set_s3_resource_metadata,
+                                [resource],
+                                title="Set S3 metadata",
+                                queue="dcor-short",
+                                rq_kwargs={
+                                    "timeout": 500,
+                                    "job_id": jid_s3meta,
+                                })
+        depends_on.append(jid_s3meta)
+
+        # Make S3 object public if applicable
+        jid_s3pub = package_job_id + "s3resourcepublic"
+        if not Job.exists(jid_s3pub, connection=redis_connect):
+            toolkit.enqueue_job(jobs.set_s3_resource_public_tag,
+                                [resource],
+                                title="Make public resources public",
+                                queue="dcor-short",
+                                rq_kwargs={
+                                    "timeout": 500,
+                                    "job_id": jid_s3pub,
+                                })
+        depends_on.append(jid_s3pub)
+
         if resource.get('mimetype') in DC_MIME_TYPES:
+            # Set DC mimetype
             jid_format = package_job_id + "format"
             if not Job.exists(jid_format, connection=redis_connect):
                 toolkit.enqueue_job(jobs.set_format_job,
@@ -356,7 +384,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                                         "timeout": 500,
                                         "job_id": jid_format,
                                         "depends_on": copy.copy(depends_on)})
-
+            # Extract DC parameters
             jid_dcparams = package_job_id + "dcparms"
             if not Job.exists(jid_dcparams, connection=redis_connect):
                 toolkit.enqueue_job(jobs.set_dc_config_job,
