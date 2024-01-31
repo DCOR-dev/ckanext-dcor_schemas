@@ -38,7 +38,7 @@ def get_resource_upload_s3_url(context, data_dict):
         object_name=object_name,
         # the default expiration time is 1 day
     )
-    return {"url": url, "fields": fields}
+    return {"url": url, "fields": fields, "resource_id": rid}
 
 
 @toolkit.side_effect_free

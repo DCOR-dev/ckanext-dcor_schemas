@@ -4,6 +4,7 @@ import re
 from ckan.common import asbool, config
 from ckan import authz, logic
 import ckan.plugins.toolkit as toolkit
+from dcor_shared import get_ckan_config_option, s3
 
 from . import helpers as dcor_helpers
 from . import resource_schema_supplements as rss
@@ -134,23 +135,31 @@ def package_update(context, data_dict=None):
     # run resource check functions
     for res_dict in data_dict.get("resources", []):
         # Note that on DCOR, you are not allowed to specify the ID
-        # during upload.
-        curid = res_dict.get("id")
+        # during upload, unless the resource was already uploaded to S3.
+        rid = res_dict.get("id")
         res_dict["package_id"] = pkg_dict["id"]
-        if curid in resource_ids:
-            # we are updating a resource
-            aorc = resource_update_check(context, res_dict)
-            if not aorc["success"]:
-                return aorc
-        elif curid is None:
+        model = context['model']
+        session = context['session']
+        if not rid:
             # we are creating a resource
             aorc = resource_create_check(context, res_dict)
             if not aorc["success"]:
                 return aorc
+        elif session.query(model.Resource).get(rid):
+            # we are updating a resource
+            aorc = resource_update_check(context, res_dict)
+            if not aorc["success"]:
+                return aorc
+        elif s3.object_exists(
+                bucket_name=get_ckan_config_option(
+                    "dcor_object_store.bucket_name").format(
+                        organization_id=pkg_dict["organization"]["id"]),
+                object_name=f"resource/{rid[:3]}/{rid[3:6]}/{rid[6:]}"):
+            return {"success": True}
         else:
             # Somebody is trying something nasty
             return {'success': False,
-                    'msg': f"Invalid resource ID {curid} for dataset "
+                    'msg': f"Invalid resource ID {rid} for dataset "
                            + f"{pkg_dict['id']}!"}
 
     # do not allow changing things and uploading resources to non-drafts
@@ -252,11 +261,24 @@ def resource_create_check(context, new_dict):
             return {'success': False,
                     'msg': 'Adding resources to non-draft datasets not '
                            'allowed!'}
-        # id must not be set
-        if new_dict.get("id", ""):
-            return {'success': False,
-                    'msg': 'You are not allowed to set the resource ID!'}
-
+        # resource id must not be set, unless the corresponding
+        # S3 object exists
+        rid = new_dict.get("id", "")
+        if rid:
+            # Double-check that the resource does not already exist
+            model = context['model']
+            session = context['session']
+            if session.query(model.Resource).get(rid):
+                return {'success': False,
+                        'msg': f'Resource {rid} already exists!'}
+            bucket_name = get_ckan_config_option(
+                "dcor_object_store.bucket_name").format(
+                organization_id=pkg_dict["organization"]["id"])
+            object_name = f"resource/{rid[:3]}/{rid[3:6]}/{rid[6:]}"
+            if not s3.object_exists(bucket_name=bucket_name,
+                                    object_name=object_name):
+                return {'success': False,
+                        'msg': f'Resource {rid} not available on S3!'}
         return {'success': True}
     else:
         return {'success': False,
