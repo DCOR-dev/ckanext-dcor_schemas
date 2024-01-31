@@ -99,12 +99,18 @@ def set_s3_resource_public_tag(resource):
 def set_sha256_job(resource):
     """Computes the sha256 hash and writes it to the resource metadata"""
     sha = str(resource.get("sha256", ""))  # can be bool sometimes
+    rid = resource["id"]
     if len(sha) != 64:  # only compute if necessary
-        path = get_resource_path(resource["id"])
-        wait_for_resource(resource["id"])
+        wait_for_resource(rid)
+        path = get_resource_path(rid)
+        if path.exists():
+            rhash = sha256sum(path)
+        else:
+            rhash = s3.compute_checksum(
+                *s3.get_s3_bucket_object_for_artifact(rid))
         patch_resource_noauth(
             package_id=resource["package_id"],
             resource_id=resource["id"],
-            data_dict={"sha256": sha256sum(path)})
+            data_dict={"sha256": rhash})
         return True
     return False
