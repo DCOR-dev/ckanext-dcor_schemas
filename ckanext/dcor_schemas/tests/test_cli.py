@@ -6,7 +6,7 @@ from ckan.cli.cli import ckan
 from ckan import model
 import ckan.tests.factories as factories
 
-from .helper_methods import make_dataset
+from dcor_shared.testing import make_dataset
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')

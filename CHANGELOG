@@ -2,6 +2,7 @@
  - feat: implement resource_upload_s3_url API method
  - enh: more strict resource and dataset id validators
  - ref: migrate to dcor_shared 0.7.1
+ - tests: migrate to helper methods from dcor_shared
 0.18.11
  - maintenance release
 0.18.10

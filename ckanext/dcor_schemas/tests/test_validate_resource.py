@@ -9,7 +9,7 @@ import ckan.logic as logic
 import ckan.tests.factories as factories
 import ckan.tests.helpers as helpers
 
-from .helper_methods import make_dataset
+from dcor_shared.testing import make_dataset
 
 data_path = pathlib.Path(__file__).parent / "data"
 

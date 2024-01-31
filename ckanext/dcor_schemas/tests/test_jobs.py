@@ -23,7 +23,7 @@ import dcor_shared
 import ckanext.dcor_schemas.plugin
 import ckanext.dcor_schemas.jobs
 
-from .helper_methods import make_dataset
+from dcor_shared.testing import make_dataset
 
 
 data_dir = pathlib.Path(__file__).parent / "data"

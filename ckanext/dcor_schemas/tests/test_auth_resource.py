@@ -9,7 +9,8 @@ import ckan.tests.factories as factories
 import ckan.tests.helpers as helpers
 from ckan import model
 
-from .helper_methods import make_dataset, make_resource
+from dcor_shared.testing import make_dataset, make_resource
+
 
 data_path = pathlib.Path(__file__).parent / "data"
 
@@ -93,7 +94,9 @@ def test_resource_delete_only_drafts(create_with_upload):
     assert helpers.call_auth("package_delete", test_context,
                              id=dataset["id"])
     # upload resource
-    res = make_resource(create_with_upload, create_context,
+    res = make_resource(data_path=data_path / "calibration_beads_47.rtdc",
+                        create_with_upload=create_with_upload,
+                        create_context=create_context,
                         dataset_id=dataset["id"])
     # set dataset state to active
     helpers.call_action("package_patch", create_context,

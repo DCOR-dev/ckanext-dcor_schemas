@@ -4,7 +4,7 @@ import ckan.model as model
 import ckan.tests.factories as factories
 import ckan.tests.helpers as helpers
 
-from .helper_methods import make_dataset
+from dcor_shared.testing import make_dataset
 
 
 @pytest.mark.parametrize("url", ["/dataset",
