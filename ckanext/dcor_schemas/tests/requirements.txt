@@ -1,4 +1,4 @@
 pytest
 pytest-ckan
 requests
-requests_toolbelt
+dcor_shared[tests]

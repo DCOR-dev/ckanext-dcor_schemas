@@ -18,6 +18,7 @@ import ckan.lib
 import ckan.tests.factories as factories
 from ckan.tests import helpers
 
+from dcor_shared.testing import synchronous_enqueue_job
 import dcor_shared
 import ckanext.dcor_schemas.plugin
 import ckanext.dcor_schemas.jobs
@@ -26,18 +27,6 @@ from .helper_methods import make_dataset
 
 
 data_dir = pathlib.Path(__file__).parent / "data"
-
-
-def synchronous_enqueue_job(job_func, args=None, kwargs=None, title=None,
-                            queue=None, rq_kwargs=None):
-    """
-    Synchronous mock for ``ckan.plugins.toolkit.enqueue_job``.
-    """
-    if rq_kwargs is None:
-        rq_kwargs = {}
-    args = args or []
-    kwargs = kwargs or {}
-    job_func(*args, **kwargs)
 
 
 def test_sha256sum(tmp_path):
