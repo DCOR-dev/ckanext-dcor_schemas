@@ -1,9 +1,7 @@
 import pathlib
 import pytest
 
-import ckan.model as model
 import ckan.tests.factories as factories
-import ckan.tests.helpers as helpers
 
 from dcor_shared.testing import make_dataset
 
@@ -28,20 +26,12 @@ def test_homepage_bad_link(app):
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_login_and_browse_to_dataset_new_fails(app):
     """We disabled dataset creation with #20"""
-    user = factories.User()
-
-    # taken from ckanext/example_iapitoken/tests/test_plugin.py
-    data = helpers.call_action(
-        u"api_token_create",
-        context={u"model": model, u"user": user[u"name"]},
-        user=user[u"name"],
-        name=u"token-name",
-    )
+    user = factories.UserWithToken()
 
     # assert: try to access /dataset
     app.get("/dataset/new",
             params={u"id": user[u"id"]},
-            headers={u"authorization": data["token"]},
+            headers={u"authorization": user["token"]},
             status=403,
             )
 
@@ -55,20 +45,12 @@ def test_login_and_browse_to_dataset_new_fails(app):
                                  "/organization/new",
                                  ])
 def test_login_and_browse_to_main_locations(url, app):
-    user = factories.User()
-
-    # taken from ckanext/example_iapitoken/tests/test_plugin.py
-    data = helpers.call_action(
-        u"api_token_create",
-        context={u"model": model, u"user": user[u"name"]},
-        user=user[u"name"],
-        name=u"token-name",
-    )
+    user = factories.UserWithToken()
 
     # assert: try to access /dataset
     app.get(url,
             params={u"id": user[u"id"]},
-            headers={u"authorization": data["token"]},
+            headers={u"authorization": user["token"]},
             status=200,
             )
 
@@ -76,7 +58,8 @@ def test_login_and_browse_to_main_locations(url, app):
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_theme')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_login_and_go_to_dataset_edit_page(app, create_with_upload):
-    user = factories.User()
+    user = factories.UserWithToken()
+
     owner_org = factories.Organization(users=[{
         'name': user['id'],
         'capacity': 'admin'
@@ -90,16 +73,10 @@ def test_login_and_go_to_dataset_edit_page(app, create_with_upload):
         create_with_upload=create_with_upload,
         resource_path=data_path / "calibration_beads_47.rtdc",
         activate=True)
-    # taken from ckanext/example_iapitoken/tests/test_plugin.py
-    data = helpers.call_action(
-        u"api_token_create",
-        context={u"model": model, u"user": user[u"name"]},
-        user=user[u"name"],
-        name=u"token-name",
-    )
+
     app.get("/dataset/edit/" + ds_dict["id"],
             params={u"id": user[u"id"]},
-            headers={u"authorization": data["token"]},
+            headers={u"authorization": user["token"]},
             status=200
             )
 
@@ -109,7 +86,7 @@ def test_login_and_go_to_dataset_edit_page(app, create_with_upload):
 def test_login_and_go_to_dataset_edit_page_and_view_license_options(
         app, create_with_upload):
     """Check whether the license options are correct"""
-    user = factories.User()
+    user = factories.UserWithToken()
     owner_org = factories.Organization(users=[{
         'name': user['id'],
         'capacity': 'admin'
@@ -124,18 +101,10 @@ def test_login_and_go_to_dataset_edit_page_and_view_license_options(
         resource_path=data_path / "calibration_beads_47.rtdc",
         activate=True, license_id="CC-BY-4.0")
 
-    # taken from ckanext/example_iapitoken/tests/test_plugin.py
-    data = helpers.call_action(
-        u"api_token_create",
-        context={u"model": model, u"user": user[u"name"]},
-        user=user[u"name"],
-        name=u"token-name",
-    )
-
     # get the dataset page
     resp = app.get("/dataset/edit/" + ds_dict["id"],
                    params={u"id": user[u"id"]},
-                   headers={u"authorization": data["token"]},
+                   headers={u"authorization": user["token"]},
                    status=200
                    )
     available_licenses_strings = [
@@ -161,7 +130,7 @@ def test_login_and_go_to_dataset_edit_page_and_view_license_options(
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_resource_view_references(app, create_with_upload):
     """Test whether the references links render correctly"""
-    user = factories.User()
+    user = factories.UserWithToken()
     owner_org = factories.Organization(users=[{
         'name': user['id'],
         'capacity': 'admin'
@@ -183,18 +152,10 @@ def test_resource_view_references(app, create_with_upload):
         activate=True,
         references=",".join(references))
 
-    # taken from ckanext/example_iapitoken/tests/test_plugin.py
-    data = helpers.call_action(
-        u"api_token_create",
-        context={u"model": model, u"user": user[u"name"]},
-        user=user[u"name"],
-        name=u"token-name",
-    )
-
     # get the dataset page
     resp = app.get("/dataset/" + ds_dict["id"],
                    params={u"id": user[u"id"]},
-                   headers={u"authorization": data["token"]},
+                   headers={u"authorization": user["token"]},
                    status=200
                    )
     rendered_refs = [
