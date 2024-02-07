@@ -9,6 +9,7 @@ import ckan.plugins.toolkit as toolkit
 
 import dclab
 import dcor_shared
+from dcor_shared import s3cc
 from slugify import slugify
 
 from . import resource_schema_supplements as rss
@@ -207,9 +208,16 @@ def dataset_state(key, data, errors, context):
             # uploading the resources to set the state to "active".
             for res in data_dict["resources"]:
                 if res["mimetype"] == "RT-DC":
-                    rp = dcor_shared.get_resource_path(res["id"])
+                    path = dcor_shared.get_resource_path(res["id"])
                     try:
-                        with dclab.IntegrityChecker(rp) as ic:
+                        if path.exists():
+                            # The file exists locally on block storage
+                            ds = dclab.new_dataset(path)
+                        else:
+                            # The file exists on S3 object storage
+                            ds = s3cc.get_s3_dc_handle(res["id"])
+
+                        with ds, dclab.IntegrityChecker(ds) as ic:
                             insane = ic.sanity_check()
                             if not insane:
                                 break

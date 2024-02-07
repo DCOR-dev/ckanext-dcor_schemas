@@ -331,6 +331,21 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
     # IResourceController
     def after_resource_create(self, context, resource):
         """Add custom jobs"""
+        # Make sure the resource has a mimetype if possible. This is a
+        # workaround for data uploaded via S3.
+        # TODO: Does it make more sense to put this in a different method
+        #       of IResourceController?
+        if not resource.get("mimetype"):
+            suffix = "." + resource["name"].split(".", 1)[-1]
+            for mt in DC_MIME_TYPES:
+                if suffix in DC_MIME_TYPES[mt]:
+                    resource["mimetype"] = mt
+                    jobs.patch_resource_noauth(
+                        package_id=resource["package_id"],
+                        resource_id=resource["id"],
+                        data_dict={"mimetype": mt})
+                    break
+
         depends_on = []
         extensions = [config.get("ckan.plugins")]
 
@@ -378,7 +393,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             if not Job.exists(jid_format, connection=redis_connect):
                 toolkit.enqueue_job(jobs.set_format_job,
                                     [resource],
-                                    title="Set mimetype for resource",
+                                    title="Set format for resource",
                                     queue="dcor-short",
                                     rq_kwargs={
                                         "timeout": 500,

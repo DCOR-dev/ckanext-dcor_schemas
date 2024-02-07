@@ -56,7 +56,7 @@ def set_format_job(resource):
     if mimetype in DC_MIME_TYPES and rformat in [mimetype, None]:
         rid = resource["id"]
         # (if format is already something like RT-FDC then we don't do this)
-        wait_for_resource(resource["id"])
+        wait_for_resource(rid)
         path = get_resource_path(rid)
         if path.exists():
             # The file exists locally on block storage
@@ -73,7 +73,7 @@ def set_format_job(resource):
         if rformat != fmt:  # only update if necessary
             patch_resource_noauth(
                 package_id=resource["package_id"],
-                resource_id=resource["id"],
+                resource_id=rid,
                 data_dict={"format": fmt})
             return True
     return False
