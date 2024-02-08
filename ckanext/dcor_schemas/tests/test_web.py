@@ -22,8 +22,8 @@ def test_homepage_bad_link(app):
     app.get("/bad_link", status=404)
 
 
-@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_theme')
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_request_context')
 def test_login_and_browse_to_dataset_new_fails(app):
     """We disabled dataset creation with #20"""
     user = factories.UserWithToken()
@@ -36,8 +36,8 @@ def test_login_and_browse_to_dataset_new_fails(app):
             )
 
 
-@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_theme')
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_request_context')
 @pytest.mark.parametrize("url", ["/dataset",
                                  "/group",
                                  "/group/new",
@@ -55,8 +55,8 @@ def test_login_and_browse_to_main_locations(url, app):
             )
 
 
-@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_theme')
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_request_context')
 def test_login_and_go_to_dataset_edit_page(app, create_with_upload):
     user = factories.UserWithToken()
 
@@ -81,8 +81,8 @@ def test_login_and_go_to_dataset_edit_page(app, create_with_upload):
             )
 
 
-@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_theme')
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_request_context')
 def test_login_and_go_to_dataset_edit_page_and_view_license_options(
         app, create_with_upload):
     """Check whether the license options are correct"""
@@ -126,8 +126,8 @@ def test_login_and_go_to_dataset_edit_page_and_view_license_options(
         assert bad not in resp.body
 
 
-@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dcor_theme')
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_request_context')
 def test_resource_view_references(app, create_with_upload):
     """Test whether the references links render correctly"""
     user = factories.UserWithToken()

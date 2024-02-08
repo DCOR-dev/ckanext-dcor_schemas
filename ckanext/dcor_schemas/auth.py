@@ -136,6 +136,20 @@ def package_update(context, data_dict=None):
         # during upload, unless the resource was already uploaded to S3.
         rid = res_dict.get("id")
         res_dict["package_id"] = pkg_dict["id"]
+        # only admin users are allowed to set the SHA256 sum
+        if "sha256" in res_dict:
+            # check whether it is already set
+            try:
+                res_dict_cur = logic.get_action("resource_show")(
+                    context={"ignore_auth": True, "user": "default"},
+                    data_dict={"id": rid}
+                )
+            except logic.NotFound:
+                return {"success": False,
+                        "msg": "Normal users may not specify SHA256 hash"}
+            if res_dict_cur.get("sha256") != res_dict["sha256"]:
+                return {"success": False,
+                        "msg": "Normal users may not specify SHA256 hash"}
         model = context['model']
         session = context['session']
         if not rid:
