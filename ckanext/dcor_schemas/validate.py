@@ -45,8 +45,8 @@ RESOURCE_EXTS = [
     ".so2",
 ]
 
-UUID_REGEXP = re.compile("^[0-9a-f]{8}\b-[0-9a-f]{4}\b-[0-9a-f]{4}"
-                         "\b-[0-9a-f]{4}\b-[0-9a-f]{12}$")
+UUID_REGEXP = re.compile(
+    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 
 
 def dataset_authors(value):
@@ -63,7 +63,10 @@ def dataset_doi(value):
 
 def dataset_id(value):
     """Check resource IDs for UUID"""
-    return UUID_REGEXP.match(value)
+    if UUID_REGEXP.match(value):
+        return value
+    else:
+        raise df.Invalid("dataset ID must be a valid UUID")
 
 
 def dataset_license_id(key, data, errors, context):

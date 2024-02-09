@@ -71,6 +71,11 @@ def package_create(context, data_dict):
         return ao
 
     if data_dict:
+        # A regular user is not allowed to specify the dataset ID
+        if data_dict.get("id"):
+            return {"success": False,
+                    "msg": "Only sysadmins may specify a dataset ID"}
+
         # Use our own configuration option to determine whether the
         # admin has disabled public datasets (e.g. for DCOR-med).
         must_be_private = not asbool(config.get(

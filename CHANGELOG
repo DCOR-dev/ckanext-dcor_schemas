@@ -1,5 +1,6 @@
 0.19.0
  - feat: implement resource_upload_s3_url API method
+ - fix: non-sysadmins may not specify dataset ID
  - enh: more strict resource and dataset id validators
  - enh: do not allow user to specify SHA256 hash
  - ref: migrate to dcor_shared 0.7.2

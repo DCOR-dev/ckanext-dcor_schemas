@@ -1,5 +1,6 @@
 import cgi
 import pathlib
+import uuid
 
 import pytest
 
@@ -253,6 +254,38 @@ def test_dataset_edit_collaborator(create_with_upload):
         helpers.call_auth("package_update", context_b,
                           id=ds_dict["id"],
                           title="Hans Peter")
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_id_cannot_be_specified_by_normal_user():
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    create_context1 = {'ignore_auth': False,
+                       'user': user['name'], 'api_version': 3}
+    ds_id = str(uuid.uuid4())
+    with pytest.raises(logic.NotAuthorized, match="Only sysadmins"):
+        make_dataset(create_context1, owner_org,
+                     activate=False, id=ds_id)
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_id_can_only_be_set_by_sysadmin():
+    user = factories.Sysadmin()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    create_context1 = {'ignore_auth': False,
+                       'user': user['name'], 'api_version': 3}
+    ds_id = str(uuid.uuid4())
+    ds_dict = make_dataset(create_context1, owner_org,
+                           activate=False, id=ds_id)
+    assert ds_dict["id"] == ds_id, "admin-specified ID is used"
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
