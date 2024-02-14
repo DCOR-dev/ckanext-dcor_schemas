@@ -216,7 +216,7 @@ def dataset_state(key, data, errors, context):
                             insane = ic.sanity_check()
                             if not insane:
                                 break
-                    except ValueError:
+                    except (ValueError, OSError):
                         # Unknown file format
                         pass
             else:
