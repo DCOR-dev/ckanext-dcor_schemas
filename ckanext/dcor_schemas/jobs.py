@@ -2,7 +2,8 @@ from ckan import logic
 
 import dclab
 from dcor_shared import (
-    DC_MIME_TYPES, get_resource_path, s3cc, sha256sum, wait_for_resource
+    DC_MIME_TYPES, get_resource_path, get_dc_instance, s3cc, sha256sum,
+    wait_for_resource
 )
 
 
@@ -24,16 +25,8 @@ def set_dc_config_job(resource):
             and resource.get("dc:setup:channel width", None) is None):
         rid = resource["id"]
         wait_for_resource(rid)
-        path = get_resource_path(rid)
-        if path.exists():
-            # The file exists locally on block storage
-            ds = dclab.new_dataset(path)
-        else:
-            # The file exists on S3 object storage
-            ds = s3cc.get_s3_dc_handle(rid)
-
         data_dict = {}
-        with ds:
+        with get_dc_instance(rid) as ds:
             for sec in dclab.dfn.CFG_METADATA:
                 if sec in ds.config:
                     for key in dclab.dfn.config_keys[sec]:
@@ -57,19 +50,12 @@ def set_format_job(resource):
         rid = resource["id"]
         # (if format is already something like RT-FDC then we don't do this)
         wait_for_resource(rid)
-        path = get_resource_path(rid)
-        if path.exists():
-            # The file exists locally on block storage
-            ds = dclab.new_dataset(path)
-        else:
-            # The file exists on S3 object storage
-            ds = s3cc.get_s3_dc_handle(rid)
-        with ds:
-            with dclab.rtdc_dataset.check.IntegrityChecker(ds) as ic:
-                if ic.has_fluorescence:
-                    fmt = "RT-FDC"
-                else:
-                    fmt = "RT-DC"
+        ds = get_dc_instance(rid)
+        with ds, dclab.IntegrityChecker(ds) as ic:
+            if ic.has_fluorescence:
+                fmt = "RT-FDC"
+            else:
+                fmt = "RT-DC"
         if rformat != fmt:  # only update if necessary
             patch_resource_noauth(
                 package_id=resource["package_id"],
