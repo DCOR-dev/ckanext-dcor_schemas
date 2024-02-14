@@ -8,7 +8,7 @@ import ckan.model as model
 import ckan.plugins.toolkit as toolkit
 
 import dclab
-from dcor_shared import s3cc, get_dc_instance
+from dcor_shared import get_dc_instance
 from slugify import slugify
 
 from . import resource_schema_supplements as rss
