@@ -68,7 +68,7 @@ def set_format_job(resource):
 def set_s3_resource_metadata(resource):
     """Set the s3_url and s3_available metadata for the resource"""
     rid = resource["id"]
-    if s3cc.object_exists(resource_id=rid):
+    if s3cc.artifact_exists(resource_id=rid, artifact="resource"):
         s3_url = s3cc.get_s3_url_for_artifact(resource_id=rid)
         patch_resource_noauth(
             package_id=resource["package_id"],
