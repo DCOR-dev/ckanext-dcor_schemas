@@ -36,7 +36,7 @@ def set_dc_config_job(resource):
                             data_dict[dckey] = value
         patch_resource_noauth(
             package_id=resource["package_id"],
-            resource_id=resource["id"],
+            resource_id=rid,
             data_dict=data_dict)
         return True
     return False
