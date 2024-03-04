@@ -1,5 +1,7 @@
 0.19.0
  - feat: implement resource_upload_s3_url API method
+ - feat: CLI command list-group-resources for listing all resources
+   in a circle or collection
  - fix: non-sysadmins may not specify dataset ID
  - enh: more strict resource and dataset id validators
  - enh: do not allow user to specify SHA256 hash

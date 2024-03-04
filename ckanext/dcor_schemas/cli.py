@@ -21,11 +21,26 @@ def list_circles():
 
 @click.command()
 def list_collections():
-    """List all circles/organizations"""
+    """List all collections/groups"""
     groups = model.Group.all()
     for grp in groups:
         if not grp.is_organization:
             click.echo(f"{grp.id}\t{grp.name}\t({grp.title})")
+
+
+@click.command()
+@click.argument("group_id_or_name")
+def list_group_resources(group_id_or_name):
+    """List all resources for a circle or collection"""
+    group = model.Group.get(group_id_or_name)
+    if group is None:
+        click.secho(f"Group '{group_id_or_name}' not found", fg="red")
+    else:
+        # print the list of resources of that group
+        for dataset in group.packages(with_private=True,
+                                      context={"user_is_admin": True}):
+            for resource in dataset.resources:
+                click.echo(resource.id)
 
 
 @click.option('--last-activity-weeks', default=12,
@@ -103,5 +118,6 @@ def get_commands():
     return [
         list_circles,
         list_collections,
+        list_group_resources,
         list_zombie_users,
         run_jobs_dcor_schemas]

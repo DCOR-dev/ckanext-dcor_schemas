@@ -15,7 +15,20 @@ data_path = pathlib.Path(__file__).parent / "data"
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_zombies_basic_clean_db(cli):
+def test_list_group_resources(create_with_upload, cli):
+    # create a dateset
+    ds_dict, res_dict = make_dataset(
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True)
+    org_id = ds_dict['organization']['id']
+    result = cli.invoke(ckan, ["list-group-resources", org_id])
+    assert res_dict["id"] in result.output
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_list_zombie_users_basic_clean_db(cli):
     result = cli.invoke(ckan, ["list-zombie-users"])
     for line in result.output.split("\n"):
         if not line.strip():
@@ -30,7 +43,7 @@ def test_zombies_basic_clean_db(cli):
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_zombies_with_a_user(cli):
+def test_list_zombie_users_with_a_user(cli):
     factories.User(name=f"test_user_{uuid.uuid4()}")
     result = cli.invoke(ckan, ["list-zombie-users", "--last-activity-weeks",
                                "0"])
@@ -52,7 +65,7 @@ def test_zombies_with_a_user(cli):
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_zombies_with_a_user_with_dataset(cli, create_with_upload):
+def test_list_zombie_users_with_a_user_with_dataset(cli, create_with_upload):
     user = factories.User()
     owner_org = factories.Organization(users=[{
         'name': user['id'],
@@ -82,7 +95,7 @@ def test_zombies_with_a_user_with_dataset(cli, create_with_upload):
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_zombies_with_active_user(cli):
+def test_list_zombie_users_with_active_user(cli):
     user = factories.User()
     owner_org = factories.Organization(users=[{
         'name': user['id'],
@@ -108,7 +121,7 @@ def test_zombies_with_active_user(cli):
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_zombies_with_admin(cli):
+def test_list_zombie_users_with_admin(cli):
     factories.Sysadmin()
     result = cli.invoke(ckan, ["list-zombie-users", "--last-activity-weeks",
                                "0"])

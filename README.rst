@@ -103,9 +103,13 @@ accordingly:
 
 - CLI:
 
-  - add CKAN command `list-zombie-users` for users with no datasets and
+  - CKAN command `list-circles` returns the list of DCOR circles
+  - CKAN command `list-collections` returns the list of DCOR collections
+  - CKAN command `list-group-resources <NAME>` returns the list of resources in
+    a DCOR circle or collection
+  - CKAN command `list-zombie-users` for users with no datasets and
     no activity for a certain amount of time
-  - add CKAN command `run-jobs-dcor-schemas` that runs all background
+  - CKAN command `run-jobs-dcor-schemas` that runs all background
     jobs for all resources (if not already done)
 
 
