@@ -1,4 +1,5 @@
 import datetime
+import sys
 import time
 import traceback
 
@@ -35,6 +36,7 @@ def list_group_resources(group_id_or_name):
     group = model.Group.get(group_id_or_name)
     if group is None:
         click.secho(f"Group '{group_id_or_name}' not found", fg="red")
+        return sys.exit(1)
     else:
         # print the list of resources of that group
         for dataset in group.packages(with_private=True,

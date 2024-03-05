@@ -23,7 +23,7 @@ def test_list_group_resources(create_with_upload, cli):
         activate=True)
     org_id = ds_dict['organization']['id']
     result = cli.invoke(ckan, ["list-group-resources", org_id])
-    assert res_dict["id"] in result.output
+    assert result.output.strip().split()[-1] == res_dict["id"]
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
