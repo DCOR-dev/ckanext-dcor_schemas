@@ -12,7 +12,7 @@ import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 
 import dclab
-from dcor_shared import DC_MIME_TYPES
+from dcor_shared import DC_MIME_TYPES, get_ckan_config_option
 from rq.job import Job
 
 
@@ -346,6 +346,19 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                         resource_id=resource["id"],
                         data_dict={"mimetype": mt})
                     break
+
+        # Also make sure the resource has "url" defined.
+        if not resource.get("url"):
+            site_url = get_ckan_config_option("ckan.site_url")
+            meta_url = (f"{site_url}"
+                        f"/dataset/{resource['package_id']}"
+                        f"/resource/{resource['id']}"
+                        f"/download/{resource['name'].lower()}")
+            resource["url"] = meta_url
+            jobs.patch_resource_noauth(
+                package_id=resource["package_id"],
+                resource_id=resource["id"],
+                data_dict={"url": meta_url})
 
         depends_on = []
         extensions = [config.get("ckan.plugins")]

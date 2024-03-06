@@ -44,7 +44,7 @@ setup(
     install_requires=[
         # the "ckan" dependency is implied
         "dclab>=0.52.0",
-        "dcor_shared>=0.7.3",
+        "dcor_shared>=0.9.0",
         "python-slugify",
         # The default rq version in CKAN is 1.0. We want version 1.8 or
         # above, since we have to specify multiple dependencies in the
