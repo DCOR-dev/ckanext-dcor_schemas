@@ -14,8 +14,11 @@ def get_resource_upload_s3_url(context, data_dict):
 
     Parameters
     ----------
-    organization_id: str
-        ID of the organization containing the dataset to which the
+    context: dict
+        CKAN context
+    data_dict: dict
+        Dictionary containing the key ID "organization_id", the
+        organization ID containing the dataset to which the
         resource will belong.
 
     Once the file is uploaded, it is private by default. Setting the
