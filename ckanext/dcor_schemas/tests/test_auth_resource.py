@@ -137,7 +137,7 @@ def test_resource_patch_only_description(create_with_upload):
         create_context, owner_org,
         resource_path=data_path / "calibration_beads_47.rtdc",
         create_with_upload=create_with_upload,
-        activate=True)
+        activate=False)
     # assert: allow updating the description
     assert helpers.call_auth("resource_patch", test_context,
                              id=res_dict["id"],

@@ -15,9 +15,9 @@ def dataset_purge(context, data_dict):
     # original auth function
     # (usually, only sysadmins are allowed to purge, so we test against
     # package_update)
-    ao = logic.auth.update.package_update(context, data_dict)
-    if not ao["success"]:
-        return ao
+    aut = logic.auth.update.package_update(context, data_dict)
+    if not aut["success"]:
+        return aut
 
     # get the current package dict
     show_context = {
@@ -66,9 +66,9 @@ def package_create(context, data_dict):
                        "Please use DCOR-Aid for uploading data!"}
 
     # original auth function
-    ao = logic.auth.create.package_create(context, data_dict)
-    if not ao["success"]:
-        return ao
+    aut = logic.auth.create.package_create(context, data_dict)
+    if not aut["success"]:
+        return aut
 
     if data_dict:
         # A regular user is not allowed to specify the dataset ID
@@ -94,9 +94,9 @@ def package_create(context, data_dict):
 def package_delete(context, data_dict):
     """Only allow deletion of draft datasets"""
     # original auth function
-    ao = logic.auth.update.package_update(context, data_dict)
-    if not ao["success"]:
-        return ao
+    aut = logic.auth.update.package_update(context, data_dict)
+    if not aut["success"]:
+        return aut
 
     # get the current package dict
     show_context = {
@@ -117,9 +117,9 @@ def package_delete(context, data_dict):
 
 def package_update(context, data_dict=None):
     # original auth function
-    ao = logic.auth.update.package_update(context, data_dict)
-    if not ao["success"]:
-        return ao
+    aut = logic.auth.update.package_update(context, data_dict)
+    if not aut["success"]:
+        return aut
 
     if data_dict is None:
         data_dict = {}
@@ -131,18 +131,18 @@ def package_update(context, data_dict=None):
         'user': context['user'],
         'auth_user_obj': context['auth_user_obj'],
     }
-    pkg_dict = logic.get_action('package_show')(
+    ds_dict = logic.get_action('package_show')(
         show_context,
         {'id': get_package_id(context, data_dict)})
 
     # run resource check functions
-    for res_dict in data_dict.get("resources", []):
+    for new_dict in data_dict.get("resources", []):
         # Note that on DCOR, you are not allowed to specify the ID
         # during upload, unless the resource was already uploaded to S3.
-        rid = res_dict.get("id")
-        res_dict["package_id"] = pkg_dict["id"]
+        rid = new_dict.get("id")
+        new_dict["package_id"] = ds_dict["id"]
         # only admin users are allowed to set the SHA256 sum
-        if "sha256" in res_dict:
+        if "sha256" in new_dict:
             # check whether it is already set
             try:
                 res_dict_cur = logic.get_action("resource_show")(
@@ -152,37 +152,26 @@ def package_update(context, data_dict=None):
             except logic.NotFound:
                 return {"success": False,
                         "msg": "Normal users may not specify SHA256 hash"}
-            if res_dict_cur.get("sha256") != res_dict["sha256"]:
+            if res_dict_cur.get("sha256") != new_dict["sha256"]:
                 return {"success": False,
                         "msg": "Normal users may not specify SHA256 hash"}
         model = context['model']
         session = context['session']
-        if not rid:
-            # we are creating a resource
-            aorc = resource_create_check(context, res_dict)
-            if not aorc["success"]:
-                return aorc
-        elif session.query(model.Resource).get(rid):
-            # we are updating a resource
-            aorc = resource_update_check(context, res_dict)
-            if not aorc["success"]:
-                return aorc
-        elif s3.object_exists(
-                bucket_name=get_ckan_config_option(
-                    "dcor_object_store.bucket_name").format(
-                        organization_id=pkg_dict["organization"]["id"]),
-                object_name=f"resource/{rid[:3]}/{rid[3:6]}/{rid[6:]}"):
-            # The resource has been uploaded to S3 but is not yet in the
-            # database.
-            return {"success": True}
+        if session.query(model.Resource).get(rid):
+            # we are updating an existing resource
+            aut = resource_update_check(context, new_dict, ds_dict=ds_dict)
+            if not aut["success"]:
+                return aut
         else:
-            # Somebody is trying something nasty
-            return {'success': False,
-                    'msg': f"Invalid resource ID {rid} for dataset "
-                           + f"{pkg_dict['id']}!"}
+            # We are either creating a resource via an upload through
+            # CKAN or we are creating a resource and have already uploaded
+            # the file to S3. Both cases are covered in this method:
+            aut = resource_create_check(context, new_dict, ds_dict=ds_dict)
+            if not aut["success"]:
+                return aut
 
     # do not allow changing things and uploading resources to non-drafts
-    if pkg_dict.get('state') != "draft":
+    if ds_dict.get('state') != "draft":
         # these things are allowed to be in the data dictionary (see below)
         allowed_keys = [
             "license_id",  # see below, setting less restrictive license
@@ -202,23 +191,23 @@ def package_update(context, data_dict=None):
             elif key in ignored_empty_keys and not data_dict[key]:
                 # ignore some of the keys
                 continue
-            elif not data_dict[key] and not pkg_dict.get(key):
+            elif not data_dict[key] and not ds_dict.get(key):
                 # ignore empty keys that are not in the original dict
                 continue
-            if data_dict[key] != pkg_dict.get(key) and key not in allowed_keys:
+            if data_dict[key] != ds_dict.get(key) and key not in allowed_keys:
                 return {'success': False,
                         'msg': f"Changing '{key}' not allowed for non-draft "
                                + "datasets!"}
 
     # do not allow switching to a more restrictive license
     if "license_id" in data_dict:
-        allowed = dcor_helpers.get_valid_licenses(pkg_dict["license_id"])
+        allowed = dcor_helpers.get_valid_licenses(ds_dict["license_id"])
         if data_dict["license_id"] not in allowed:
             return {'success': False,
                     'msg': 'Cannot switch to more-restrictive license'}
 
     # do not allow setting state from "active" to "draft"
-    if pkg_dict["state"] != "draft" and data_dict.get("state") == "draft":
+    if ds_dict["state"] != "draft" and data_dict.get("state") == "draft":
         return {'success': False,
                 'msg': 'Changing dataset state to draft not allowed'}
 
@@ -227,7 +216,7 @@ def package_update(context, data_dict=None):
         "ckanext.dcor_schemas.allow_public_datasets", "true"))
     private_default = must_be_private  # public if not has to be private
     is_private = asbool(data_dict.get('private', private_default))
-    was_private = pkg_dict["private"]
+    was_private = ds_dict["private"]
     assert isinstance(was_private, bool)
     if must_be_private:
         # has to be private
@@ -249,9 +238,9 @@ def package_update(context, data_dict=None):
     prohibited_keys = ["name"]
     invalid = {}
     for key in data_dict:
-        if (key in pkg_dict
+        if (key in ds_dict
             and key in prohibited_keys
-                and data_dict[key] != pkg_dict[key]):
+                and data_dict[key] != ds_dict[key]):
             invalid[key] = data_dict[key]
     if invalid:
         return {'success': False,
@@ -262,76 +251,117 @@ def package_update(context, data_dict=None):
 
 def resource_create(context, data_dict=None):
     # original auth function
-    ao = logic.auth.create.resource_create(context, data_dict)
-    if not ao["success"]:
-        return ao
+    aut = logic.auth.create.resource_create(context, data_dict)
+    if not aut["success"]:
+        return aut
 
     return resource_create_check(context, data_dict)
 
 
-def resource_create_check(context, new_dict):
-    if "package_id" in new_dict:
-        pkg_dict = logic.get_action('package_show')(
+def resource_create_check(context, new_dict, ds_dict=None):
+    aut = resource_auth_general(context, new_dict, ds_dict=ds_dict)
+    if not aut["success"]:
+        return aut
+
+    if ds_dict is None:
+        ds_dict = logic.get_action('package_show')(
             dict(context, return_type='dict'),
             {'id': new_dict["package_id"]})
 
-        # do not allow adding resources to non-draft datasets
-        if pkg_dict["state"] != "draft":
+    # resource id must not be set, unless the corresponding
+    # S3 object exists
+    rid = new_dict.get("id")
+    if rid:
+        # Double-check that the resource does not already exist
+        model = context['model']
+        session = context['session']
+        if session.query(model.Resource).get(rid):
             return {'success': False,
-                    'msg': 'Adding resources to non-draft datasets not '
-                           'allowed!'}
-        # resource id must not be set, unless the corresponding
-        # S3 object exists
-        rid = new_dict.get("id", "")
-        if rid:
-            # Double-check that the resource does not already exist
-            model = context['model']
-            session = context['session']
-            if session.query(model.Resource).get(rid):
+                    'msg': f'Resource {rid} already exists!'}
+        bucket_name = get_ckan_config_option(
+            "dcor_object_store.bucket_name").format(
+            organization_id=ds_dict["organization"]["id"])
+        object_name = f"resource/{rid[:3]}/{rid[3:6]}/{rid[6:]}"
+        if not s3.object_exists(bucket_name=bucket_name,
+                                object_name=object_name):
+            return {'success': False,
+                    'msg': f'Resource {rid} not available on S3!'}
+        # Also make sure that the user did not specify more metadata
+        # than allowed.
+        allowed_keys = resource_editable_metadata().union(
+            {"id", "name", "package_id", "s3_available"})
+        if not set(new_dict.keys()).issubset(allowed_keys):
+            return {'success': False,
+                    'msg': f'You may only specify the metadata keys '
+                           f'{allowed_keys} for resource uploads via S3. '
+                           f'Got the following keys: {new_dict.keys()}!'}
+        if not new_dict.get("s3_available", True):
+            return {'success': False,
+                    'msg': '"s3_available" must be set to True'}
+    else:
+        # Legacy upload
+        allowed_keys = resource_editable_metadata().union(
+            # some of these are set by the uploader class
+            {"name", "package_id", "upload", "url", "url_type",
+             "last_modified", "mimetype", "size"})
+        if not set(new_dict.keys()).issubset(allowed_keys):
+            return {'success': False,
+                    'msg': f'You may only specify the metadata keys '
+                           f'{allowed_keys} for legacy resource uploads. '
+                           f'Got the following keys: {new_dict.keys()}!'}
+
+    return {'success': True}
+
+
+def resource_editable_metadata():
+    """Set of resource metadata keys that may be edited for draft datasets"""
+    # "sp:*" keys and "description"
+    return set(rss.get_composite_item_list() + ["description"])
+
+
+def resource_auth_general(context, new_dict, ds_dict=None):
+    """General checks for adding or changing resource data"""
+    if "package_id" in new_dict:
+        if ds_dict is None:
+            ds_dict = logic.get_action('package_show')(
+                dict(context, return_type='dict'),
+                {'id': new_dict["package_id"]})
+
+            # do not allow adding resources to non-draft datasets
+            if ds_dict["state"] != "draft":
                 return {'success': False,
-                        'msg': f'Resource {rid} already exists!'}
-            bucket_name = get_ckan_config_option(
-                "dcor_object_store.bucket_name").format(
-                organization_id=pkg_dict["organization"]["id"])
-            object_name = f"resource/{rid[:3]}/{rid[3:6]}/{rid[6:]}"
-            if not s3.object_exists(bucket_name=bucket_name,
-                                    object_name=object_name):
-                return {'success': False,
-                        'msg': f'Resource {rid} not available on S3!'}
-        return {'success': True}
+                        'msg': 'Editing resources for non-draft datasets not '
+                               'allowed!'}
     else:
         return {'success': False,
                 'msg': 'No package_id specified!'}
+    return {"success": True}
 
 
 def resource_update(context, data_dict=None):
     # original auth function
     # (this also checks against package_update auth)
-    ao = logic.auth.update.resource_update(context, data_dict)
-    if not ao["success"]:
-        return ao
+    aut = logic.auth.update.resource_update(context, data_dict)
+    if not aut["success"]:
+        return aut
 
     data_dict["package_id"] = get_package_id(context, data_dict)
 
     return resource_update_check(context, data_dict)
 
 
-def resource_update_check(context, new_dict):
+def resource_update_check(context, new_dict, ds_dict=None):
+    aut = resource_auth_general(context, new_dict, ds_dict=ds_dict)
+    if not aut["success"]:
+        return aut
+
     # get the current resource dict
-    show_context = {
-        'model': context['model'],
-        'session': context['session'],
-        'user': context['user'],
-        'auth_user_obj': context['auth_user_obj'],
-    }
     old_dict = logic.get_action('resource_show')(
-        show_context,
+        context,
         {'id': logic.get_or_bust(new_dict, 'id')})
 
     # only allow updating the description...
-    allowed_keys = ["description"]
-    # ...and "sp:*" keys
-    allowed_keys += rss.get_composite_item_list()
+    allowed_keys = resource_editable_metadata()
 
     invalid = []
     for key in new_dict:
@@ -385,9 +415,9 @@ def user_create(context, data_dict=None):
     https://github.com/ckan/ckan/issues/6070
     """
     # original auth function
-    ao = logic.auth.create.user_create(context, data_dict)
-    if not ao["success"]:
-        return ao
+    aut = logic.auth.create.user_create(context, data_dict)
+    if not aut["success"]:
+        return aut
 
     collected_data = {}
     spam_score = 0
@@ -403,10 +433,10 @@ def user_create(context, data_dict=None):
             spam_score += 1
 
     if "image_url" in data_dict:
-        imgu = data_dict.get("image_url", "").lower()
-        collected_data["image_url"] = imgu
-        if imgu:
-            if not re.search(r"\.(png|jpe?g)$", imgu):  # clearly abuse
+        im_url = data_dict.get("image_url", "").lower()
+        collected_data["image_url"] = im_url
+        if im_url:
+            if not re.search(r"\.(png|jpe?g)$", im_url):  # abuse!
                 spam_score += 1
 
     if "email" in data_dict:

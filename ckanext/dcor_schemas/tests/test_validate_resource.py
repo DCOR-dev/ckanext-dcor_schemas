@@ -18,24 +18,16 @@ data_path = pathlib.Path(__file__).parent / "data"
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_resource_create_configuration_metadata():
     """configuration metadata (using `dclab.dfn.config_funcs`)"""
-    user = factories.User()
-    owner_org = factories.Organization(users=[{
-        'name': user['id'],
-        'capacity': 'admin'
-    }])
-    # Note: `call_action` bypasses authorization!
-    # create 1st dataset
-    create_context1 = {'ignore_auth': False,
-                       'user': user['name'],
-                       'api_version': 3}
-    ds_dict = make_dataset(create_context1, owner_org,
-                           activate=False)
+    create_context = {'ignore_auth': True,
+                      'user': "default",
+                      'api_version': 3}
+    ds_dict = make_dataset(activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     with path.open('rb') as fd:
         upload = cgi.FieldStorage()
         upload.filename = path.name
         upload.file = fd
-        res = helpers.call_action("resource_create", create_context1,
+        res = helpers.call_action("resource_create", create_context,
                                   package_id=ds_dict["id"],
                                   upload=upload,
                                   url="upload",
@@ -53,25 +45,18 @@ def test_resource_create_configuration_metadata():
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_resource_create_configuration_metadata_invalid():
     """test for invalid metadata"""
-    user = factories.User()
-    owner_org = factories.Organization(users=[{
-        'name': user['id'],
-        'capacity': 'admin'
-    }])
-    # Note: `call_action` bypasses authorization!
-    # create 1st dataset
-    create_context1 = {'ignore_auth': False,
-                       'user': user['name'],
-                       'api_version': 3}
-    ds_dict = make_dataset(create_context1, owner_org,
-                           activate=False)
+    create_context = {'ignore_auth': True,
+                      'user': "default",
+                      'api_version': 3}
+
+    ds_dict = make_dataset(activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     with path.open('rb') as fd:
         upload = cgi.FieldStorage()
         upload.filename = path.name
         upload.file = fd
         with pytest.raises(logic.ValidationError):
-            helpers.call_action("resource_create", create_context1,
+            helpers.call_action("resource_create", create_context,
                                 package_id=ds_dict["id"],
                                 upload=upload,
                                 url="upload",
@@ -109,10 +94,10 @@ def test_resource_create_configuration_supplement():
                                   name=path.name,
                                   # We have to add them as kwargs dict
                                   **{"sp:general:sample type": "artificial",
-                                     "sp:experiment:acquisition delay": 2.1}
+                                     "sp:experiment:average brightness": 2.1}
                                   )
     assert res["sp:general:sample type"] == "artificial"
-    assert res["sp:experiment:acquisition delay"] == 2.1
+    assert res["sp:experiment:average brightness"] == 2.1
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')

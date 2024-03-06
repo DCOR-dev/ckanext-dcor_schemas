@@ -42,7 +42,7 @@ def test_dataset_add_resources_only_to_drafts(create_with_upload):
         upload.file = fd
         with pytest.raises(
                 logic.NotAuthorized,
-                match="Adding resources to non-draft datasets not allowed"):
+                match="Editing resources for non-draft datasets not allowed"):
             helpers.call_auth("resource_create", test_context,
                               package_id=ds_dict["id"],
                               upload=upload,

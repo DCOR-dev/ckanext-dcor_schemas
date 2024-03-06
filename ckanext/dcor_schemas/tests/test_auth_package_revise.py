@@ -42,7 +42,7 @@ def test_dataset_add_resources_only_to_drafts_package_revise(
                       "package_id": ds_dict["id"]})
     with pytest.raises(
             logic.NotAuthorized,
-            match="Adding resources to non-draft datasets not allowed"):
+            match="Changing 'resources' not allowed for non-draft datasets"):
         helpers.call_auth(
             "package_revise", test_context,
             **{"update": {
@@ -107,13 +107,13 @@ def test_dataset_add_resources_set_id_not_allowed_package_revise(
         create_with_upload=create_with_upload,
         resource_path=data_path / "calibration_beads_47.rtdc",
         activate=False)
-    # assert: adding resources to active datasets forbidden
+    # assert: if resource is not on S3, cannot add it to the dataset
     resources = copy.deepcopy(ds_dict["resources"])
     resources.append({"name": "peter.rtdc",
                       "url": "upload",
                       "package_id": ds_dict["id"],
                       "id": str(uuid.uuid4())})
-    with pytest.raises(logic.NotAuthorized, match="Invalid resource ID"):
+    with pytest.raises(logic.NotAuthorized, match="not available on S3"):
         helpers.call_auth(
             "package_revise", test_context,
             **{"update": {

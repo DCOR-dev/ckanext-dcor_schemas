@@ -316,7 +316,7 @@ def test_upload_to_s3_sha256_not_allowed_update(enqueue_job_mock, app):
                 "update__resources__extend": res_str,
                 },
         headers={"authorization": user["token"]},
-        status=200  # User forbidden to set SHA256
+        status=200
         )
 
     # Attempt to update the resource with a bad SHA256 hash
@@ -383,4 +383,64 @@ def test_upload_to_s3_wrong_key_fails(enqueue_job_mock, app):
         status=403  # Forbidden
         )
     error = json.loads(resp_res.data)["error"]
-    assert "Access denied: Invalid resource ID" in error["message"]
+    assert "not available on S3" in error["message"]
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_request_context')
+@mock.patch('ckan.plugins.toolkit.enqueue_job',
+            side_effect=synchronous_enqueue_job)
+def test_upload_to_s3_not_allowed_to_specify_metadata(enqueue_job_mock, app):
+    input_path = data_path / "calibration_beads_47.rtdc"
+    user = factories.UserWithToken()
+
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+
+    # Get the upload URL
+    resp_s3 = app.get(
+        "/api/3/action/resource_upload_s3_url",
+        params={"organization_id": owner_org["id"]},
+        headers={"authorization": user["token"]},
+        status=200)
+    data_s3 = json.loads(resp_s3.data)["result"]
+
+    # Upload a resource with that information
+    upload_presigned_to_s3(
+        psurl=data_s3["url"],
+        fields=data_s3["fields"],
+        path_to_upload=input_path)
+
+    # Create a dataset
+    resp_ds = app.post(
+        "/api/3/action/package_create",
+        params={"state": "draft",
+                "private": False,
+                "owner_org": owner_org["id"],
+                "authors": "Hans Peter",
+                "title": "a new world",
+                "license_id": "CC0-1.0",
+                },
+        headers={"authorization": user["token"]},
+        status=200)
+    data_ds = json.loads(resp_ds.data)["result"]
+    assert "id" in data_ds, "sanity check"
+
+    # Add the resource to the dataset
+    rid = data_s3["resource_id"]
+    res_str = ('[{'
+               '"name":"data.rtdc",'
+               f'"id":"{rid}",'
+               f'"url":"https://example.com/{rid}"'  # this is not allowed
+               '}]'
+               )
+    app.post(
+        "/api/3/action/package_revise",
+        params={"match__id": data_ds["id"],
+                "update__resources__extend": res_str,
+                },
+        headers={"authorization": user["token"]},
+        status=403  # not authorized to set "url"
+        )
