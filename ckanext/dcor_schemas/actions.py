@@ -12,6 +12,12 @@ from .validate import RESOURCE_EXTS
 def get_resource_upload_s3_url(context, data_dict):
     """Return a presigned URL for uploading a resource to S3
 
+    Parameters
+    ----------
+    organization_id: str
+        ID of the organization containing the dataset to which the
+        resource will belong.
+
     Once the file is uploaded, it is private by default. Setting the
     `public=true` tag to a resource will make it public. This is taken
     care of in CKAN's background jobs.
