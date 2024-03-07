@@ -157,7 +157,7 @@ def package_update(context, data_dict=None):
                         "msg": "Normal users may not specify SHA256 hash"}
         model = context['model']
         session = context['session']
-        if session.query(model.Resource).get(rid):
+        if rid and session.query(model.Resource).get(rid):
             # we are updating an existing resource
             aut = resource_update_check(context, new_dict, ds_dict=ds_dict)
             if not aut["success"]:
@@ -165,7 +165,8 @@ def package_update(context, data_dict=None):
         else:
             # We are either creating a resource via an upload through
             # CKAN or we are creating a resource and have already uploaded
-            # the file to S3. Both cases are covered in this method:
+            # the file to S3 (we know `rid`). Both cases are covered in
+            # this method:
             aut = resource_create_check(context, new_dict, ds_dict=ds_dict)
             if not aut["success"]:
                 return aut
