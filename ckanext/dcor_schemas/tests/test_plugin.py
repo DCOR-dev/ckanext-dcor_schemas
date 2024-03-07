@@ -106,4 +106,4 @@ def test_iresourcecontroller_after_resource_create_properties(
     assert res_dict["last_modified"]
     assert res_dict["s3_available"]
     assert res_dict["s3_url"]
-    assert res_dict["mimetype"] == "RT-FDC"
+    assert res_dict["format"] == "RT-FDC"

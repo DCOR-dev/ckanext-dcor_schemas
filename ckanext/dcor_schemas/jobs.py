@@ -46,7 +46,7 @@ def set_format_job(resource):
     """Writes the correct format to the resource metadata"""
     mimetype = resource.get("mimetype")
     rformat = resource.get("format")
-    if mimetype in DC_MIME_TYPES and rformat in [mimetype, None]:
+    if mimetype in DC_MIME_TYPES and rformat in [mimetype, None, ""]:
         rid = resource["id"]
         # (if format is already something like RT-FDC then we don't do this)
         wait_for_resource(rid)
@@ -73,12 +73,12 @@ def set_s3_resource_metadata(resource):
         res_new_dict = {"s3_available": True,
                         "s3_url": s3_url,
                         }
-        if "size" not in resource:
+        if not resource.get("size"):
             # Resource has been uploaded via S3 and CKAN did not pick up
             # the size.
             meta = s3cc.get_s3_attributes_for_artifact(rid)
             res_new_dict["size"] = meta["size"]
-        if "url_type" not in resource:
+        if not resource.get("url_type"):
             # Resource has been uploaded via S3 and CKAN did not set the
             # url_type to "upload". Here we set it to "s3_upload" to
             # clarify this.
