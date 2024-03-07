@@ -5,7 +5,7 @@
  - fix: non-sysadmins may not specify dataset ID
  - enh: more strict resource and dataset id validators
  - enh: do not allow user to specify SHA256 hash
- - ref: migrate to dcor_shared 0.7.3
+ - ref: migrate to dcor_shared 0.9.1
  - tests: migrate to helper methods from dcor_shared
  - tests: increased coverage
 0.18.11

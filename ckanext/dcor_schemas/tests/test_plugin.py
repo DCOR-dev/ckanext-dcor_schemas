@@ -1,4 +1,5 @@
 import pathlib
+from unittest import mock
 
 import pytest
 
@@ -8,7 +9,8 @@ import ckan.tests.factories as factories
 import ckan.tests.helpers as helpers
 
 from dcor_shared.testing import (
-    get_ckan_config_option, make_dataset, make_dataset_via_s3
+    get_ckan_config_option, make_dataset, make_dataset_via_s3,
+    synchronous_enqueue_job
 )
 
 
@@ -86,7 +88,10 @@ def test_ipermissionlabels_user_group_see_privates_inverted(
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_iresourcecontroller_after_resource_create_properties():
+@mock.patch('ckan.plugins.toolkit.enqueue_job',
+            side_effect=synchronous_enqueue_job)
+def test_iresourcecontroller_after_resource_create_properties(
+        enqueue_job_mock):
     ds_dict, res_dict = make_dataset_via_s3(
         resource_path=data_path / "calibration_beads_47.rtdc",
         activate=True,
@@ -97,3 +102,8 @@ def test_iresourcecontroller_after_resource_create_properties():
                                f"/dataset/{ds_dict['id']}"
                                f"/resource/{res_dict['id']}"
                                f"/download/{res_dict['name'].lower()}")
+    assert res_dict["size"] == 904729
+    assert res_dict["last_modified"]
+    assert res_dict["s3_available"]
+    assert res_dict["s3_url"]
+    assert res_dict["mimetype"] == "RT-FDC"

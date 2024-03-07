@@ -70,11 +70,23 @@ def set_s3_resource_metadata(resource):
     rid = resource["id"]
     if s3cc.artifact_exists(resource_id=rid, artifact="resource"):
         s3_url = s3cc.get_s3_url_for_artifact(resource_id=rid)
+        res_new_dict = {"s3_available": True,
+                        "s3_url": s3_url,
+                        }
+        if "size" not in resource:
+            # Resource has been uploaded via S3 and CKAN did not pick up
+            # the size.
+            meta = s3cc.get_s3_attributes_for_artifact(rid)
+            res_new_dict["size"] = meta["size"]
+        if "url_type" not in resource:
+            # Resource has been uploaded via S3 and CKAN did not set the
+            # url_type to "upload". Here we set it to "s3_upload" to
+            # clarify this.
+            res_new_dict["url_type"] = "s3_upload"
         patch_resource_noauth(
             package_id=resource["package_id"],
             resource_id=resource["id"],
-            data_dict={"s3_available": True,
-                       "s3_url": s3_url})
+            data_dict=res_new_dict)
 
 
 def set_s3_resource_public_tag(resource):

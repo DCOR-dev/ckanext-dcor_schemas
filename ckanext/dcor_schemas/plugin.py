@@ -1,4 +1,5 @@
 import copy
+import datetime
 import mimetypes
 import pathlib
 import sys
@@ -336,15 +337,15 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         # workaround for data uploaded via S3.
         # TODO: Does it make more sense to put this in a different method
         #       of IResourceController?
+        res_data_dict = {
+            "last_modified": datetime.datetime.utcnow(),
+        }
+
         if not resource.get("mimetype"):
             suffix = "." + resource["name"].split(".", 1)[-1]
             for mt in DC_MIME_TYPES:
                 if suffix in DC_MIME_TYPES[mt]:
-                    resource["mimetype"] = mt
-                    jobs.patch_resource_noauth(
-                        package_id=resource["package_id"],
-                        resource_id=resource["id"],
-                        data_dict={"mimetype": mt})
+                    res_data_dict["mimetype"] = mt
                     break
 
         # Also make sure the resource has "url" defined.
@@ -354,11 +355,13 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                         f"/dataset/{resource['package_id']}"
                         f"/resource/{resource['id']}"
                         f"/download/{resource['name'].lower()}")
-            resource["url"] = meta_url
-            jobs.patch_resource_noauth(
-                package_id=resource["package_id"],
-                resource_id=resource["id"],
-                data_dict={"url": meta_url})
+            res_data_dict["url"] = meta_url
+
+        resource.update(res_data_dict)
+        jobs.patch_resource_noauth(
+            package_id=resource["package_id"],
+            resource_id=resource["id"],
+            data_dict=res_data_dict)
 
         depends_on = []
         extensions = [config.get("ckan.plugins")]
