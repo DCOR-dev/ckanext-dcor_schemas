@@ -8,7 +8,7 @@ import ckan.model as model
 import ckan.plugins.toolkit as toolkit
 
 import dclab
-from dcor_shared import get_dc_instance
+from dcor_shared import DC_MIME_TYPES, get_dc_instance
 from slugify import slugify
 
 from . import resource_schema_supplements as rss
@@ -209,7 +209,7 @@ def dataset_state(key, data, errors, context):
             # for uploading, they also have to use package_revise *after*
             # uploading the resources to set the state to "active".
             for res in data_dict["resources"]:
-                if res["mimetype"] == "RT-DC":
+                if res["mimetype"] in DC_MIME_TYPES:
                     try:
                         ds = get_dc_instance(res["id"])
                         with ds, dclab.IntegrityChecker(ds) as ic:
@@ -222,7 +222,7 @@ def dataset_state(key, data, errors, context):
             else:
                 raise toolkit.Invalid(
                     "Before activating a dataset, make sure that it "
-                    "contains a valid .rtdc resource!")
+                    "contains a valid DC resource!")
 
 
 def resource_dc_config(key, data, errors, context):
