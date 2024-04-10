@@ -100,7 +100,7 @@ def test_upload_to_s3_and_verify(enqueue_job_mock, app):
     assert data_res2["id"] == rid
     assert data_res2["s3_available"]
     assert data_res2["s3_url"] == \
-           data_s3["url"] + "/" + data_s3["fields"]["key"]
+           data_s3["upload_urls"][0].split("?")[0]
 
     # Attempt to download the resource without authorization
     ret = requests.get(data_res2["s3_url"])
@@ -193,7 +193,7 @@ def test_upload_to_s3_and_verify_public(enqueue_job_mock, app):
     assert data_res2["id"] == rid
     assert data_res2["s3_available"]
     assert data_res2["s3_url"] == \
-           data_s3["url"] + "/" + data_s3["fields"]["key"]
+           data_s3["upload_urls"][0].split("?")[0]
 
     # Download the resource without authentication
     ret = requests.get(data_res2["s3_url"])

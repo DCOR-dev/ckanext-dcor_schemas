@@ -425,7 +425,7 @@ def test_dataset_state_from_draft_to_active_without_rtdc_forbidden(
     # assert: cannot activate dataset without valid .rtdc file
     with pytest.raises(
             logic.ValidationError,
-            match="make sure that it contains a valid .rtdc resource"):
+            match="make sure that it contains a valid DC resource"):
         helpers.call_action("package_patch", test_context,
                             id=ds_dict["id"],
                             state="active")
@@ -468,7 +468,7 @@ def test_dataset_state_from_draft_to_active_without_rtdc_forbidden_2(
     # assert: cannot activate dataset without valid .rtdc file
     with pytest.raises(
             logic.ValidationError,
-            match="make sure that it contains a valid .rtdc resource"):
+            match="make sure that it contains a valid DC resource"):
         helpers.call_action("package_patch", test_context,
                             id=ds_dict["id"],
                             state="active")

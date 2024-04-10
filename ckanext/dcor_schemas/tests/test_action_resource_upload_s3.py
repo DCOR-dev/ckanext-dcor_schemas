@@ -30,13 +30,11 @@ def test_action_resource_upload_get_url():
     response = helpers.call_action("resource_upload_s3_urls",
                                    test_context,
                                    organization_id=owner_org["id"],
+                                   file_size=20*1024**3,
                                    )
-    assert "url" in response
-    assert "fields" in response
-    assert "key" in response["fields"]
-    assert "AWSAccessKeyId" in response["fields"]
-    assert "policy" in response["fields"]
-    assert "signature" in response["fields"]
+    assert len(response["upload_urls"]) == 20
+    assert response["complete_url"] is not None
+    assert "resource_id" in response
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -45,6 +43,8 @@ def test_action_resource_upload_get_url():
             side_effect=synchronous_enqueue_job)
 def test_action_resource_upload_get_url_and_upload(enqueue_job_mock):
     """Perform an upload directly to S3"""
+    path = data_path / "calibration_beads_47.rtdc"
+
     user = factories.User()
     owner_org = factories.Organization(users=[{
         'name': user['id'],
@@ -59,11 +59,13 @@ def test_action_resource_upload_get_url_and_upload(enqueue_job_mock):
     response = helpers.call_action("resource_upload_s3_urls",
                                    test_context,
                                    organization_id=owner_org["id"],
+                                   file_size=path.stat().st_size,
                                    )
     upload_presigned_to_s3(
-        psurl=response["url"],
-        fields=response["fields"],
-        path_to_upload=data_path / "calibration_beads_47.rtdc")
+        path=path,
+        upload_urls=response["upload_urls"],
+        complete_url=response["complete_url"],
+        )
 
     # Create the dataset
     pkg_dict = helpers.call_action("package_create",
@@ -95,6 +97,6 @@ def test_action_resource_upload_get_url_and_upload(enqueue_job_mock):
     assert res_dict["name"] == "new_test.rtdc"
 
     # Also attempt to download the resource
-    dlurl = response["url"] + "/" + response["fields"]["key"]
+    dlurl = response["upload_urls"][0].split("?")[0]
     retdl = requests.get(dlurl)
     assert retdl.ok

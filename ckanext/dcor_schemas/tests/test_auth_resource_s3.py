@@ -25,6 +25,7 @@ def test_resource_upload_s3_normal():
     helpers.call_auth("resource_upload_s3_urls",
                       test_context,
                       organization_id=owner_org["id"],
+                      file_size=1024 * 1024,
                       )
 
 

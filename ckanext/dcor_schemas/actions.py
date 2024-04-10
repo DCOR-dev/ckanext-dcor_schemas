@@ -28,7 +28,7 @@ def get_resource_upload_s3_urls(context, data_dict):
     # The corresponding auth function already checks whether the user
     # is a member of the organization.
     org_id = data_dict["organization_id"]
-    file_size = data_dict["file_size"]
+    file_size = int(data_dict["file_size"])
     bucket_name = get_ckan_config_option(
         "dcor_object_store.bucket_name").format(
         organization_id=org_id)
