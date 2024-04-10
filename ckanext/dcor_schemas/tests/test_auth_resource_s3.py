@@ -22,7 +22,7 @@ def test_resource_upload_s3_normal():
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    helpers.call_auth("resource_upload_s3_url",
+    helpers.call_auth("resource_upload_s3_urls",
                       test_context,
                       organization_id=owner_org["id"],
                       )
@@ -42,7 +42,7 @@ def test_resource_upload_s3_with_anon_user_fails():
                     'api_version': 3}
     # create a dataset
     with pytest.raises(logic.NotAuthorized):
-        helpers.call_auth("resource_upload_s3_url",
+        helpers.call_auth("resource_upload_s3_urls",
                           test_context,
                           organization_id=owner_org["id"],
                           )
@@ -62,7 +62,7 @@ def test_resource_upload_s3_wrong_organization_fails():
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
     with pytest.raises(logic.NotAuthorized):
-        helpers.call_auth("resource_upload_s3_url",
+        helpers.call_auth("resource_upload_s3_urls",
                           test_context,
                           organization_id=invalid_org["id"],
                           )

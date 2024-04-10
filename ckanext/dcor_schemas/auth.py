@@ -379,11 +379,15 @@ def resource_update_check(context, new_dict, ds_dict=None):
     return {'success': True}
 
 
-def resource_upload_s3_url(context, data_dict):
+def resource_upload_s3_urls(context, data_dict):
     """Check whether the user is allowed to upload a resource to S3"""
+    # TODO: Can these checks also be added to a validator method?
     if not data_dict or data_dict.get("organization_id") is None:
         return {'success': False,
                 'msg': 'No `organization_id` provided'}
+    if not data_dict or data_dict.get("file_size") is None:
+        return {'success': False,
+                'msg': 'No `file_size` provided'}
     org_id = data_dict["organization_id"]
     # Check whether the user can create a resource in the organization
     org_dicts = logic.get_action('organization_list_for_user')(

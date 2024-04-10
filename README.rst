@@ -94,8 +94,9 @@ accordingly:
 
 - API extensions:
 
-  - ``resource_upload_s3_url`` returns a dictionary containing the URL
-    and the fields required for uploading a new resource directly to S3
+  - ``resource_upload_s3_urls`` returns a dictionary containing the upload
+    URLs (single file or multipart) required for uploading a new resource
+    directly to S3
   - ``resource_schema_supplements`` returns a dictionary of the
     current supplementary resource schema
   - ``supported_resource_suffixes`` returns a list of supported

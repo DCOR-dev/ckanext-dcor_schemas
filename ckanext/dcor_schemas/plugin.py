@@ -59,8 +59,8 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
     # IActions
     def get_actions(self):
         return {
-            "resource_upload_s3_url":
-                actions.get_resource_upload_s3_url,
+            "resource_upload_s3_urls":
+                actions.get_resource_upload_s3_urls,
             "resource_schema_supplements":
                 actions.get_resource_schema_supplements,
             "supported_resource_suffixes":
@@ -84,7 +84,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             'resource_create': dcor_auth.resource_create,
             'resource_delete': dcor_auth.deny,
             'resource_update': dcor_auth.resource_update,
-            'resource_upload_s3_url':  dcor_auth.resource_upload_s3_url,
+            'resource_upload_s3_urls':  dcor_auth.resource_upload_s3_urls,
             'user_create': dcor_auth.user_create,
         }
 

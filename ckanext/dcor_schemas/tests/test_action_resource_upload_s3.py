@@ -27,7 +27,7 @@ def test_action_resource_upload_get_url():
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
 
-    response = helpers.call_action("resource_upload_s3_url",
+    response = helpers.call_action("resource_upload_s3_urls",
                                    test_context,
                                    organization_id=owner_org["id"],
                                    )
@@ -56,7 +56,7 @@ def test_action_resource_upload_get_url_and_upload(enqueue_job_mock):
 
     # Upload the resource to S3 (note that it is not required that the
     # dataset exists)
-    response = helpers.call_action("resource_upload_s3_url",
+    response = helpers.call_action("resource_upload_s3_urls",
                                    test_context,
                                    organization_id=owner_org["id"],
                                    )

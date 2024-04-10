@@ -9,8 +9,8 @@ from .validate import RESOURCE_EXTS
 
 
 @toolkit.side_effect_free
-def get_resource_upload_s3_url(context, data_dict):
-    """Return a presigned URL for uploading a resource to S3
+def get_resource_upload_s3_urls(context, data_dict):
+    """Return presigned URLs for uploading a resource to S3
 
     Parameters
     ----------
@@ -28,6 +28,7 @@ def get_resource_upload_s3_url(context, data_dict):
     # The corresponding auth function already checks whether the user
     # is a member of the organization.
     org_id = data_dict["organization_id"]
+    file_size = data_dict["file_size"]
     bucket_name = get_ckan_config_option(
         "dcor_object_store.bucket_name").format(
         organization_id=org_id)
@@ -42,12 +43,14 @@ def get_resource_upload_s3_url(context, data_dict):
     else:
         raise KeyError("Could not allocate a free UUID for a new resource")
     object_name = f"resource/{rid[:3]}/{rid[3:6]}/{rid[6:]}"
-    url, fields = s3.create_presigned_upload_url(
+    data = s3.create_presigned_upload_urls(
         bucket_name=bucket_name,
         object_name=object_name,
+        file_size=file_size,
         # the default expiration time is 1 day
     )
-    return {"url": url, "fields": fields, "resource_id": rid}
+    data["resource_id"] = rid
+    return data
 
 
 @toolkit.side_effect_free

@@ -20,6 +20,8 @@ data_path = pathlib.Path(__file__).parent / "data"
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
 def test_upload_to_s3_and_verify(enqueue_job_mock, app):
+    upload_path = data_path / "calibration_beads_47.rtdc"
+
     user = factories.UserWithToken()
 
     owner_org = factories.Organization(users=[{
@@ -29,17 +31,19 @@ def test_upload_to_s3_and_verify(enqueue_job_mock, app):
 
     # Get the upload URL
     resp_s3 = app.get(
-        "/api/3/action/resource_upload_s3_url",
-        params={"organization_id": owner_org["id"]},
+        "/api/3/action/resource_upload_s3_urls",
+        params={"organization_id": owner_org["id"],
+                "file_size": upload_path.stat().st_size},
         headers={"authorization": user["token"]},
         status=200)
     data_s3 = json.loads(resp_s3.data)["result"]
 
     # Upload a resource with that information
     upload_presigned_to_s3(
-        psurl=data_s3["url"],
-        fields=data_s3["fields"],
-        path_to_upload=data_path / "calibration_beads_47.rtdc")
+        path=data_path / "calibration_beads_47.rtdc",
+        upload_urls=data_s3["upload_urls"],
+        complete_url=data_s3["complete_url"],
+        )
 
     # Create a dataset
     resp_ds = app.post(
@@ -109,7 +113,8 @@ def test_upload_to_s3_and_verify(enqueue_job_mock, app):
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
 def test_upload_to_s3_and_verify_public(enqueue_job_mock, app):
-    input_path = data_path / "calibration_beads_47.rtdc"
+    upload_path = data_path / "calibration_beads_47.rtdc"
+
     user = factories.UserWithToken()
 
     owner_org = factories.Organization(users=[{
@@ -119,17 +124,19 @@ def test_upload_to_s3_and_verify_public(enqueue_job_mock, app):
 
     # Get the upload URL
     resp_s3 = app.get(
-        "/api/3/action/resource_upload_s3_url",
-        params={"organization_id": owner_org["id"]},
+        "/api/3/action/resource_upload_s3_urls",
+        params={"organization_id": owner_org["id"],
+                "file_size": upload_path.stat().st_size},
         headers={"authorization": user["token"]},
         status=200)
     data_s3 = json.loads(resp_s3.data)["result"]
 
     # Upload a resource with that information
     upload_presigned_to_s3(
-        psurl=data_s3["url"],
-        fields=data_s3["fields"],
-        path_to_upload=input_path)
+        path=data_path / "calibration_beads_47.rtdc",
+        upload_urls=data_s3["upload_urls"],
+        complete_url=data_s3["complete_url"],
+        )
 
     # Create a dataset
     resp_ds = app.post(
@@ -193,9 +200,9 @@ def test_upload_to_s3_and_verify_public(enqueue_job_mock, app):
     assert ret.ok
 
     # Verify that the resource is the same
-    pout = input_path.with_name("download.rtdc")
+    pout = upload_path.with_name("download.rtdc")
     pout.write_bytes(ret.content)
-    assert sha256sum(pout) == sha256sum(input_path)
+    assert sha256sum(pout) == sha256sum(upload_path)
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -203,7 +210,8 @@ def test_upload_to_s3_and_verify_public(enqueue_job_mock, app):
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
 def test_upload_to_s3_sha256_not_allowed(enqueue_job_mock, app):
-    input_path = data_path / "calibration_beads_47.rtdc"
+    upload_path = data_path / "calibration_beads_47.rtdc"
+
     user = factories.UserWithToken()
 
     owner_org = factories.Organization(users=[{
@@ -213,17 +221,19 @@ def test_upload_to_s3_sha256_not_allowed(enqueue_job_mock, app):
 
     # Get the upload URL
     resp_s3 = app.get(
-        "/api/3/action/resource_upload_s3_url",
-        params={"organization_id": owner_org["id"]},
+        "/api/3/action/resource_upload_s3_urls",
+        params={"organization_id": owner_org["id"],
+                "file_size": upload_path.stat().st_size},
         headers={"authorization": user["token"]},
         status=200)
     data_s3 = json.loads(resp_s3.data)["result"]
 
     # Upload a resource with that information
     upload_presigned_to_s3(
-        psurl=data_s3["url"],
-        fields=data_s3["fields"],
-        path_to_upload=input_path)
+        path=data_path / "calibration_beads_47.rtdc",
+        upload_urls=data_s3["upload_urls"],
+        complete_url=data_s3["complete_url"],
+        )
 
     # Create a dataset
     resp_ds = app.post(
@@ -266,7 +276,8 @@ def test_upload_to_s3_sha256_not_allowed(enqueue_job_mock, app):
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
 def test_upload_to_s3_sha256_not_allowed_update(enqueue_job_mock, app):
-    input_path = data_path / "calibration_beads_47.rtdc"
+    upload_path = data_path / "calibration_beads_47.rtdc"
+
     user = factories.UserWithToken()
 
     owner_org = factories.Organization(users=[{
@@ -276,17 +287,19 @@ def test_upload_to_s3_sha256_not_allowed_update(enqueue_job_mock, app):
 
     # Get the upload URL
     resp_s3 = app.get(
-        "/api/3/action/resource_upload_s3_url",
-        params={"organization_id": owner_org["id"]},
+        "/api/3/action/resource_upload_s3_urls",
+        params={"organization_id": owner_org["id"],
+                "file_size": upload_path.stat().st_size},
         headers={"authorization": user["token"]},
         status=200)
     data_s3 = json.loads(resp_s3.data)["result"]
 
     # Upload a resource with that information
     upload_presigned_to_s3(
-        psurl=data_s3["url"],
-        fields=data_s3["fields"],
-        path_to_upload=input_path)
+        path=data_path / "calibration_beads_47.rtdc",
+        upload_urls=data_s3["upload_urls"],
+        complete_url=data_s3["complete_url"],
+        )
 
     # Create a dataset
     resp_ds = app.post(
@@ -391,7 +404,8 @@ def test_upload_to_s3_wrong_key_fails(enqueue_job_mock, app):
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
 def test_upload_to_s3_not_allowed_to_specify_metadata(enqueue_job_mock, app):
-    input_path = data_path / "calibration_beads_47.rtdc"
+    upload_path = data_path / "calibration_beads_47.rtdc"
+
     user = factories.UserWithToken()
 
     owner_org = factories.Organization(users=[{
@@ -401,17 +415,19 @@ def test_upload_to_s3_not_allowed_to_specify_metadata(enqueue_job_mock, app):
 
     # Get the upload URL
     resp_s3 = app.get(
-        "/api/3/action/resource_upload_s3_url",
-        params={"organization_id": owner_org["id"]},
+        "/api/3/action/resource_upload_s3_urls",
+        params={"organization_id": owner_org["id"],
+                "file_size": upload_path.stat().st_size},
         headers={"authorization": user["token"]},
         status=200)
     data_s3 = json.loads(resp_s3.data)["result"]
 
     # Upload a resource with that information
     upload_presigned_to_s3(
-        psurl=data_s3["url"],
-        fields=data_s3["fields"],
-        path_to_upload=input_path)
+        path=data_path / "calibration_beads_47.rtdc",
+        upload_urls=data_s3["upload_urls"],
+        complete_url=data_s3["complete_url"],
+        )
 
     # Create a dataset
     resp_ds = app.post(
