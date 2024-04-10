@@ -43,13 +43,17 @@ def get_resource_upload_s3_urls(context, data_dict):
     else:
         raise KeyError("Could not allocate a free UUID for a new resource")
     object_name = f"resource/{rid[:3]}/{rid[3:6]}/{rid[6:]}"
-    data = s3.create_presigned_upload_urls(
+    upload_urls, complete_url = s3.create_presigned_upload_urls(
         bucket_name=bucket_name,
         object_name=object_name,
         file_size=file_size,
         # the default expiration time is 1 day
     )
-    data["resource_id"] = rid
+    data = {
+        "upload_urls": upload_urls,
+        "complete_url": complete_url,
+        "resource_id": rid,
+        }
     return data
 
 
