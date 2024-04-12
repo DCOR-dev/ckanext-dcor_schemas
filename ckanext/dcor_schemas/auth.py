@@ -273,6 +273,17 @@ def resource_create_check(context, new_dict, ds_dict=None):
     # S3 object exists
     rid = new_dict.get("id")
     if rid:
+        # determine the new keys in the dictionary (sometimes the check has to
+        # be performed multiple times).
+        unchanged_keys = []
+        if ds_dict and ds_dict["resources"]:
+            for res_dict_old in ds_dict["resources"]:
+                if res_dict_old["id"] == rid:
+                    for key in res_dict_old:
+                        if res_dict_old[key] == new_dict[key]:
+                            unchanged_keys.append(key)
+                    break
+
         # Double-check that the resource does not already exist
         model = context['model']
         session = context['session']
@@ -290,13 +301,15 @@ def resource_create_check(context, new_dict, ds_dict=None):
         # Also make sure that the user did not specify more metadata
         # than allowed.
         allowed_keys = resource_editable_metadata().union(
-            {"id", "name", "package_id", "s3_available"})
+            {"id", "name", "package_id", "s3_available"}).union(
+            set(unchanged_keys))
         if not set(new_dict.keys()).issubset(allowed_keys):
+            changed_keys = [k for k in new_dict if k not in allowed_keys]
             return {'success': False,
                     'msg': f'For resource uploads via S3, you may only '
-                           f'specify the metadata {sorted(allowed_keys)}. '
-                           f'Got the following metadata keys: '
-                           f'{sorted(new_dict.keys())}!'}
+                           f'change the metadata keys {sorted(allowed_keys)}. '
+                           f'Got the following new or changed metadata keys: '
+                           f'{sorted(changed_keys)}!'}
         if not new_dict.get("s3_available", True):
             return {'success': False,
                     'msg': '"s3_available" must be set to True'}
