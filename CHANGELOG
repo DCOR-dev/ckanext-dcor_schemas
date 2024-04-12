@@ -3,6 +3,7 @@
  - feat: CLI command list-group-resources for listing all resources
    in a circle or collection
  - fix: non-sysadmins may not specify dataset ID
+ - fix: improper extraction of resource suffix for mimetype
  - enh: more strict resource and dataset id validators
  - enh: do not allow user to specify SHA256 hash
  - ref: migrate to dcor_shared 0.9.1

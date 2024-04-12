@@ -273,16 +273,14 @@ def resource_create_check(context, new_dict, ds_dict=None):
     # S3 object exists
     rid = new_dict.get("id")
     if rid:
-        # determine the new keys in the dictionary (sometimes the check has to
-        # be performed multiple times).
+        # We want to ignore keys in the dictionary that did not change.
         unchanged_keys = []
-        if ds_dict and ds_dict["resources"]:
-            for res_dict_old in ds_dict["resources"]:
-                if res_dict_old["id"] == rid:
-                    for key in res_dict_old:
-                        if res_dict_old[key] == new_dict[key]:
-                            unchanged_keys.append(key)
-                    break
+        for res_dict_old in ds_dict["resources"]:
+            if res_dict_old["id"] == rid:
+                for key in new_dict:
+                    if res_dict_old.get(key) == new_dict[key]:
+                        unchanged_keys.append(key)
+                break
 
         # Double-check that the resource does not already exist
         model = context['model']
@@ -302,7 +300,7 @@ def resource_create_check(context, new_dict, ds_dict=None):
         # than allowed.
         allowed_keys = resource_editable_metadata().union(
             {"id", "name", "package_id", "s3_available"}).union(
-            set(unchanged_keys))
+                set(unchanged_keys))
         if not set(new_dict.keys()).issubset(allowed_keys):
             changed_keys = [k for k in new_dict if k not in allowed_keys]
             return {'success': False,

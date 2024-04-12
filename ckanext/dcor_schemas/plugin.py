@@ -342,7 +342,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         }
 
         if not resource.get("mimetype"):
-            suffix = "." + resource["name"].split(".", 1)[-1]
+            suffix = "." + resource["name"].rsplit(".", 1)[-1]
             for mt in DC_MIME_TYPES:
                 if suffix in DC_MIME_TYPES[mt]:
                     res_data_dict["mimetype"] = mt
