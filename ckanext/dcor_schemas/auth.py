@@ -293,9 +293,10 @@ def resource_create_check(context, new_dict, ds_dict=None):
             {"id", "name", "package_id", "s3_available"})
         if not set(new_dict.keys()).issubset(allowed_keys):
             return {'success': False,
-                    'msg': f'You may only specify the metadata keys '
-                           f'{allowed_keys} for resource uploads via S3. '
-                           f'Got the following keys: {new_dict.keys()}!'}
+                    'msg': f'For resource uploads via S3, you may only '
+                           f'specify the metadata {sorted(allowed_keys)}. '
+                           f'Got the following metadata keys: '
+                           f'{sorted(new_dict.keys())}!'}
         if not new_dict.get("s3_available", True):
             return {'success': False,
                     'msg': '"s3_available" must be set to True'}
@@ -307,9 +308,10 @@ def resource_create_check(context, new_dict, ds_dict=None):
              "last_modified", "mimetype", "size"})
         if not set(new_dict.keys()).issubset(allowed_keys):
             return {'success': False,
-                    'msg': f'You may only specify the metadata keys '
-                           f'{allowed_keys} for legacy resource uploads. '
-                           f'Got the following keys: {new_dict.keys()}!'}
+                    'msg': f'For legacy resource uploads, you may only '
+                           f'specify the metadata {sorted(allowed_keys)}. "'
+                           f'Got the following metadata keys: '
+                           f' {sorted(new_dict.keys())}!'}
 
     return {'success': True}
 
