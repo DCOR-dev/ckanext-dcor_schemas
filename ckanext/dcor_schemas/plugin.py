@@ -167,6 +167,10 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             ],
         })
         schema['resources'].update({
+            # ETag given by S3 backend
+            'etag': [
+                toolkit.get_validator('ignore_missing'),
+            ],
             'id': [
                 toolkit.get_validator('ignore_missing'),
                 toolkit.get_validator('unicode_safe'),
@@ -253,6 +257,9 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             ],
         })
         schema['resources'].update({
+            'etag': [
+                toolkit.get_validator('ignore_missing'),
+            ],
             'sha256': [
                 toolkit.get_validator('ignore_missing'),
             ],
@@ -390,6 +397,19 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                                     "job_id": jid_s3meta,
                                 })
         depends_on.append(jid_s3meta)
+
+        # Set the ETag (this is not a dependency for anything else)
+        jid_s3etag = package_job_id + "s3etag"
+        if not Job.exists(jid_s3etag, connection=redis_connect):
+            toolkit.enqueue_job(jobs.set_etag_job,
+                                [resource],
+                                title="Set S3 ETag",
+                                queue="dcor-short",
+                                rq_kwargs={
+                                    "timeout": 500,
+                                    "job_id": jid_s3etag,
+                                    "depends_on": copy.copy(depends_on),
+                                })
 
         # Make S3 object public if applicable
         jid_s3pub = package_job_id + "s3resourcepublic"

@@ -209,6 +209,72 @@ def test_upload_to_s3_and_verify_public(enqueue_job_mock, app):
 @pytest.mark.usefixtures('clean_db', 'with_request_context')
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
+def test_upload_to_s3_etag_not_allowed(enqueue_job_mock, app):
+    upload_path = data_path / "calibration_beads_47.rtdc"
+
+    user = factories.UserWithToken()
+
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+
+    # Get the upload URL
+    resp_s3 = app.get(
+        "/api/3/action/resource_upload_s3_urls",
+        params={"organization_id": owner_org["id"],
+                "file_size": upload_path.stat().st_size},
+        headers={"authorization": user["token"]},
+        status=200)
+    data_s3 = json.loads(resp_s3.data)["result"]
+
+    # Upload a resource with that information
+    upload_presigned_to_s3(
+        path=data_path / "calibration_beads_47.rtdc",
+        upload_urls=data_s3["upload_urls"],
+        complete_url=data_s3["complete_url"],
+        )
+
+    # Create a dataset
+    resp_ds = app.post(
+        "/api/3/action/package_create",
+        params={"state": "draft",
+                "private": False,
+                "owner_org": owner_org["id"],
+                "authors": "Hans Peter",
+                "title": "a new world",
+                "license_id": "CC0-1.0",
+                },
+        headers={"authorization": user["token"]},
+        status=200)
+    data_ds = json.loads(resp_ds.data)["result"]
+    assert "id" in data_ds, "sanity check"
+
+    # Add the resource to the dataset, specifying a random etag
+    rid = data_s3["resource_id"]
+    rnd256 = "81a89c74b50282fc02e4faa7b654a05a"
+    res_str = ('[{'
+               '"name":"data.rtdc",'
+               f'"id":"{rid}",'
+               f'"etag":"{rnd256}"'
+               '}]'
+               )
+    resp_res = app.post(
+        "/api/3/action/package_revise",
+        params={"match__id": data_ds["id"],
+                "update__resources__extend": res_str,
+                },
+        headers={"authorization": user["token"]},
+        status=403  # User forbidden to set etag
+        )
+    error = json.loads(resp_res.data)["error"]
+    assert "Regular users may not specify 'etag'" in error["message"]
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_request_context')
+@mock.patch('ckan.plugins.toolkit.enqueue_job',
+            side_effect=synchronous_enqueue_job)
 def test_upload_to_s3_sha256_not_allowed(enqueue_job_mock, app):
     upload_path = data_path / "calibration_beads_47.rtdc"
 
@@ -268,7 +334,7 @@ def test_upload_to_s3_sha256_not_allowed(enqueue_job_mock, app):
         status=403  # User forbidden to set SHA256
         )
     error = json.loads(resp_res.data)["error"]
-    assert "Normal users may not specify SHA256 hash" in error["message"]
+    assert "Regular users may not specify 'sha256'" in error["message"]
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -350,7 +416,7 @@ def test_upload_to_s3_sha256_not_allowed_update(enqueue_job_mock, app):
         )
 
     error = json.loads(resp_res2.data)["error"]
-    assert "Normal users may not specify SHA256 hash" in error["message"]
+    assert "Regular users may not edit 'sha256'" in error["message"]
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')

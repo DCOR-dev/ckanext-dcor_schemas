@@ -81,6 +81,7 @@ accordingly:
   - set the mimetype for each dataset
   - populate "dc:sec:key" metadata for each DC dataset
   - generates sha256 hash upon resource creation
+  - populate etag resource property from S3 storage upon resource creation
 
 - Configuration keywords:
 
@@ -127,7 +128,7 @@ In the configuration file ckan.ini:
 ::
     
     ckan.plugins = [...] dcor_schemas
-    ckan.extra_resource_fields = sha256
+    ckan.extra_resource_fields = etag sha256
 
 
 Testing

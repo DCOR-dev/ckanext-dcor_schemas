@@ -2,6 +2,7 @@
  - feat: implement resource_upload_s3_urls API method
  - feat: CLI command list-group-resources for listing all resources
    in a circle or collection
+ - feat: add ETag property which is populated with ETag from S3 via a job
  - fix: non-sysadmins may not specify dataset ID
  - fix: improper extraction of resource suffix for mimetype
  - enh: more strict resource and dataset id validators

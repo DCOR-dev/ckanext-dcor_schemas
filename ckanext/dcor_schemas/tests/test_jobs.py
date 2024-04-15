@@ -18,12 +18,12 @@ import ckan.lib
 import ckan.tests.factories as factories
 from ckan.tests import helpers
 
-from dcor_shared.testing import synchronous_enqueue_job
+from dcor_shared.testing import (
+    make_dataset, make_dataset_via_s3, synchronous_enqueue_job
+)
 import dcor_shared
 import ckanext.dcor_schemas.plugin
 import ckanext.dcor_schemas.jobs
-
-from dcor_shared.testing import make_dataset
 
 
 data_dir = pathlib.Path(__file__).parent / "data"
@@ -81,6 +81,28 @@ def test_symlink_user_dataset(enqueue_job_mock, create_with_upload,
     assert resource["dc:experiment:date"] == "2018-12-11"
     assert resource["dc:experiment:event count"] == 47
     assert np.allclose(resource["dc:setup:flow rate"], 0.06)
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_request_context')
+@mock.patch('ckan.plugins.toolkit.enqueue_job',
+            side_effect=synchronous_enqueue_job)
+def test_set_etag_job(enqueue_job_mock):
+    user = factories.User()
+    # Note: `call_action` bypasses authorization!
+    # create 1st dataset
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    path = data_dir / "calibration_beads_47.rtdc"
+    ds_dict, rs_dict = make_dataset_via_s3(
+        create_context=create_context,
+        resource_path=path,
+        activate=False)
+    print(rs_dict)
+    resource = helpers.call_action("resource_show", id=rs_dict["id"])
+    assert not dcor_shared.get_resource_path(rs_dict["id"]).exists()
+    md5sum = "108d47e80f3e5f35110493b1fdcd30d5"
+    assert resource["etag"] == md5sum
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')

@@ -2,7 +2,7 @@ from ckan import logic
 
 import dclab
 from dcor_shared import (
-    DC_MIME_TYPES, get_resource_path, get_dc_instance, s3cc, sha256sum,
+    DC_MIME_TYPES, get_resource_path, get_dc_instance, s3, s3cc, sha256sum,
     wait_for_resource
 )
 
@@ -39,6 +39,36 @@ def set_dc_config_job(resource):
             resource_id=rid,
             data_dict=data_dict)
         return True
+    return False
+
+
+def set_etag_job(resource):
+    """Retrieves the ETag from the S3 object store API"""
+    etag = str(resource.get("etag", ""))
+    rid = resource["id"]
+    # Example ETags:
+    # - "69725a2f8ea27a47401960990377188b": MD5 sum of a file
+    # - "81a89c74b50282fc02e4faa7b654a05a-4": multipart upload
+    if len(etag.split("-")[0]) != 32:  # only compute if necessary
+        wait_for_resource(rid)
+        path = get_resource_path(rid)
+        if path.exists():
+            # We just don't do it. ETags are only for datasets that
+            # were uploaded to S3.
+            pass
+        else:
+            # The file exists on S3 object storage
+            bucket_name, object_name = s3cc.get_s3_bucket_object_for_artifact(
+                resource_id=rid, artifact="resource")
+            s3_client, _, _ = s3.get_s3()
+            meta = s3_client.head_object(Bucket=bucket_name, Key=object_name)
+            if "ETag" in meta:
+                etag = meta["ETag"].strip("'").strip('"')
+                patch_resource_noauth(
+                    package_id=resource["package_id"],
+                    resource_id=resource["id"],
+                    data_dict={"etag": etag})
+            return True
     return False
 
 
