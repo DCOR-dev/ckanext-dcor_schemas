@@ -32,7 +32,7 @@
  - enh: update the resource schema with 's3_available' and 's3_url'
  - ref: make sha256sum available as separate method
 0.18.3
- - enh: more protextion against script kiddies
+ - enh: more protection against script kiddies
 0.18.2
  - tests: don't use the new `after_dataset_update` during concurrent job tests
 0.18.1
