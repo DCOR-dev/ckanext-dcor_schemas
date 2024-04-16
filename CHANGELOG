@@ -7,7 +7,7 @@
  - fix: improper extraction of resource suffix for mimetype
  - enh: more strict resource and dataset id validators
  - enh: do not allow user to specify SHA256 hash
- - ref: migrate to dcor_shared 0.9.1
+ - setup: migrate to dcor_shared 0.10.0
  - tests: migrate to helper methods from dcor_shared
  - tests: increased coverage
 0.18.11
