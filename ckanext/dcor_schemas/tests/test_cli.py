@@ -5,6 +5,7 @@ import pytest
 
 from ckan.cli.cli import ckan
 from ckan import model
+import ckan.tests.helpers as helpers
 import ckan.tests.factories as factories
 
 from dcor_shared.testing import make_dataset
@@ -15,15 +16,48 @@ data_path = pathlib.Path(__file__).parent / "data"
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_list_group_resources(create_with_upload, cli):
+@pytest.mark.parametrize("activate", [True, False])
+def test_list_group_resources(create_with_upload, cli, activate):
+    """Group resources include resources from draft and active datasets"""
     # create a dateset
     ds_dict, res_dict = make_dataset(
         create_with_upload=create_with_upload,
         resource_path=data_path / "calibration_beads_47.rtdc",
-        activate=True)
+        activate=activate)
     org_id = ds_dict['organization']['id']
     result = cli.invoke(ckan, ["list-group-resources", org_id])
     assert result.output.strip().split()[-1] == res_dict["id"]
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.parametrize("activate", [True, False])
+def test_list_group_resources_delete_purge(create_with_upload, cli, activate):
+    """ Group resources include resources from deleted (not pruned) datasets"""
+    # create a dateset
+    ds_dict, res_dict = make_dataset(
+        create_with_upload=create_with_upload,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=activate)
+    org_id = ds_dict['organization']['id']
+
+    admin = factories.Sysadmin()
+    context = {'ignore_auth': True,
+               'user': admin['name'],
+               'api_version': 3}
+
+    # Delete the dataset
+    helpers.call_action("package_delete", context, id=ds_dict["id"])
+    # It should still be listed
+    result = cli.invoke(ckan, ["list-group-resources", org_id])
+    assert result.output.strip().split()[-1] == res_dict["id"]
+    assert res_dict["id"] in result.output.strip().split()  # same test
+
+    # Purge the dataset
+    helpers.call_action("dataset_purge", context, id=ds_dict["id"])
+    # It should not be there anymore
+    result2 = cli.invoke(ckan, ["list-group-resources", org_id])
+    assert res_dict["id"] not in result2.output.strip().split()
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')

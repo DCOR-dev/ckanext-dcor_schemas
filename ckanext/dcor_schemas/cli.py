@@ -32,15 +32,27 @@ def list_collections():
 @click.command()
 @click.argument("group_id_or_name")
 def list_group_resources(group_id_or_name):
-    """List all resources for a circle or collection"""
+    """List all resources (active/draft/deleted) for a circle or collection"""
+    # We cannot just use model.group.Group.packages(), because this does
+    # not include resources from draft or deleted datasets.
     group = model.Group.get(group_id_or_name)
     if group is None:
         click.secho(f"Group '{group_id_or_name}' not found", fg="red")
         return sys.exit(1)
     else:
         # print the list of resources of that group
-        for dataset in group.packages(with_private=True,
-                                      context={"user_is_admin": True}):
+        query = model.meta.Session.query(model.package.Package).\
+            filter(model.group.group_table.c["id"] == group.id)
+        # copy-pasted from CKAN's model.group.Group.packages()
+        query = query.join(
+            model.group.member_table,
+            model.group.member_table.c["table_id"] == model.package.Package.id)
+        query = query.join(
+            model.group.group_table,
+            model.group.group_table.c["id"]
+            == model.group.member_table.c["group_id"])
+
+        for dataset in query.all():
             for resource in dataset.resources:
                 click.echo(resource.id)
 
