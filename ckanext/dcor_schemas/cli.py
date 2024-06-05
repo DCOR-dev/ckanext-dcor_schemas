@@ -85,11 +85,18 @@ def dcor_move_dataset_to_circle(dataset, circle):
         url_new = url_old.replace(cr_old["id"], cr_new["id"])
         toolkit.get_action("package_revise")(
             admin_context(), {
-                "match": {"id": ds_dict["id"]},
-                "update": {f"update__resource__{rid}__s3_url": url_new}
+                "match__id": ds_dict["id"],
+                f"update__resource__{rid}__s3_url": url_new,
                 }
         )
         print(f"...updated s3_url for {rid}")
+
+    # make sure editing the database worked
+    ds_dict_new = toolkit.get_action("package_show")(
+        admin_context(), {"id": dataset})
+    assert ds_dict_new["owner_org"] == cr_new["id"]
+    for res in ds_dict_new["resources"]:
+        assert res["s3_url"].count(cr_new["id"])
 
     # Delete the resource files in the old S3 bucket
     for bucket, key in to_delete:
