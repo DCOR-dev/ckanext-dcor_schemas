@@ -113,6 +113,8 @@ accordingly:
     no activity for a certain amount of time
   - CKAN command `run-jobs-dcor-schemas` that runs all background
     jobs for all resources (if not already done)
+  - CKAN command `dcor-move-dataset-to-circle` for moving a dataset to
+    a different circle
 
 
 Installation
