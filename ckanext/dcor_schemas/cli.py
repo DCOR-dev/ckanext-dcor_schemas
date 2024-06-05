@@ -53,6 +53,7 @@ def dcor_move_dataset_to_circle(dataset, circle):
             bucket_new = bucket_old.replace(cr_old["id"], cr_new["id"])
             assert bucket_old != bucket_new, "sanity check"
             # copy the resource to the destination bucket
+            s3.require_bucket(bucket_new)
             copy_source = {'Bucket': bucket_old, 'Key': obj}
             s3_client.copy(copy_source, bucket_new, obj)
             # verify checksum
@@ -70,7 +71,7 @@ def dcor_move_dataset_to_circle(dataset, circle):
             to_delete.append([bucket_old, obj])
 
     # Set owner org of dataset to new circle ID
-    toolkit.get_action("package_patch")(
+    toolkit.get_action("package_revise")(
         admin_context(), {"match": ds_dict["id"],
                           "update": {"owner_org": cr_new["id"]}
                           }
@@ -82,7 +83,7 @@ def dcor_move_dataset_to_circle(dataset, circle):
         rid = rs_dict["id"]
         url_old = rs_dict["s3_url"]
         url_new = url_old.replace(cr_old["id"], cr_new["id"])
-        toolkit.get_action("package_patch")(
+        toolkit.get_action("package_revise")(
             admin_context(), {
                 "match": ds_dict["id"],
                 "update": {f"update__resource__{rid}__s3_url": url_new}
