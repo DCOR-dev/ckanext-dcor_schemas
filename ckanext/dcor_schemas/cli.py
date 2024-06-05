@@ -49,6 +49,8 @@ def dcor_move_dataset_to_circle(dataset, circle):
         rid = rs_dict["id"]
         rsha = rs_dict["sha256"]
         for art in ["condensed", "preview", "resource"]:
+            if not s3cc.artifact_exists(rid, art):
+                continue
             bucket_old, obj = s3cc.get_s3_bucket_object_for_artifact(rid, art)
             bucket_new = bucket_old.replace(cr_old["id"], cr_new["id"])
             assert bucket_old != bucket_new, "sanity check"
