@@ -43,7 +43,7 @@ def test_upload_to_s3_and_verify(enqueue_job_mock, app):
         path=data_path / "calibration_beads_47.rtdc",
         upload_urls=data_s3["upload_urls"],
         complete_url=data_s3["complete_url"],
-        )
+    )
 
     # Create a dataset
     resp_ds = app.post(
@@ -74,7 +74,7 @@ def test_upload_to_s3_and_verify(enqueue_job_mock, app):
                 },
         headers={"authorization": user["token"]},
         status=200
-        )
+    )
     data_res = json.loads(resp_res.data)["result"]
     res_dict = data_res["package"]["resources"][0]
     assert res_dict["id"] == rid
@@ -95,12 +95,12 @@ def test_upload_to_s3_and_verify(enqueue_job_mock, app):
         params={"id": rid},
         headers={"authorization": user["token"]},
         status=200
-        )
+    )
     data_res2 = json.loads(resp_res2.data)["result"]
     assert data_res2["id"] == rid
     assert data_res2["s3_available"]
     assert data_res2["s3_url"] == \
-           data_s3["upload_urls"][0].split("?")[0]
+        data_s3["upload_urls"][0].split("?")[0]
 
     # Attempt to download the resource without authorization
     ret = requests.get(data_res2["s3_url"])
@@ -136,7 +136,7 @@ def test_upload_to_s3_and_verify_public(enqueue_job_mock, app):
         path=data_path / "calibration_beads_47.rtdc",
         upload_urls=data_s3["upload_urls"],
         complete_url=data_s3["complete_url"],
-        )
+    )
 
     # Create a dataset
     resp_ds = app.post(
@@ -167,7 +167,7 @@ def test_upload_to_s3_and_verify_public(enqueue_job_mock, app):
                 },
         headers={"authorization": user["token"]},
         status=200
-        )
+    )
     data_res = json.loads(resp_res.data)["result"]
     res_dict = data_res["package"]["resources"][0]
     assert res_dict["id"] == rid
@@ -188,12 +188,12 @@ def test_upload_to_s3_and_verify_public(enqueue_job_mock, app):
         params={"id": rid},
         headers={"authorization": user["token"]},
         status=200
-        )
+    )
     data_res2 = json.loads(resp_res2.data)["result"]
     assert data_res2["id"] == rid
     assert data_res2["s3_available"]
     assert data_res2["s3_url"] == \
-           data_s3["upload_urls"][0].split("?")[0]
+        data_s3["upload_urls"][0].split("?")[0]
 
     # Download the resource without authentication
     ret = requests.get(data_res2["s3_url"])
@@ -233,7 +233,7 @@ def test_upload_to_s3_etag_not_allowed(enqueue_job_mock, app):
         path=data_path / "calibration_beads_47.rtdc",
         upload_urls=data_s3["upload_urls"],
         complete_url=data_s3["complete_url"],
-        )
+    )
 
     # Create a dataset
     resp_ds = app.post(
@@ -266,7 +266,7 @@ def test_upload_to_s3_etag_not_allowed(enqueue_job_mock, app):
                 },
         headers={"authorization": user["token"]},
         status=403  # User forbidden to set etag
-        )
+    )
     error = json.loads(resp_res.data)["error"]
     assert "Regular users may not specify 'etag'" in error["message"]
 
@@ -299,7 +299,7 @@ def test_upload_to_s3_sha256_not_allowed(enqueue_job_mock, app):
         path=data_path / "calibration_beads_47.rtdc",
         upload_urls=data_s3["upload_urls"],
         complete_url=data_s3["complete_url"],
-        )
+    )
 
     # Create a dataset
     resp_ds = app.post(
@@ -332,7 +332,7 @@ def test_upload_to_s3_sha256_not_allowed(enqueue_job_mock, app):
                 },
         headers={"authorization": user["token"]},
         status=403  # User forbidden to set SHA256
-        )
+    )
     error = json.loads(resp_res.data)["error"]
     assert "Regular users may not specify 'sha256'" in error["message"]
 
@@ -365,7 +365,7 @@ def test_upload_to_s3_sha256_not_allowed_update(enqueue_job_mock, app):
         path=data_path / "calibration_beads_47.rtdc",
         upload_urls=data_s3["upload_urls"],
         complete_url=data_s3["complete_url"],
-        )
+    )
 
     # Create a dataset
     resp_ds = app.post(
@@ -396,7 +396,7 @@ def test_upload_to_s3_sha256_not_allowed_update(enqueue_job_mock, app):
                 },
         headers={"authorization": user["token"]},
         status=200
-        )
+    )
 
     # Attempt to update the resource with a bad SHA256 hash
     rnd256 = "8486a10c4393cee1c15392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef"
@@ -413,7 +413,7 @@ def test_upload_to_s3_sha256_not_allowed_update(enqueue_job_mock, app):
                 },
         headers={"authorization": user["token"]},
         status=403  # User forbidden to set SHA256
-        )
+    )
 
     error = json.loads(resp_res2.data)["error"]
     assert "Regular users may not edit 'sha256'" in error["message"]
@@ -460,7 +460,7 @@ def test_upload_to_s3_wrong_key_fails(enqueue_job_mock, app):
                 },
         headers={"authorization": user["token"]},
         status=403  # Forbidden
-        )
+    )
     error = json.loads(resp_res.data)["error"]
     assert "not available on S3" in error["message"]
 
@@ -493,7 +493,7 @@ def test_upload_to_s3_not_allowed_to_specify_metadata(enqueue_job_mock, app):
         path=data_path / "calibration_beads_47.rtdc",
         upload_urls=data_s3["upload_urls"],
         complete_url=data_s3["complete_url"],
-        )
+    )
 
     # Create a dataset
     resp_ds = app.post(
@@ -525,4 +525,4 @@ def test_upload_to_s3_not_allowed_to_specify_metadata(enqueue_job_mock, app):
                 },
         headers={"authorization": user["token"]},
         status=403  # not authorized to set "url"
-        )
+    )

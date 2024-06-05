@@ -53,7 +53,7 @@ def get_resource_upload_s3_urls(context, data_dict):
         "upload_urls": upload_urls,
         "complete_url": complete_url,
         "resource_id": rid,
-        }
+    }
     return data
 
 

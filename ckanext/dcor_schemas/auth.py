@@ -180,7 +180,7 @@ def package_update(context, data_dict=None):
             "license_id",  # see below, setting less restrictive license
             "private",  # see below, making dataset public
             "state",  # see below, not really important
-            ]
+        ]
         ignored_keys = [
             "pkg_name",  # this is sometimes present in the web interface
         ]

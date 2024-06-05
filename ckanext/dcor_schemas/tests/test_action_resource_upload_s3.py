@@ -65,7 +65,7 @@ def test_action_resource_upload_get_url_and_upload(enqueue_job_mock):
         path=path,
         upload_urls=response["upload_urls"],
         complete_url=response["complete_url"],
-        )
+    )
 
     # Create the dataset
     pkg_dict = helpers.call_action("package_create",
@@ -87,7 +87,7 @@ def test_action_resource_upload_get_url_and_upload(enqueue_job_mock):
         update__resources__extend=[{"id": response["resource_id"],
                                     "name": "new_test.rtdc",
                                     }],
-        )
+    )
     assert new_pkg_dict["package"]["num_resources"] == 1
 
     # Make sure the resource exists

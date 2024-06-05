@@ -68,7 +68,7 @@ def dcor_move_dataset_to_circle(dataset, circle):
                 assert s3.compute_checksum(bucket_new, obj) == rsha
             else:
                 assert s3.compute_checksum(bucket_new, obj) \
-                       == s3.compute_checksum(bucket_old, obj)
+                    == s3.compute_checksum(bucket_old, obj)
             # set to public if applicable
             if not ds_dict["private"]:
                 s3.make_object_public(bucket_name=bucket_new,
@@ -80,10 +80,10 @@ def dcor_move_dataset_to_circle(dataset, circle):
     # Set owner org of dataset to new circle ID
     toolkit.get_action("package_owner_org_update")(
         admin_context(), {"id": ds_dict["id"],
-                          "organization_id":cr_new["id"]
+                          "organization_id": cr_new["id"]
                           }
     )
-    print(f"...updated owner_org")
+    print("...updated owner_org")
 
     # Update the "s3_url" for all resources
     res_update = []
@@ -94,9 +94,9 @@ def dcor_move_dataset_to_circle(dataset, circle):
 
     toolkit.get_action("package_revise")(
         admin_context(),
-        {"match": {"id": ds_dict["id"]}, f"update": {"resources": res_update}}
+        {"match": {"id": ds_dict["id"]}, "update": {"resources": res_update}}
     )
-    print(f"...updated s3_urls")
+    print("...updated s3_urls")
 
     # make sure editing the database worked
     ds_dict_new = toolkit.get_action("package_show")(
@@ -108,7 +108,7 @@ def dcor_move_dataset_to_circle(dataset, circle):
     # Delete the resource files in the old S3 bucket
     for bucket, key in to_delete:
         s3_client.delete_object(Bucket=bucket, Key=key)
-    print(f"...deleted old S3 objects")
+    print("...deleted old S3 objects")
 
 
 @click.command()
@@ -174,7 +174,7 @@ def list_zombie_users(last_activity_weeks=12):
         # user has been active?
         if (user.last_active is not None
                 and user.last_active.timestamp() >= (
-                        time.time() - 60*60*24*7*last_activity_weeks)):
+                    time.time() - 60*60*24*7*last_activity_weeks)):
             # don't delete users that did things
             continue
         click.echo(user.name)

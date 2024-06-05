@@ -81,7 +81,7 @@ def test_dataset_doi_remove_url(create_with_upload):
         resource_path=data_path / "calibration_beads_47.rtdc",
         activate=True,
         doi="https://doi.org/10.1371/journal.pone.0088458"
-        )
+    )
     ds_dict = helpers.call_action("package_show",
                                   id=ds_dict["id"],
                                   )
