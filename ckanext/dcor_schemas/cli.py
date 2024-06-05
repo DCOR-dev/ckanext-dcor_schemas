@@ -28,6 +28,12 @@ def dcor_move_dataset_to_circle(dataset, circle):
     - setting the "owner_org" of the dataset to the new circle ID
     - updating the "s3_url" metadata of each resource to the new S3 URL
     - deleting the resource files in the old S3 bucket
+
+    Notes
+    -----
+    There is an issue in CKAN where the resources of the dataset still
+    show up in the old organization when calling `package_owner_org_update`:
+    https://github.com/ckan/ckan/issues/8249
     """
     ds_dict = toolkit.get_action("package_show")(
         admin_context(), {"id": dataset})
