@@ -78,18 +78,18 @@ def dcor_move_dataset_to_circle(dataset, circle):
     )
     print(f"...updated owner_org")
 
-    # Update the "s3_url" for each resource
+    # Update the "s3_url" for all resources
+    res_update = []
     for rs_dict in ds_dict["resources"]:
-        rid = rs_dict["id"]
         url_old = rs_dict["s3_url"]
         url_new = url_old.replace(cr_old["id"], cr_new["id"])
-        toolkit.get_action("package_revise")(
-            admin_context(), {
-                "match__id": ds_dict["id"],
-                f"update__resource__{rid}__s3_url": url_new,
-                }
-        )
-        print(f"...updated s3_url for {rid}")
+        res_update.append({"s3_url": url_new})
+
+    toolkit.get_action("package_revise")(
+        admin_context(),
+        {"match": {"id": ds_dict["id"]}, f"update": {"resources": res_update}}
+    )
+    print(f"...updated s3_urls")
 
     # make sure editing the database worked
     ds_dict_new = toolkit.get_action("package_show")(
