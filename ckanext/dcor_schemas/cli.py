@@ -93,7 +93,7 @@ def dcor_move_dataset_to_circle(dataset, circle):
 
     # Delete the resource files in the old S3 bucket
     for bucket, key in to_delete:
-        s3_client.delete_object(bucket, key)
+        s3_client.delete_object(Bucket=bucket, Key=key)
     print(f"...deleted old S3 objects")
 
 
