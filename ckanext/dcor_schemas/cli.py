@@ -72,7 +72,7 @@ def dcor_move_dataset_to_circle(dataset, circle):
 
     # Set owner org of dataset to new circle ID
     toolkit.get_action("package_revise")(
-        admin_context(), {"match": ds_dict["id"],
+        admin_context(), {"match": {"id": ds_dict["id"]},
                           "update": {"owner_org": cr_new["id"]}
                           }
     )
@@ -85,7 +85,7 @@ def dcor_move_dataset_to_circle(dataset, circle):
         url_new = url_old.replace(cr_old["id"], cr_new["id"])
         toolkit.get_action("package_revise")(
             admin_context(), {
-                "match": ds_dict["id"],
+                "match": {"id": ds_dict["id"]},
                 "update": {f"update__resource__{rid}__s3_url": url_new}
                 }
         )
