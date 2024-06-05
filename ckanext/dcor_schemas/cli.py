@@ -31,7 +31,6 @@ def dcor_move_dataset_to_circle(dataset, circle):
     """
     ds_dict = toolkit.get_action("package_show")(
         admin_context(), {"id": dataset})
-
     cr_old = toolkit.get_action("organization_show")(
         admin_context(), {"id": ds_dict["owner_org"]})
     cr_new = toolkit.get_action("organization_show")(
@@ -73,9 +72,9 @@ def dcor_move_dataset_to_circle(dataset, circle):
             to_delete.append([bucket_old, obj])
 
     # Set owner org of dataset to new circle ID
-    toolkit.get_action("package_revise")(
-        admin_context(), {"match": {"id": ds_dict["id"]},
-                          "update": {"owner_org": cr_new["id"]}
+    toolkit.get_action("package_owner_org_update")(
+        admin_context(), {"id": ds_dict["id"],
+                          "organization_id":cr_new["id"]
                           }
     )
     print(f"...updated owner_org")
