@@ -4,11 +4,97 @@ import time
 import traceback
 
 import ckan.model as model
-
+import ckan.plugins.toolkit as toolkit
 import click
-
+from dcor_shared import s3, s3cc
 
 from . import jobs
+
+
+def admin_context():
+    return {'ignore_auth': True, 'user': 'default'}
+
+
+@click.command()
+@click.argument("dataset")
+@click.argument("circle")
+def dcor_move_dataset_to_circle(dataset, circle):
+    """Move a dataset to a different circle
+
+    Moving a dataset to a new circle implies:
+    - copying the resource files from the old S3 bucket to the new
+      S3 bucket (verifying SHA256sum)
+    - setting the public flag (if applicable)
+    - setting the "owner_org" of the dataset to the new circle ID
+    - updating the "s3_url" metadata of each resource to the new S3 URL
+    - deleting the resource files in the old S3 bucket
+    """
+    ds_dict = toolkit.get_action("package_show")(
+        admin_context(), {"id": dataset})
+
+    cr_old = toolkit.get_action("organization_show")(
+        admin_context(), {"id": ds_dict["owner_org"]})
+    cr_new = toolkit.get_action("organization_show")(
+        admin_context(), {"id": circle})
+
+    if cr_old["id"] == cr_new["id"]:
+        print(f"Dataset already in {cr_new['id']}")
+        return
+
+    s3_client, _, _ = s3.get_s3()
+
+    # Copy resource files to new bucket
+    to_delete = []
+    for rs_dict in ds_dict["resources"]:
+        rid = rs_dict["id"]
+        rsha = rs_dict["sha256"]
+        for art in ["condensed", "preview", "resource"]:
+            bucket_old = s3cc.get_s3_bucket_object_for_artifact(rid, art)
+            bucket_new = bucket_old.replace(cr_old, cr_new)
+            assert bucket_old != bucket_new, "sanity check"
+            obj = s3cc.get_s3_bucket_object_for_artifact(rid, art)
+            # copy the resource to the destination bucket
+            copy_source = {'Bucket': bucket_old, 'Key': obj}
+            s3_client.copy(copy_source, bucket_new, obj)
+            # verify checksum
+            if art == "resource":
+                assert s3.compute_checksum(bucket_new, obj) == rsha
+            else:
+                assert s3.compute_checksum(bucket_new, obj) \
+                       == s3.compute_checksum(bucket_old, obj)
+            # set to public if applicable
+            if not ds_dict["private"]:
+                s3.make_object_public(bucket_name=bucket_new,
+                                      object_name=obj,
+                                      missing_ok=False)
+            print(f"...copied S3 object {rid}:{art}")
+            to_delete.append([bucket_old, obj])
+
+    # Set owner org of dataset to new circle ID
+    toolkit.get_action("package_patch")(
+        admin_context(), {"match": ds_dict["id"],
+                          "update": {"owner_org": cr_new["id"]}
+                          }
+    )
+    print(f"...updated owner_org")
+
+    # Update the "s3_url" for each resource
+    for rs_dict in ds_dict["resources"]:
+        rid = rs_dict["id"]
+        url_old = rs_dict["s3_url"]
+        url_new = url_old.replace(cr_old["id"], cr_new["id"])
+        toolkit.get_action("package_patch")(
+            admin_context(), {
+                "match": ds_dict["id"],
+                "update": {f"update__resource__{rid}__s3_url": url_new}
+                }
+        )
+        print(f"...updated s3_url for {rid}")
+
+    # Delete the resource files in the old S3 bucket
+    for bucket, key in to_delete:
+        s3_client.delete_object(bucket, key)
+    print(f"...deleted old S3 objects")
 
 
 @click.command()
@@ -130,6 +216,7 @@ def run_jobs_dcor_schemas(modified_days=-1):
 
 def get_commands():
     return [
+        dcor_move_dataset_to_circle,
         list_circles,
         list_collections,
         list_group_resources,
