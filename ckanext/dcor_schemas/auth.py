@@ -10,6 +10,7 @@ from . import helpers as dcor_helpers
 from . import resource_schema_supplements as rss
 
 
+@logic.auth_allow_anonymous_access
 def content_listing(context, data_dict):
     """manage access for listing all circles, groups, tags"""
     if not asbool(config.get(
