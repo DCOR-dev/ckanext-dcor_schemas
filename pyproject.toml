@@ -1,0 +1,55 @@
+[build-system]
+# Defined by PEP 518:
+requires = [
+    # for version management
+    "setuptools>=46", "setuptools_scm[toml]>=6.2"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ckanext-dcor_schemas"
+authors = [
+    # In alphabetical order.
+    {name = "Paul Müller"},
+]
+maintainers = [
+    {name = "Paul Müller", email="dev@craban.de"},
+]
+description = "Introduces or lifts restrictions (authorization) for managing data and metadata on DCOR"
+readme = "README.rst"
+requires-python = ">=3.8, <4"
+keywords = ["DC", "DCOR", "deformability", "cytometry"]
+classifiers = [
+    'Operating System :: OS Independent',
+    'Programming Language :: Python :: 3',
+    'Topic :: Scientific/Engineering :: Visualization',
+    'Intended Audience :: Science/Research',
+]
+license = {text = "GNU Affero General Public License v3 or later (AGPLv3+)"}
+dependencies = [
+    "ckan>=2.10.4, <3",
+    "dclab>=0.60.9",
+    "dcor_shared>=0.10.0",
+    "python-slugify",
+    # The default rq version in CKAN is 1.0. We want version 1.8 or
+    # above, since we have to specify multiple dependencies in the
+    # jobs.
+    "rq>=1.10,<2",
+]
+dynamic = ["version"]
+
+[project.urls]
+source = "https://github.com/DCOR-dev/ckanext-dcor_schemas"
+tracker = "https://github.com/DCOR-dev/ckanext-dcor_schemas/issues"
+changelog = "https://github.com/DCOR-dev/ckanext-dcor_schemas/blob/main/CHANGELOG"
+
+[project.entry-points."ckan.plugins"]
+dcor_schemas = "ckanext.dcor_schemas.plugin:DCORDatasetFormPlugin"
+
+[tool.setuptools_scm]
+write_to = "ckanext/dcor_schemas/_version.py"
+version_scheme = "post-release"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ckanext.dcor_schemas"]
