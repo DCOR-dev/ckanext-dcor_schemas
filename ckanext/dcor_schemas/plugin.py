@@ -142,6 +142,11 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         group = key.ckanext.dcor_schemas
 
         declaration.declare_bool(
+            group.allow_content_listing_for_anon, True).set_description(
+            "allow anonymous users to list all circles, groups, tags"
+        )
+
+        declaration.declare_bool(
             group.allow_public_datasets, True).set_description(
             "allow users to create publicly-accessible datasets"
         )
@@ -150,11 +155,6 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             group.json_resource_schema_dir, "package").set_description(
             "directory containing .json files that define the supplementary "
             "resource schema"
-        )
-
-        declaration.declare_bool(
-            group.allow_content_listing_for_anon, True).set_description(
-            "allow anonymous users to list all circles, groups, tags"
         )
 
     # IDatasetForm
