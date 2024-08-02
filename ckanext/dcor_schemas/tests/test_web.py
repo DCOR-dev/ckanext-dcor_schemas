@@ -9,12 +9,21 @@ from dcor_shared.testing import make_dataset
 data_path = pathlib.Path(__file__).parent / "data"
 
 
+def test_status(app):
+    app.get("/api/3/action/status_show",
+            status=200)
+
+
 @pytest.mark.parametrize("url", ["/dataset",
                                  "/group",
                                  "/organization",
                                  ])
 def test_homepage(url, app):
-    app.get(url, status=200)
+    user = factories.UserWithToken()
+    app.get(url,
+            params={u"id": user[u"id"]},
+            headers={u"authorization": user["token"]},
+            status=200)
 
 
 def test_homepage_bad_link(app):

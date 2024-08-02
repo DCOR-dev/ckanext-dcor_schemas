@@ -15,6 +15,27 @@ data_path = pathlib.Path(__file__).parent / "data"
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_org_list_anon_vs_logged_in():
+    user = factories.User()
+
+    # control: a logged-in user should be able to list the organization
+    helpers.call_auth("organization_list",
+                      {'ignore_auth': False,
+                       'user': user['name'],
+                       'model': model, 'api_version': 3},
+                      )
+
+    # test: anon should be able to list the organization
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth("organization_list",
+                          {'ignore_auth': False,
+                           'user': None,
+                           'model': model, 'api_version': 3},
+                          )
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_org_admin_bulk_update_delete_forbidden(create_with_upload):
     """do not allow bulk_update_delete"""
     user = factories.User()

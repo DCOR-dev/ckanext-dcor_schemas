@@ -4,11 +4,10 @@ import mimetypes
 import pathlib
 import sys
 
-from ckan.common import config
 import ckan.lib.datapreview as datapreview
 from ckan.lib.plugins import DefaultPermissionLabels
 from ckan.lib.jobs import _connect as ckan_redis_connect
-from ckan import common, logic
+from ckan import config, common, logic
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 
@@ -68,7 +67,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                 actions.get_supported_resource_suffixes,
         }
 
-    # IAuthfunctions
+    # IAuthFunctions
     def get_auth_functions(self):
         # - `*_patch` has same authorization as `*_update`
         # - If you are wondering why group_create and organization_create
@@ -79,6 +78,9 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             'bulk_update_delete': dcor_auth.deny,
             'bulk_update_private': dcor_auth.deny,
             'dataset_purge': dcor_auth.dataset_purge,
+            'group_list': dcor_auth.content_listing,
+            'member_roles_list': dcor_auth.content_listing,
+            'organization_list': dcor_auth.content_listing,
             'package_create': dcor_auth.package_create,
             'package_delete': dcor_auth.package_delete,
             'package_update': dcor_auth.package_update,
@@ -86,7 +88,10 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             'resource_delete': dcor_auth.deny,
             'resource_update': dcor_auth.resource_update,
             'resource_upload_s3_urls':  dcor_auth.resource_upload_s3_urls,
+            'tag_list': dcor_auth.content_listing,
+            'tag_show': dcor_auth.content_listing,
             'user_create': dcor_auth.user_create,
+            'vocabulary_show': dcor_auth.content_listing,
         }
 
     # IClick
@@ -133,17 +138,22 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             declaration: config.declaration.Declaration,
             key: config.declaration.Key):
 
-        group = key.ckanext.dcor_schemas.feature
+        group = key.ckanext.dcor_schemas
 
         declaration.declare(
             group.allow_public_datasets, True).set_description(
-            "Allow users to create publicly-accessible datasets"
+            "allow users to create publicly-accessible datasets"
         )
 
         declaration.declare(
             group.json_resource_schema_dir, "package").set_description(
             "directory containing .json files that define the supplementary "
             "resource schema"
+        )
+
+        declaration.declare(
+            group.allow_content_listing_for_anon, True).set_description(
+            "allow anonymous users to list all circles, groups, tags"
         )
 
     # IDatasetForm
@@ -391,7 +401,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             data_dict=res_data_dict)
 
         depends_on = []
-        extensions = [config.get("ckan.plugins")]
+        extensions = [common.config.get("ckan.plugins")]
 
         package_job_id = f"{resource['package_id']}_{resource['position']}_"
 

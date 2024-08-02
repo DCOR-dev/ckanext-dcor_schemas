@@ -85,6 +85,9 @@ accordingly:
 
 - Configuration keywords:
 
+  - the ``ckanext.dcor_schemas.allow_content_listing_for_anon`` boolean
+    parameter can be set to False to prevent anonymous users to see
+    circles, colletions, and other content.
   - the ``ckanext.dcor_schemas.allow_public_datasets`` boolean parameter
     can be used to disable the creation of public datasets (e.g. for DCOR-med).
   - the ``ckanext.dcor_schemas.json_resource_schema_dir`` parameter
