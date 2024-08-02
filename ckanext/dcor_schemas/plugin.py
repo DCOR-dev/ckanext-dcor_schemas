@@ -55,6 +55,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
     plugins.implements(plugins.IResourceController, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(plugins.ITemplateHelpers, inherit=True)
+    plugins.implements(plugins.IValidators, inherit=True)
 
     # IActions
     def get_actions(self):
@@ -166,13 +167,13 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         schema.update({
             'authors': [
                 toolkit.get_validator('unicode_safe'),
-                dcor_validate.dataset_authors,
+                toolkit.get_validator('dcor_schemas_dataset_authors'),
                 toolkit.get_validator('not_empty'),
                 toolkit.get_converter('convert_to_extras'),
             ],
             'doi': [
                 toolkit.get_validator('ignore_missing'),
-                dcor_validate.dataset_doi,
+                toolkit.get_validator('dcor_schemas_dataset_doi'),
                 toolkit.get_validator('unicode_safe'),
                 toolkit.get_converter('convert_to_extras'),
             ],
@@ -180,20 +181,20 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                 toolkit.get_validator('ignore_missing'),
                 toolkit.get_validator('package_id_not_changed'),
                 toolkit.get_validator('unicode_safe'),
-                dcor_validate.dataset_id,
+                toolkit.get_validator('dcor_schemas_dataset_id'),
             ],
             'license_id': [
-                dcor_validate.dataset_license_id,
+                toolkit.get_validator('dcor_schemas_dataset_license_id'),
             ],
             'references': [
                 toolkit.get_validator('ignore_missing'),
-                dcor_validate.dataset_references,
+                toolkit.get_validator('dcor_schemas_dataset_references'),
                 toolkit.get_validator('unicode_safe'),
                 toolkit.get_converter('convert_to_extras'),
             ],
             'state': [
                 toolkit.get_validator('ignore_missing'),
-                dcor_validate.dataset_state,
+                toolkit.get_validator('dcor_schemas_dataset_state'),
             ],
         })
         schema['resources'].update({
@@ -204,12 +205,12 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             'id': [
                 toolkit.get_validator('ignore_missing'),
                 toolkit.get_validator('unicode_safe'),
-                dcor_validate.resource_id,
+                toolkit.get_validator('dcor_schemas_resource_id'),
             ],
             'name': [
                 toolkit.get_validator('ignore_missing'),
                 toolkit.get_validator('unicode_safe'),
-                dcor_validate.resource_name,
+                toolkit.get_validator('dcor_schemas_resource_name'),
             ],
             'sha256': [
                 toolkit.get_validator('ignore_missing'),
@@ -234,14 +235,16 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                 schema['resources'].update({
                     'dc:{}:{}'.format(sec, key): [
                         toolkit.get_validator('ignore_missing'),
-                        dcor_validate.resource_dc_config,
+                        toolkit.get_validator(
+                            'dcor_schemas_resource_dc_config'),
                     ]})
         # Add supplementary resource schemas
         for composite_key in rss.get_composite_item_list():
             schema['resources'].update({
                 composite_key: [
                     toolkit.get_validator('ignore_missing'),
-                    dcor_validate.resource_dc_supplement,
+                    toolkit.get_validator(
+                        'dcor_schemas_resource_dc_supplement'),
                 ]})
 
         return schema
@@ -252,7 +255,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         schema.update({
             'name': [
                 toolkit.get_validator('unicode_safe'),
-                dcor_validate.dataset_name_create,
+                toolkit.get_validator('dcor_schemas_dataset_name_create'),
             ],
         })
 
@@ -557,3 +560,30 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             rss.get_composite_section_item_list
         }
         return hlps
+
+    # IValidators
+    def get_validators(self):
+        return {
+            "dcor_schemas_dataset_authors":
+                dcor_validate.dataset_authors,
+            "dcor_schemas_dataset_doi":
+                dcor_validate.dataset_doi,
+            "dcor_schemas_dataset_id":
+                dcor_validate.dataset_id,
+            "dcor_schemas_dataset_license_id":
+                dcor_validate.dataset_license_id,
+            "dcor_schemas_dataset_name_create":
+                dcor_validate.dataset_name_create,
+            "dcor_schemas_dataset_references":
+                dcor_validate.dataset_references,
+            "dcor_schemas_dataset_state":
+                dcor_validate.dataset_state,
+            "dcor_schemas_resource_dc_config":
+                dcor_validate.resource_dc_config,
+            "dcor_schemas_resource_dc_supplement":
+                dcor_validate.resource_dc_supplement,
+            "dcor_schemas_resource_id":
+                dcor_validate.resource_id,
+            "dcor_schemas_resource_name":
+                dcor_validate.resource_name,
+        }

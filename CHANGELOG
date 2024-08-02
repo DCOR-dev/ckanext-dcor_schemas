@@ -1,4 +1,5 @@
 0.19.2
+ - fix: register validators instead of calling them directly (#30)
  - fix: allow to restrict content visibility with config option
    ckanext.dcor_schemas.allow_content_listing_for_anon
  - enh: declare custom configuration options in IConfigDeclaration
