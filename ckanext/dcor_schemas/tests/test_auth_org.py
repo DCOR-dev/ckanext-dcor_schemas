@@ -15,6 +15,8 @@ data_path = pathlib.Path(__file__).parent / "data"
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.ckan_config(
+    'ckanext.dcor_schemas.allow_content_listing_for_anon', "false")
 def test_org_list_anon_vs_logged_in():
     user = factories.User()
 
@@ -22,16 +24,42 @@ def test_org_list_anon_vs_logged_in():
     helpers.call_auth("organization_list",
                       {'ignore_auth': False,
                        'user': user['name'],
-                       'model': model, 'api_version': 3},
+                       'model': model,
+                       'api_version': 3},
                       )
 
-    # test: anon should be able to list the organization
+    # test: anon should NOT be able to list the organization
     with pytest.raises(logic.NotAuthorized):
         helpers.call_auth("organization_list",
                           {'ignore_auth': False,
                            'user': None,
-                           'model': model, 'api_version': 3},
+                           'model': model,
+                           'api_version': 3},
                           )
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.ckan_config(
+    'ckanext.dcor_schemas.allow_content_listing_for_anon', "true")
+def test_org_list_anon_vs_logged_in_control():
+    user = factories.User()
+
+    # control: a logged-in user should be able to list the organization
+    helpers.call_auth("organization_list",
+                      {'ignore_auth': False,
+                       'user': user['name'],
+                       'model': model,
+                       'api_version': 3},
+                      )
+
+    # test: anon should be able to list the organization
+    helpers.call_auth("organization_list",
+                      {'ignore_auth': False,
+                       'user': None,
+                       'model': model,
+                       'api_version': 3},
+                      )
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
