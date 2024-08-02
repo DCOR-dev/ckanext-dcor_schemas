@@ -12,7 +12,8 @@ from . import resource_schema_supplements as rss
 
 def content_listing(context, data_dict):
     """manage access for listing all circles, groups, tags"""
-    if not config.get('ckanext.dcor_schemas.allow_content_listing_for_anon'):
+    if not asbool(config.get(
+            "ckanext.dcor_schemas.allow_content_listing_for_anon", "true")):
         return logic.auth.restrict_anon(context)
     else:
         return {'success': True}
