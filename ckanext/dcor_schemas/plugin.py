@@ -47,14 +47,15 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                             DefaultPermissionLabels):
     """This plugin makes views of DC data"""
     plugins.implements(plugins.IActions, inherit=True)
-    plugins.implements(plugins.IAuthFunctions)
-    plugins.implements(plugins.IClick)
+    plugins.implements(plugins.IAuthFunctions, inherit=True)
+    plugins.implements(plugins.IClick, inherit=True)
     plugins.implements(plugins.IConfigurer, inherit=True)
-    plugins.implements(plugins.IDatasetForm)
-    plugins.implements(plugins.IPermissionLabels)
+    plugins.implements(plugins.IConfigDeclaration, inherit=True)
+    plugins.implements(plugins.IDatasetForm, inherit=True)
+    plugins.implements(plugins.IPermissionLabels, inherit=True)
     plugins.implements(plugins.IResourceController, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
-    plugins.implements(plugins.ITemplateHelpers)
+    plugins.implements(plugins.ITemplateHelpers, inherit=True)
 
     # IActions
     def get_actions(self):
@@ -125,6 +126,25 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                 'licenses_group_url': [ignore_missing],
             })
         return schema
+
+    # IConfigDeclaration
+    def declare_config_options(
+            self,
+            declaration: config.declaration.Declaration,
+            key: config.declaration.Key):
+
+        group = key.ckanext.dcor_schemas.feature
+
+        declaration.declare(
+            group.allow_public_datasets, True).set_description(
+            "Allow users to create publicly-accessible datasets"
+        )
+
+        declaration.declare(
+            group.json_resource_schema_dir, "package").set_description(
+            "directory containing .json files that define the supplementary "
+            "resource schema"
+        )
 
     # IDatasetForm
     def _modify_package_schema(self, schema):

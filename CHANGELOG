@@ -1,4 +1,6 @@
 0.19.2
+ - enh: declare custom configuration options in IConfigDeclaration
+0.19.2
  - enh: add CLI script for moving a dataset to a different circle
 0.19.1
  - fix: list-group-resources CLI should return draft and deleted resources
