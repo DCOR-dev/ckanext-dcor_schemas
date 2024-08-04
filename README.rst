@@ -96,6 +96,14 @@ accordingly:
     ``package`` which means that the supplementary resource schema of
     this extension is used.
 
+  - These DCOR-wide configuratio options for accessing S3 object storage
+
+    - ``endpoint_url``
+    - ``bucket_name``
+    - ``access_key_id``
+    - ``secret_access_key``
+    - ``ssl_verify``
+
 - API extensions:
 
   - ``resource_upload_s3_urls`` returns a dictionary containing the upload

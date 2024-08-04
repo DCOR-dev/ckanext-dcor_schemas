@@ -139,22 +139,49 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             declaration: config.declaration.Declaration,
             key: config.declaration.Key):
 
-        group = key.ckanext.dcor_schemas
+        schema_group = key.ckanext.dcor_schemas
 
         declaration.declare_bool(
-            group.allow_content_listing_for_anon, True).set_description(
+            schema_group.allow_content_listing_for_anon, True).set_description(
             "allow anonymous users to list all circles, groups, tags"
         )
 
         declaration.declare_bool(
-            group.allow_public_datasets, True).set_description(
+            schema_group.allow_public_datasets, True).set_description(
             "allow users to create publicly-accessible datasets"
         )
 
         declaration.declare(
-            group.json_resource_schema_dir, "package").set_description(
+            schema_group.json_resource_schema_dir, "package").set_description(
             "directory containing .json files that define the supplementary "
             "resource schema"
+        )
+
+        dcor_group = key.dcor_object_store
+
+        declaration.declare(
+            dcor_group.endpoint_url).set_description(
+            "S3 storage endpoint URL"
+        )
+
+        declaration.declare(
+            dcor_group.bucket_name).set_description(
+            "S3 storage bucket name schema"
+        )
+
+        declaration.declare(
+            dcor_group.access_key_id).set_description(
+            "S3 storage access key ID"
+        )
+
+        declaration.declare(
+            dcor_group.secret_access_key).set_description(
+            "S3 storage secret access key"
+        )
+
+        declaration.declare_bool(
+            dcor_group.ssl_verify, True).set_description(
+            "S3 storage verify SSL connection (disable for testing)"
         )
 
     # IDatasetForm
