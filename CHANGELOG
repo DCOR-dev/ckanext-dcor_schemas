@@ -1,3 +1,5 @@
+0.20.3
+ - ci: update workflows
 0.20.2
  - setup: fix ckanext namespace
 0.20.1
