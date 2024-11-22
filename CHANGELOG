@@ -1,5 +1,6 @@
 0.20.3
  - enh: improve spam user signup detection
+ - ref: replace deprecations
  - ci: update workflows
 0.20.2
  - setup: fix ckanext namespace

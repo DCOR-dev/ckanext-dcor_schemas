@@ -405,7 +405,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         # TODO: Does it make more sense to put this in a different method
         #       of IResourceController?
         res_data_dict = {
-            "last_modified": datetime.datetime.utcnow(),
+            "last_modified": datetime.datetime.now(datetime.UTC)
         }
 
         if not resource.get("mimetype"):
