@@ -461,12 +461,20 @@ def user_create(context, data_dict=None):
         if name_val.count("xx"):
             # script kiddies
             spam_score += 1
+        if name_val.count("/"):
+            spam_score += 1
+        if name_val.count("+"):
+            spam_score += 1
+        if len(name_val) > 30:
+            spam_score += 1
 
     if "image_url" in data_dict:
         im_url = data_dict.get("image_url", "").lower()
         collected_data["image_url"] = im_url
         if im_url:
             if not re.search(r"\.(png|jpe?g)$", im_url):  # abuse!
+                spam_score += 1
+            if "abortion" in im_url:
                 spam_score += 1
 
     if "email" in data_dict:
