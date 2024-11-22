@@ -1,3 +1,5 @@
+0.20.4
+ - fix: datetime.UTC does not exist in Python < 3.11
 0.20.3
  - enh: improve spam user signup detection
  - ref: replace deprecations
