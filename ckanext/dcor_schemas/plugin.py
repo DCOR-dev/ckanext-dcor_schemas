@@ -359,18 +359,18 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             # Check for resources that have been added (e.g. using
             # package_revise) during this dataset update.
             for resource in data_dict.get('resources', []):
-                if "created" not in resource:
+                if resource and "created" not in resource:
                     # If "created" is in `resource`, this means that the
                     # resource already existed. Since in DCOR, we do not allow
                     # updating resources, this should be fine. However, there
                     # might be a better solution
                     # (https://github.com/ckan/ckan/issues/6472).
+                    # get full resource dict, contains e.g. also "position"
+                    res_dict = logic.get_action("resource_show")(
+                        context=context,
+                        data_dict={"id": resource["id"]})
                     for plugin in plugins.PluginImplementations(
                             plugins.IResourceController):
-                        # get full resource dict, contains e.g. also "position"
-                        res_dict = logic.get_action("resource_show")(
-                            context=context,
-                            data_dict={"id": resource["id"]})
                         plugin.after_resource_create(context, res_dict)
 
     # IPermissionLabels
@@ -425,6 +425,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             res_data_dict["url"] = meta_url
 
         resource.update(res_data_dict)
+        # Make sure the jobs have an updated version of the resource
         jobs.patch_resource_noauth(
             package_id=resource["package_id"],
             resource_id=resource["id"],
@@ -523,43 +524,6 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         # https://github.com/ckan/ckan/issues/7837
         datapreview.add_views_to_resource(context={"ignore_auth": True},
                                           resource_dict=resource)
-
-    def after_resource_update(self, context, pkg_dict):
-        for ii, resource in enumerate(pkg_dict.get('resources', [])):
-            # Run all jobs that should be run after resource creation.
-            # Note that some of the jobs are added twice, because rq
-            # does not do job uniqueness. But the implementation of the
-            # jobs is such that this should not be a problem.
-            resource = logic.get_action("resource_show")(
-                {'model': context['model'],
-                 'user': context['user'],
-                 'ignore_auth': True
-                 },
-                {"id": resource["id"]})
-            if resource.get("sha256"):
-                # that means we already went through all of this
-                continue
-
-            for plugin in plugins.PluginImplementations(
-                    plugins.IResourceController):
-                if "pytest" not in sys.modules:
-                    # Unfortunately, this is a necessary thing, because
-                    # otherwise the job tests fail in wait_for_resource.
-                    # This might be because somehow the dcor_depot plugin
-                    # is active even though it is not selected.
-                    # Related to https://github.com/ckan/ckan/issues/6472
-                    plugin.after_resource_create(context, resource)
-
-            # Create default resource views
-            # https://github.com/ckan/ckan/issues/6472#issuecomment-944067114
-            logic.get_action('resource_create_default_resource_views')(
-                {'model': context['model'],
-                 'user': context['user'],
-                 'ignore_auth': True
-                 },
-                {'resource': resource,
-                 'package': pkg_dict
-                 })
 
     def before_resource_create(self, context, resource):
         if "upload" in resource:
