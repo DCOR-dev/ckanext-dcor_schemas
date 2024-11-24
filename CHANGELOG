@@ -1,3 +1,5 @@
+0.20.5
+ - fix: avoid excessive API calls in auth.package_update (performance)
 0.20.4
  - fix: datetime.UTC does not exist in Python < 3.11
 0.20.3

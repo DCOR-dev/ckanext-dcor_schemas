@@ -144,34 +144,43 @@ def package_update(context, data_dict=None):
     ds_dict = logic.get_action('package_show')(
         show_context,
         {'id': get_package_id(context, data_dict)})
+    resources_exist = ds_dict["resources"]
 
     # run resource check functions
-    for new_dict in data_dict.get("resources", []):
+    for ii, new_res in enumerate(data_dict.get("resources", [])):
+        position = new_res.get("position")
+        if (position is not None
+                and position == ii
+                and len(resources_exist) > position
+                and new_res == resources_exist[position]):
+            # We do not need to verify things that haven't changed.
+            continue
+
+        # Find the resource in the current dataset.
+        for res in resources_exist:
+            if res["id"] == new_res["id"]:
+                cur_res = res
+                break
+        else:
+            cur_res = None
+
         # Note that on DCOR, you are not allowed to specify the ID
         # during upload, unless the resource was already uploaded to S3.
-        rid = new_dict.get("id")
-        new_dict["package_id"] = ds_dict["id"]
+        new_res["package_id"] = ds_dict["id"]
         # only admin users are allowed to set these values (extra security)
         for key in ["sha256", "etag"]:
-            if key in new_dict:
-                # check whether it is already set
-                try:
-                    res_dict_cur = logic.get_action("resource_show")(
-                        context={"ignore_auth": True, "user": "default"},
-                        data_dict={"id": rid}
-                    )
-                except logic.NotFound:
+            if key in new_res:
+                if cur_res is None:
                     return {"success": False,
                             "msg": f"Regular users may not specify '{key}' "
                                    f"when creating a resource."}
-                if res_dict_cur.get(key) != new_dict[key]:
+                if cur_res.get(key) != new_res[key]:
                     return {"success": False,
                             "msg": f"Regular users may not edit '{key}'."}
-        model = context['model']
-        session = context['session']
-        if rid and session.query(model.Resource).get(rid):
+
+        if cur_res is not None:
             # we are updating an existing resource
-            aut = resource_update_check(context, new_dict, ds_dict=ds_dict)
+            aut = resource_update_check(context, new_res, ds_dict=ds_dict)
             if not aut["success"]:
                 return aut
         else:
@@ -179,7 +188,7 @@ def package_update(context, data_dict=None):
             # CKAN or we are creating a resource and have already uploaded
             # the file to S3 (we know `rid`). Both cases are covered in
             # this method:
-            aut = resource_create_check(context, new_dict, ds_dict=ds_dict)
+            aut = resource_create_check(context, new_res, ds_dict=ds_dict)
             if not aut["success"]:
                 return aut
 
@@ -377,14 +386,35 @@ def resource_update(context, data_dict=None):
 
 
 def resource_update_check(context, new_dict, ds_dict=None):
+    """Check update of an *existing* resource
+
+    Parameters
+    ----------
+    context:
+        CKAN context
+    new_dict:
+        new resource dict
+    ds_dict:
+        current dataset dict containing the resource
+    """
+    rid = logic.get_or_bust(new_dict, "id")
     aut = resource_auth_general(context, new_dict, ds_dict=ds_dict)
     if not aut["success"]:
         return aut
 
     # get the current resource dict
-    old_dict = logic.get_action('resource_show')(
-        context,
-        {'id': logic.get_or_bust(new_dict, 'id')})
+    if ds_dict is None:
+        old_dict = logic.get_action('resource_show')(
+            context,
+            {'id': rid})
+    else:
+        for res in ds_dict["resources"]:
+            if res["id"] == rid:
+                old_dict = res
+                break
+        else:
+            return {'success': False,
+                    'msg': f'Resource {rid} not in dataset!'}
 
     # only allow updating the description...
     allowed_keys = resource_editable_metadata()
