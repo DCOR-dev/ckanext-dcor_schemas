@@ -475,7 +475,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                                 rq_kwargs={
                                     "timeout": 500,
                                     "job_id": jid_s3etag,
-                                    "enqueue_at_front": True,
+                                    "at_front": True,
                                 })
 
         # Make S3 object public if applicable
