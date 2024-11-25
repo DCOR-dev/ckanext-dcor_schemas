@@ -353,6 +353,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
     # IPackageController
     def after_dataset_update(self, context, data_dict):
         # TODO: Find a way to avoid using this constant.
+        # Trigger Background Jobs.
         # `DISABLE_AFTER_DATASET_CREATE_FOR_CONCURRENT_JOB_TESTS` is used in
         # concurrent job testing that do not involve `package_update` and
         # `package_revise`.
@@ -367,7 +368,10 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                 {'id': data_dict["id"]})
 
             for resource in data_dict.get('resources', []):
-                if resource and "id" in resource:
+                # Do not perform any actions if the resource already
+                # contains the "etag", which means that all background
+                # jobs already ran.
+                if resource and "id" in resource and "etag" not in resource:
                     # Update with current
                     for res in ds_dict["resources"]:
                         if resource["id"] == res["id"]:
