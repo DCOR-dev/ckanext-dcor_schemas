@@ -157,12 +157,12 @@ def package_update(context, data_dict=None):
             continue
 
         # Find the resource in the current dataset.
-        for res in resources_exist:
-            if res["id"] == new_res["id"]:
-                cur_res = res
-                break
-        else:
-            cur_res = None
+        cur_res = None
+        if "id" in new_res:
+            for res in resources_exist:
+                if res["id"] == new_res["id"]:
+                    cur_res = res
+                    break
 
         # Note that on DCOR, you are not allowed to specify the ID
         # during upload, unless the resource was already uploaded to S3.
