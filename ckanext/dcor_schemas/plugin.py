@@ -400,12 +400,8 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         return labels
 
     # IResourceController
-    def after_resource_create(self, context, resource):
-        """Add custom jobs"""
-        # Make sure the resource has a mimetype if possible. This is a
-        # workaround for data uploaded via S3.
-        # TODO: Does it make more sense to put this in a different method
-        #       of IResourceController?
+    def before_resource_create(self, context, resource):
+        """Ran before creating the resource; changes will be in package dict"""
         res_data_dict = {
             "last_modified": datetime.datetime.now(datetime.timezone.utc)
         }
@@ -427,12 +423,12 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             res_data_dict["url"] = meta_url
 
         resource.update(res_data_dict)
-        # Make sure the jobs have an updated version of the resource
-        jobs.patch_resource_noauth(
-            package_id=resource["package_id"],
-            resource_id=resource["id"],
-            data_dict=res_data_dict)
 
+
+    def after_resource_create(self, context, resource):
+        """Add custom jobs"""
+        # Make sure the resource has a mimetype if possible. This is a
+        # workaround for data uploaded via S3.
         depends_on = []
         extensions = [common.config.get("ckan.plugins")]
 
