@@ -359,7 +359,9 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             # Check for resources that have been added (e.g. using
             # package_revise) during this dataset update.
             for resource in data_dict.get('resources', []):
-                if resource and "created" not in resource:
+                if resource and ("created" not in resource
+                                 or resource.get("size") is None
+                                 or resource.get("etag" is None)):
                     # If "created" is in `resource`, this means that the
                     # resource already existed. Since in DCOR, we do not allow
                     # updating resources, this should be fine. However, there
