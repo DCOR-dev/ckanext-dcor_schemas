@@ -1,3 +1,8 @@
+0.20.6
+ - ref: enqueue eTag retrieval "at front"
+ - ref: introduce `IS_BACKGROUND_JOB` as workaround to prevent background
+   jobs to enqueue other background jobs via `after_dataset_update`
+ - ref: other code cleanup
 0.20.5
  - fix: avoid excessive API calls in auth.package_update (performance)
  - ref: remove unused and broken plugin..after_resource_update

@@ -1,5 +1,4 @@
 import copy
-import datetime
 import mimetypes
 import pathlib
 import sys
@@ -12,7 +11,7 @@ import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 
 import dclab
-from dcor_shared import DC_MIME_TYPES, get_ckan_config_option
+from dcor_shared import DC_MIME_TYPES
 from rq.job import Job
 
 
@@ -28,6 +27,8 @@ from . import validate as dcor_validate
 # This is used for job testing. Set it to True if you need concurrent
 # background jobs and are using resource_create and the likes.
 DISABLE_AFTER_DATASET_CREATE_FOR_CONCURRENT_JOB_TESTS = False
+# Used for disabling `after_resource_create` in background jobs
+IS_BACKGROUND_JOB = bool(" ".join(sys.argv).count("jobs worker"))
 
 #: ignored schema fields (see default_create_package_schema in
 #: https://github.com/ckan/ckan/blob/master/ckan/logic/schema.py)
@@ -355,7 +356,8 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         # `DISABLE_AFTER_DATASET_CREATE_FOR_CONCURRENT_JOB_TESTS` is used in
         # concurrent job testing that do not involve `package_update` and
         # `package_revise`.
-        if not DISABLE_AFTER_DATASET_CREATE_FOR_CONCURRENT_JOB_TESTS:
+        if not (DISABLE_AFTER_DATASET_CREATE_FOR_CONCURRENT_JOB_TESTS
+                or IS_BACKGROUND_JOB):
             # Check for resources that have been added (e.g. using
             # package_revise) during this dataset update.
             # We need the "position" of each resource, so we must fetch
@@ -473,7 +475,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                                 rq_kwargs={
                                     "timeout": 500,
                                     "job_id": jid_s3etag,
-                                    "depends_on": copy.copy(depends_on),
+                                    "enqueue_at_front": True,
                                 })
 
         # Make S3 object public if applicable
