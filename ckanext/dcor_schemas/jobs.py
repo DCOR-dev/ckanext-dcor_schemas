@@ -3,12 +3,32 @@ from ckan import logic
 import dclab
 from dcor_shared import (
     DC_MIME_TYPES, get_resource_path, get_dc_instance, s3, s3cc, sha256sum,
-    wait_for_resource
+    wait_for_resource, get_ckan_config_option
 )
 
 
 def admin_context():
     return {'ignore_auth': True, 'user': 'default'}
+
+
+def get_base_metadata(resource):
+    res_dict_base = {}
+    if not resource.get("mimetype"):
+        suffix = "." + resource["name"].rsplit(".", 1)[-1]
+        for mt in DC_MIME_TYPES:
+            if suffix in DC_MIME_TYPES[mt]:
+                res_dict_base["mimetype"] = mt
+                break
+
+    # Also make sure the resource has "url" defined.
+    if not resource.get("url"):
+        site_url = get_ckan_config_option("ckan.site_url")
+        meta_url = (f"{site_url}"
+                    f"/dataset/{resource['package_id']}"
+                    f"/resource/{resource['id']}"
+                    f"/download/{resource['name'].lower()}")
+        res_dict_base["url"] = meta_url
+    return res_dict_base
 
 
 def patch_resource_noauth(package_id, resource_id, data_dict):
@@ -28,20 +48,17 @@ def set_resource_meta_base_data(resource):
     run before. So it makes sense to perform any additional calls
     to `package_revise` in those background jobs.
     """
-    data_dict = {}
-    if "url" in resource:
-        data_dict["url"] = resource["url"]
-    if "mimetype" in resource:
-        data_dict["mimetype"] = resource["mimetype"]
+    res_dict_base = get_base_metadata(resource)
     patch_resource_noauth(
         package_id=resource["package_id"],
         resource_id=resource["id"],
-        data_dict=data_dict)
+        data_dict=res_dict_base)
     return True
 
 
 def set_dc_config_job(resource):
     """Store all DC config metadata"""
+    resource.update(get_base_metadata(resource))
     if (resource.get('mimetype') in DC_MIME_TYPES
             and resource.get("dc:setup:channel width", None) is None):
         rid = resource["id"]

@@ -403,33 +403,23 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
 
     # IResourceController
     def before_resource_create(self, context, resource):
-        """Ran before creating the resource; changes will be in package dict"""
-        res_data_dict = {
-            "last_modified": datetime.datetime.now(datetime.timezone.utc)
-        }
-
-        if not resource.get("mimetype"):
-            suffix = "." + resource["name"].rsplit(".", 1)[-1]
-            for mt in DC_MIME_TYPES:
-                if suffix in DC_MIME_TYPES[mt]:
-                    res_data_dict["mimetype"] = mt
-                    break
-
-        # Also make sure the resource has "url" defined.
-        if not resource.get("url"):
-            site_url = get_ckan_config_option("ckan.site_url")
-            meta_url = (f"{site_url}"
-                        f"/dataset/{resource['package_id']}"
-                        f"/resource/{resource['id']}"
-                        f"/download/{resource['name'].lower()}")
-            res_data_dict["url"] = meta_url
-
-        resource.update(res_data_dict)
+        if "upload" in resource:
+            # set/override the filename
+            upload = resource["upload"]
+            if hasattr(upload, "filename"):
+                filename = upload.filename
+            elif hasattr(upload, "name"):
+                filename = pathlib.Path(upload.name).name
+            else:
+                raise ValueError(
+                    f"Could not determine filename for {resource}")
+            resource["name"] = filename
+        resource.update(jobs.get_base_metadata(resource))
 
     def after_resource_create(self, context, resource):
         """Add custom jobs"""
         # Make sure mimetype etc. are set properly
-        self.before_resource_create(context, resource)
+        resource.update(jobs.get_base_metadata(resource))
 
         # Make sure the resource has a mimetype if possible. This is a
         # workaround for data uploaded via S3.
@@ -538,19 +528,6 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         # https://github.com/ckan/ckan/issues/7837
         datapreview.add_views_to_resource(context={"ignore_auth": True},
                                           resource_dict=resource)
-
-    def before_resource_create(self, context, resource):
-        if "upload" in resource:
-            # set/override the filename
-            upload = resource["upload"]
-            if hasattr(upload, "filename"):
-                filename = upload.filename
-            elif hasattr(upload, "name"):
-                filename = pathlib.Path(upload.name).name
-            else:
-                raise ValueError(
-                    f"Could not determine filename for {resource}")
-            resource["name"] = filename
 
     # ITemplateHelpers
     def get_helpers(self):
