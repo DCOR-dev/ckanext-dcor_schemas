@@ -362,7 +362,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             # the whole dataset once.
             ds_dict = logic.get_action('package_show')(
                 context,
-                {'id': data_dict["package_id"]})
+                {'id': data_dict["id"]})
 
             for resource in data_dict.get('resources', []):
                 if resource and "id" in resource:
