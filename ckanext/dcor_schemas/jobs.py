@@ -13,21 +13,19 @@ def admin_context():
 
 def get_base_metadata(resource):
     res_dict_base = {}
-    if not resource.get("mimetype"):
-        suffix = "." + resource["name"].rsplit(".", 1)[-1]
-        for mt in DC_MIME_TYPES:
-            if suffix in DC_MIME_TYPES[mt]:
-                res_dict_base["mimetype"] = mt
-                break
+    suffix = "." + resource["name"].rsplit(".", 1)[-1]
+    for mt in DC_MIME_TYPES:
+        if suffix in DC_MIME_TYPES[mt]:
+            res_dict_base["mimetype"] = mt
+            break
 
     # Also make sure the resource has "url" defined.
-    if not resource.get("url"):
-        site_url = get_ckan_config_option("ckan.site_url")
-        meta_url = (f"{site_url}"
-                    f"/dataset/{resource['package_id']}"
-                    f"/resource/{resource['id']}"
-                    f"/download/{resource['name'].lower()}")
-        res_dict_base["url"] = meta_url
+    site_url = get_ckan_config_option("ckan.site_url")
+    meta_url = (f"{site_url}"
+                f"/dataset/{resource['package_id']}"
+                f"/resource/{resource['id']}"
+                f"/download/{resource['name'].lower()}")
+    res_dict_base["url"] = meta_url
     return res_dict_base
 
 
