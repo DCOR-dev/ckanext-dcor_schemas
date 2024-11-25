@@ -375,6 +375,13 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                             plugins.IResourceController):
                         plugin.after_resource_create(context, res_dict)
 
+    def edit(self, context, data_dict):
+        for resource in data_dict.get('resources', []):
+            if resource and ("created" not in resource
+                             or resource.get("mimetype") is None
+                             or resource.get("url") is None):
+                self.before_resource_create(context, resource)
+
     # IPermissionLabels
     def get_dataset_labels(self, dataset_obj):
         """
