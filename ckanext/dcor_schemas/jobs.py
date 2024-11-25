@@ -19,6 +19,27 @@ def patch_resource_noauth(package_id, resource_id, data_dict):
     package_revise(context=admin_context(), data_dict=revise_dict)
 
 
+def set_resource_meta_base_data(resource):
+    """Workaround for not circular code
+
+    `package_revise` calls `after_dataset_update` which calls
+    `after_resource_create` in the dcor_schemas plugin. But in
+    `after_resource_create`, we only run jobs that have not been
+    run before. So it makes sense to perform any additional calls
+    to `package_revise` in those background jobs.
+    """
+    data_dict = {}
+    if "url" in resource:
+        data_dict["url"] = resource["url"]
+    if "mimetype" in resource:
+        data_dict["mimetype"] = resource["mimetype"]
+    patch_resource_noauth(
+        package_id=resource["package_id"],
+        resource_id=resource["id"],
+        data_dict=data_dict)
+    return True
+
+
 def set_dc_config_job(resource):
     """Store all DC config metadata"""
     if (resource.get('mimetype') in DC_MIME_TYPES

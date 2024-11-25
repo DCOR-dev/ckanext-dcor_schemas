@@ -359,28 +359,11 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             # Check for resources that have been added (e.g. using
             # package_revise) during this dataset update.
             for resource in data_dict.get('resources', []):
-                if resource and ("created" not in resource
-                                 or resource.get("size") is None
-                                 or resource.get("etag") is None):
-                    # If "created" is in `resource`, this means that the
-                    # resource already existed. Since in DCOR, we do not allow
-                    # updating resources, this should be fine. However, there
-                    # might be a better solution
-                    # (https://github.com/ckan/ckan/issues/6472).
-                    # get full resource dict, contains e.g. also "position"
-                    res_dict = logic.get_action("resource_show")(
-                        context=context,
-                        data_dict={"id": resource["id"]})
+                if resource and "id" in resource:
+                    # Run jobs after resource create
                     for plugin in plugins.PluginImplementations(
                             plugins.IResourceController):
-                        plugin.after_resource_create(context, res_dict)
-
-    def edit(self, context, data_dict):
-        for resource in data_dict.get('resources', []):
-            if resource and ("created" not in resource
-                             or resource.get("mimetype") is None
-                             or resource.get("url") is None):
-                self.before_resource_create(context, resource)
+                        plugin.after_resource_create(context, resource)
 
     # IPermissionLabels
     def get_dataset_labels(self, dataset_obj):
@@ -431,9 +414,11 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
 
         resource.update(res_data_dict)
 
-
     def after_resource_create(self, context, resource):
         """Add custom jobs"""
+        # Make sure mimetype etc. are set properly
+        self.before_resource_create(context, resource)
+
         # Make sure the resource has a mimetype if possible. This is a
         # workaround for data uploaded via S3.
         depends_on = []
@@ -450,6 +435,18 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
 
         # Add the fast jobs first.
         redis_connect = ckan_redis_connect()
+
+        jid_meta_base = package_job_id + "metabase"
+        if not Job.exists(jid_meta_base, connection=redis_connect):
+            toolkit.enqueue_job(jobs.set_resource_meta_base_data,
+                                [resource],
+                                title="Set base metadata",
+                                queue="dcor-short",
+                                rq_kwargs={
+                                    "timeout": 500,
+                                    "job_id": jid_meta_base,
+                                })
+        depends_on.append(jid_meta_base)
 
         # Add the "s3_url" and "s3_available" metadata if applicable
         jid_s3meta = package_job_id + "s3resourcemeta"
