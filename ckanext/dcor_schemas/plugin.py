@@ -358,8 +358,20 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         if not DISABLE_AFTER_DATASET_CREATE_FOR_CONCURRENT_JOB_TESTS:
             # Check for resources that have been added (e.g. using
             # package_revise) during this dataset update.
+            # We need the "position" of each resource, so we must fetch
+            # the whole dataset once.
+            ds_dict = logic.get_action('package_show')(
+                context,
+                {'id': data_dict["package_id"]})
+
             for resource in data_dict.get('resources', []):
                 if resource and "id" in resource:
+                    # Update with current
+                    for res in ds_dict["resources"]:
+                        if resource["id"] == res["id"]:
+                            res.update(resource)
+                            resource = res
+                            break
                     # Run jobs after resource create
                     for plugin in plugins.PluginImplementations(
                             plugins.IResourceController):
