@@ -209,7 +209,14 @@ def dataset_state(key, data, errors, context):
             # for uploading, they also have to use package_revise *after*
             # uploading the resources to set the state to "active".
             for res in data_dict["resources"]:
-                if res["mimetype"] in DC_MIME_TYPES:
+                suffix = "." + res["name"].rsplit(".", 1)[-1]
+                for mt in DC_MIME_TYPES:
+                    if suffix in DC_MIME_TYPES[mt]:
+                        is_dc = True
+                        break
+                else:
+                    is_dc = False
+                if is_dc:
                     try:
                         ds = get_dc_instance(res["id"])
                         with ds, dclab.IntegrityChecker(ds) as ic:
