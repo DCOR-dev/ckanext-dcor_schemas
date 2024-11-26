@@ -198,30 +198,31 @@ def run_jobs_dcor_schemas(modified_days=-1):
         past_str = time.strftime("%Y-%m-%d", past.timetuple())
         datasets = datasets.filter(model.Package.metadata_modified >= past_str)
 
+    job_list = jobs.RQJob.get_all_job_methods_in_order(
+        ckanext="dcor_schemas")
+
     nl = False  # new line character
     for dataset in datasets:
-        try:
-            nl = False
-            click.echo(f"Checking dataset {dataset.id}\r", nl=False)
+        nl = False
+        click.echo(f"Checking dataset {dataset.id}\r", nl=False)
 
-            job_list = jobs.RQJob.get_all_job_methods_in_order(
-                ckanext="dcor_schemas")
-
-            for resource in dataset.resources:
-                res_dict = resource.as_dict()
-
+        for resource in dataset.resources:
+            res_dict = resource.as_dict()
+            try:
                 for job in job_list:
                     if job.method(res_dict):
                         if not nl:
                             click.echo("")
                             nl = True
                         click.echo(f"OK: {job.title} for {resource.name}")
-
-        except BaseException as e:
-            click.echo(
-                f"\nEncountered {e.__class__.__name__} for {dataset.id}!",
-                err=True)
-            click.echo(traceback.format_exc(), err=True)
+            except KeyboardInterrupt:
+                raise
+            except BaseException as e:
+                click.echo(
+                    f"\n{e.__class__.__name__} for {res_dict['name']}!",
+                    err=True)
+                click.echo(traceback.format_exc(), err=True)
+                nl = True
     if not nl:
         click.echo("")
     click.echo("Done!")
