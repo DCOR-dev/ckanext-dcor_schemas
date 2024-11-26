@@ -211,7 +211,7 @@ def run_jobs_dcor_schemas(modified_days=-1):
                 res_dict = resource.as_dict()
 
                 for job in job_list:
-                    if job_list.method(res_dict):
+                    if job.method(res_dict):
                         if not nl:
                             click.echo("")
                             nl = True
