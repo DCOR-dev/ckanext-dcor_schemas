@@ -7,6 +7,7 @@ import ckan.model as model
 import ckan.plugins.toolkit as toolkit
 import click
 from dcor_shared import s3, s3cc
+from dcor_shared import RQJob  # noqa: F401
 
 from . import jobs
 
@@ -202,22 +203,20 @@ def run_jobs_dcor_schemas(modified_days=-1):
         try:
             nl = False
             click.echo(f"Checking dataset {dataset.id}\r", nl=False)
+
+            job_list = jobs.RQJob.get_all_job_methods_in_order(
+                ckanext="dcor_schemas")
+
             for resource in dataset.resources:
                 res_dict = resource.as_dict()
-                if jobs.set_format_job(res_dict):
-                    if not nl:
-                        click.echo("")
-                        nl = True
-                    click.echo(f"Updated format for {resource.name}")
-                if jobs.set_sha256_job(res_dict):
-                    if not nl:
-                        click.echo("")
-                        nl = True
-                    click.echo(f"Updated SHA256 for {resource.name}")
-                if jobs.set_dc_config_job(res_dict):
-                    if not nl:
-                        click.echo("")
-                    click.echo(f"Updated config for {resource.name}")
+
+                for job in job_list:
+                    if job_list.method(res_dict):
+                        if not nl:
+                            click.echo("")
+                            nl = True
+                        click.echo(f"OK: {job.title} for {resource.name}")
+
         except BaseException as e:
             click.echo(
                 f"\nEncountered {e.__class__.__name__} for {dataset.id}!",

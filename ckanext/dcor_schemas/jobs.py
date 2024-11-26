@@ -2,13 +2,17 @@ from ckan import logic
 
 import dclab
 from dcor_shared import (
-    DC_MIME_TYPES, get_resource_path, get_dc_instance, s3, s3cc, sha256sum,
-    wait_for_resource, get_ckan_config_option
+    DC_MIME_TYPES, get_ckan_config_option, get_dc_instance, get_resource_path,
+    rqjob_register, s3, s3cc, sha256sum, wait_for_resource,
 )
+from dcor_shared import RQJob  # noqa: F401
 
 
-def admin_context():
-    return {'ignore_auth': True, 'user': 'default'}
+def admin_background_context():
+    return {'ignore_auth': True,
+            'user': 'default',
+            'is_background_job': True,
+            }
 
 
 def get_base_metadata(resource):
@@ -34,10 +38,12 @@ def patch_resource_noauth(package_id, resource_id, data_dict):
     package_revise = logic.get_action("package_revise")
     revise_dict = {"match": {"id": package_id},
                    "update__resources__{}".format(resource_id): data_dict}
-    package_revise(context=admin_context(), data_dict=revise_dict)
+    package_revise(context=admin_background_context(), data_dict=revise_dict)
 
 
-def set_resource_meta_base_data(resource):
+@rqjob_register(ckanext="dcor_schemas",
+                queue="dcor-short")
+def job_set_resource_metadata_base(resource):
     """Workaround for not circular code
 
     `package_revise` calls `after_dataset_update` which calls
@@ -54,7 +60,13 @@ def set_resource_meta_base_data(resource):
     return True
 
 
-def set_dc_config_job(resource):
+@rqjob_register(ckanext="dcor_schemas",
+                queue="dcor-normal",
+                timeout=500,
+                depends_on=["job_set_resource_metadata_base",
+                            "job_set_dc_format",
+                            ])
+def job_set_dc_config(resource):
     """Store all DC config metadata"""
     resource.update(get_base_metadata(resource))
     if (resource.get('mimetype') in DC_MIME_TYPES
@@ -78,8 +90,12 @@ def set_dc_config_job(resource):
     return False
 
 
-def set_etag_job(resource):
-    """Retrieves the ETag from the S3 object store API"""
+@rqjob_register(ckanext="dcor_schemas",
+                queue="dcor-short",
+                timeout=300,
+                at_front=True)
+def job_set_etag(resource):
+    """Set the resource ETag extracted from S3"""
     etag = str(resource.get("etag", ""))
     rid = resource["id"]
     # Example ETags:
@@ -108,7 +124,13 @@ def set_etag_job(resource):
     return False
 
 
-def set_format_job(resource):
+@rqjob_register(ckanext="dcor_schemas",
+                queue="dcor-short",
+                timeout=500,
+                depends_on=["job_set_resource_metadata_base",
+                            "job_set_etag",
+                            ])
+def job_set_dc_format(resource):
     """Writes the correct format to the resource metadata"""
     mimetype = resource.get("mimetype")
     rformat = resource.get("format")
@@ -131,10 +153,15 @@ def set_format_job(resource):
     return False
 
 
-def set_s3_resource_metadata(resource):
-    """Set the s3_url and s3_available metadata for the resource"""
+@rqjob_register(ckanext="dcor_schemas",
+                queue="dcor-short",
+                timeout=500,
+                )
+def job_set_s3_resource_metadata(resource):
+    """Set S3-related resource metadata"""
     rid = resource["id"]
-    if s3cc.artifact_exists(resource_id=rid, artifact="resource"):
+    if (("s3_available" not in resource or "s3_url" not in resource)
+            and s3cc.artifact_exists(resource_id=rid, artifact="resource")):
         s3_url = s3cc.get_s3_url_for_artifact(resource_id=rid)
         res_new_dict = {"s3_available": True,
                         "s3_url": s3_url,
@@ -155,11 +182,15 @@ def set_s3_resource_metadata(resource):
             data_dict=res_new_dict)
 
 
-def set_s3_resource_public_tag(resource):
+@rqjob_register(ckanext="dcor_schemas",
+                queue="dcor-short",
+                timeout=300,
+                )
+def job_set_s3_resource_public_tag(resource):
     """Set the public=True tag to an S3 object if the dataset is public"""
     # Determine whether the resource is public
     ds_dict = logic.get_action('package_show')(
-        admin_context(),
+        admin_background_context(),
         {'id': resource["package_id"]})
     private = ds_dict.get("private")
     if private is not None and not private:
@@ -171,7 +202,11 @@ def set_s3_resource_public_tag(resource):
         )
 
 
-def set_sha256_job(resource):
+@rqjob_register(ckanext="dcor_schemas",
+                queue="dcor-long",
+                timeout=3600,
+                )
+def job_set_sha256(resource):
     """Computes the sha256 hash and writes it to the resource metadata"""
     sha = str(resource.get("sha256", ""))  # can be bool sometimes
     rid = resource["id"]

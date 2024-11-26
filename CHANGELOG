@@ -1,3 +1,6 @@
+0.20.7
+ - ref: migrate to dcor_shared.RQJob for background jobs
+ - enh: introduce "is_background_job" context
 0.20.6
  - ref: enqueue eTag retrieval "at front"
  - ref: introduce `IS_BACKGROUND_JOB` as workaround to prevent background

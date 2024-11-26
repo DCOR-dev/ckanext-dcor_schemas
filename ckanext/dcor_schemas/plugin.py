@@ -1,18 +1,15 @@
-import copy
 import mimetypes
 import pathlib
 import sys
 
 import ckan.lib.datapreview as datapreview
 from ckan.lib.plugins import DefaultPermissionLabels
-from ckan.lib.jobs import _connect as ckan_redis_connect
 from ckan import config, common, logic
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 
 import dclab
 from dcor_shared import DC_MIME_TYPES
-from rq.job import Job
 
 
 from . import actions
@@ -358,7 +355,9 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         # concurrent job testing that do not involve `package_update` and
         # `package_revise`.
         if not (DISABLE_AFTER_DATASET_CREATE_FOR_CONCURRENT_JOB_TESTS
-                or IS_BACKGROUND_JOB):
+                or IS_BACKGROUND_JOB
+                or bool(context.get("is_background_job")) is True
+                ):
             # Check for resources that have been added (e.g. using
             # package_revise) during this dataset update.
             # We need the "position" of each resource, so we must fetch
@@ -424,116 +423,16 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
 
     def after_resource_create(self, context, resource):
         """Add custom jobs"""
-        # Make sure mimetype etc. are set properly
-        resource.update(jobs.get_base_metadata(resource))
+        if not context.get("is_background_job"):
+            # Make sure mimetype etc. are set properly
+            resource.update(jobs.get_base_metadata(resource))
 
-        # Make sure the resource has a mimetype if possible. This is a
-        # workaround for data uploaded via S3.
-        depends_on = []
-        extensions = [common.config.get("ckan.plugins")]
+            # All jobs are defined via decorators in jobs.py
+            jobs.RQJob.enqueue_all_jobs(resource, ckanext="dcor_schemas")
 
-        package_job_id = f"{resource['package_id']}_{resource['position']}_"
-
-        # Are we waiting for symlinking (ckanext-dcor_depot)?
-        # (This makes wait_for_resource really fast ;)
-        if "dcor_depot" in extensions:
-            # Wait for the resource to be moved to the depot.
-            jid_sl = package_job_id + "symlink"
-            depends_on.append(jid_sl)
-
-        # Add the fast jobs first.
-        redis_connect = ckan_redis_connect()
-
-        jid_meta_base = package_job_id + "metabase"
-        if not Job.exists(jid_meta_base, connection=redis_connect):
-            toolkit.enqueue_job(jobs.set_resource_meta_base_data,
-                                [resource],
-                                title="Set base metadata",
-                                queue="dcor-short",
-                                rq_kwargs={
-                                    "timeout": 500,
-                                    "job_id": jid_meta_base,
-                                })
-        depends_on.append(jid_meta_base)
-
-        # Add the "s3_url" and "s3_available" metadata if applicable
-        jid_s3meta = package_job_id + "s3resourcemeta"
-        if not Job.exists(jid_s3meta, connection=redis_connect):
-            toolkit.enqueue_job(jobs.set_s3_resource_metadata,
-                                [resource],
-                                title="Set S3 metadata",
-                                queue="dcor-short",
-                                rq_kwargs={
-                                    "timeout": 500,
-                                    "job_id": jid_s3meta,
-                                })
-        depends_on.append(jid_s3meta)
-
-        # Set the ETag (this is not a dependency for anything else)
-        jid_s3etag = package_job_id + "s3etag"
-        if not Job.exists(jid_s3etag, connection=redis_connect):
-            toolkit.enqueue_job(jobs.set_etag_job,
-                                [resource],
-                                title="Set S3 ETag",
-                                queue="dcor-short",
-                                rq_kwargs={
-                                    "timeout": 500,
-                                    "job_id": jid_s3etag,
-                                    "at_front": True,
-                                })
-
-        # Make S3 object public if applicable
-        jid_s3pub = package_job_id + "s3resourcepublic"
-        if not Job.exists(jid_s3pub, connection=redis_connect):
-            toolkit.enqueue_job(jobs.set_s3_resource_public_tag,
-                                [resource],
-                                title="Make public resources public",
-                                queue="dcor-short",
-                                rq_kwargs={
-                                    "timeout": 500,
-                                    "job_id": jid_s3pub,
-                                })
-        depends_on.append(jid_s3pub)
-
-        if resource.get('mimetype') in DC_MIME_TYPES:
-            # Set DC mimetype
-            jid_format = package_job_id + "format"
-            if not Job.exists(jid_format, connection=redis_connect):
-                toolkit.enqueue_job(jobs.set_format_job,
-                                    [resource],
-                                    title="Set format for resource",
-                                    queue="dcor-short",
-                                    rq_kwargs={
-                                        "timeout": 500,
-                                        "job_id": jid_format,
-                                        "depends_on": copy.copy(depends_on)})
-            # Extract DC parameters
-            jid_dcparams = package_job_id + "dcparms"
-            if not Job.exists(jid_dcparams, connection=redis_connect):
-                toolkit.enqueue_job(jobs.set_dc_config_job,
-                                    [resource],
-                                    title="Set DC parameters for resource",
-                                    queue="dcor-short",
-                                    rq_kwargs={
-                                        "timeout": 500,
-                                        "job_id": jid_dcparams,
-                                        "depends_on": copy.copy(depends_on)})
-
-        # The SHA256 job comes last.
-        jid_sha256 = package_job_id + "sha256"
-        if not Job.exists(jid_sha256, connection=redis_connect):
-            toolkit.enqueue_job(jobs.set_sha256_job,
-                                [resource],
-                                title="Set SHA256 hash for resource",
-                                queue="dcor-normal",
-                                rq_kwargs={
-                                    "timeout": 3600,
-                                    "job_id": jid_sha256,
-                                    "depends_on": copy.copy(depends_on)})
-
-        # https://github.com/ckan/ckan/issues/7837
-        datapreview.add_views_to_resource(context={"ignore_auth": True},
-                                          resource_dict=resource)
+            # https://github.com/ckan/ckan/issues/7837
+            datapreview.add_views_to_resource(context={"ignore_auth": True},
+                                              resource_dict=resource)
 
     # ITemplateHelpers
     def get_helpers(self):
