@@ -44,13 +44,20 @@ def patch_resource_noauth(package_id, resource_id, data_dict):
 @rqjob_register(ckanext="dcor_schemas",
                 queue="dcor-short")
 def job_set_resource_metadata_base(resource):
-    """Workaround for not circular code
+    """Set basic resource metadata
 
     `package_revise` calls `after_dataset_update` which calls
     `after_resource_create` in the dcor_schemas plugin. But in
     `after_resource_create`, we only run jobs that have not been
     run before. So it makes sense to perform any additional calls
     to `package_revise` in those background jobs.
+
+    Notes
+    -----
+    This method exists as a workaround to avoid circular code. When this
+    method calls `patch_resource_noauth`, it does so with the
+    `admin_background_context`, preventing any other background jobs from
+    being triggered.
     """
     res_dict_base = get_base_metadata(resource)
     patch_resource_noauth(
