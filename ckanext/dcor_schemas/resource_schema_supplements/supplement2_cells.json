@@ -9,10 +9,12 @@
    "type": "string",
    "example": "human",
    "choices": [
-     "C. elegans",
+     "Caenorhabditis elegans",
+     "Danio rerio",
+     "Drosophila melanogaster",
      "zebrafish",
-     "human",
-     "mouse"
+     "Homo sapiens",
+     "Mus musculus"
      ]
    },
   {"key": "cell type",
