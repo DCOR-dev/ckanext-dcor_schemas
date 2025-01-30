@@ -28,6 +28,24 @@
      "macrophage"
      ]
    },
+  {"key": "condition",
+   "name": "Condition",
+   "hint": "The condition that was measured",
+   "type": "string",
+   "example": "control",
+   "choices": [
+     "cancer",
+     "control",
+     "treatment"
+     ]
+   },
+  {"key": "repetition",
+   "name": "Repetition",
+   "hint": "Repetition index of the treatment or control",
+   "type": "integer",
+   "options": [">0"],
+   "example": 1
+   },
   {"key": "fixed",
    "name": "Fixed cells",
    "hint": "Were the cells fixed?",
