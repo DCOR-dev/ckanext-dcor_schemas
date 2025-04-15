@@ -1,3 +1,4 @@
+import logging
 import mimetypes
 import pathlib
 import sys
@@ -7,6 +8,7 @@ from ckan.lib.plugins import DefaultPermissionLabels
 from ckan import config, common, logic
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
+import pkg_resources
 
 import dclab
 from dcor_shared import DC_MIME_TYPES
@@ -20,6 +22,8 @@ from . import helpers as dcor_helpers
 from . import resource_schema_supplements as rss
 from . import validate as dcor_validate
 
+
+logger = logging.getLogger(__name__)
 
 # This is used for job testing. Set it to True if you need concurrent
 # background jobs and are using resource_create and the likes.
@@ -113,12 +117,21 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             # trying to do anything with the database (e.g. `ckan db clean`).
             if not sys.argv.count("db"):
                 # use default license location from dcor_schemas
-                here = pathlib.Path(__file__).parent
-                license_loc = "file://{}".format(here / "licenses.json")
-                toolkit.get_action('config_option_update')(
-                    context={'ignore_auth': True, 'user': None},
-                    data_dict={'licenses_group_url': license_loc}
-                )
+                licence_path_candidates = [
+                    pathlib.Path(__file__).parent / 'licenses.json',
+                    pathlib.Path(pkg_resources.resource_filename(
+                        'ckanext.dcor_schemas', 'licenses.json'))
+                    ]
+                for licence_path in licence_path_candidates:
+                    if licence_path.exists():
+                        license_loc = f"file://{licence_path}"
+                        toolkit.get_action('config_option_update')(
+                            context={'ignore_auth': True, 'user': None},
+                            data_dict={'licenses_group_url': license_loc}
+                        )
+                        break
+                else:
+                    logger.error("Could not find 'licenses.json'")
 
     def update_config_schema(self, schema):
         ignore_missing = toolkit.get_validator('ignore_missing')
