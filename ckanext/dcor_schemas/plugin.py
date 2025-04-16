@@ -111,7 +111,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         for key in DC_MIME_TYPES:
             mimetypes.add_type(key, DC_MIME_TYPES[key])
         # Set licenses path if no licenses_group_url was given
-        if not common.config.get("licenses_group_url", ""):
+        if not common.config.get("licenses_group_url", "").strip():
             # Workaround for https://github.com/ckan/ckan/issues/5580
             # Only update the configuration options when we are not
             # trying to do anything with the database (e.g. `ckan db clean`).
@@ -135,7 +135,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
 
     def update_config_schema(self, schema):
         ignore_missing = toolkit.get_validator('ignore_missing')
-        if not common.config.get("licenses_group_url", ""):
+        if not common.config.get("licenses_group_url", "").strip():
             # Only update the schema if no licenses_group_url was given
             schema.update({
                 # This is an existing CKAN core configuration option, we are
