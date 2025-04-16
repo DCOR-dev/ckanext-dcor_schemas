@@ -112,26 +112,8 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             mimetypes.add_type(key, DC_MIME_TYPES[key])
         # Set licenses path if no licenses_group_url was given
         if not common.config.get("licenses_group_url", "").strip():
-            # Workaround for https://github.com/ckan/ckan/issues/5580
-            # Only update the configuration options when we are not
-            # trying to do anything with the database (e.g. `ckan db clean`).
-            if not sys.argv.count("db"):
-                # use default license location from dcor_schemas
-                licence_path_candidates = [
-                    pathlib.Path(__file__).parent / 'licenses.json',
-                    pathlib.Path(pkg_resources.resource_filename(
-                        'ckanext.dcor_schemas', 'licenses.json'))
-                    ]
-                for licence_path in licence_path_candidates:
-                    if licence_path.exists():
-                        license_loc = f"file://{licence_path}"
-                        toolkit.get_action('config_option_update')(
-                            context={'ignore_auth': True, 'user': None},
-                            data_dict={'licenses_group_url': license_loc}
-                        )
-                        break
-                else:
-                    logger.error("Could not find 'licenses.json'")
+            logger.error("`licenses_group_url` is not set. Consider "
+                         "running `dcor inspect`.")
 
     def update_config_schema(self, schema):
         ignore_missing = toolkit.get_validator('ignore_missing')
