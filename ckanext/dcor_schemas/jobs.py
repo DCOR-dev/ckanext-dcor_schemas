@@ -25,11 +25,12 @@ def get_base_metadata(resource):
 
     # Also make sure the resource has "url" defined.
     site_url = get_ckan_config_option("ckan.site_url")
-    meta_url = (f"{site_url}"
-                f"/dataset/{resource['package_id']}"
-                f"/resource/{resource['id']}"
-                f"/download/{resource['name'].lower()}")
-    res_dict_base["url"] = meta_url
+    if "package_id" in resource and "id" in resource:
+        meta_url = (f"{site_url}"
+                    f"/dataset/{resource['package_id']}"
+                    f"/resource/{resource['id']}"
+                    f"/download/{resource['name'].lower()}")
+        res_dict_base["url"] = meta_url
     return res_dict_base
 
 
