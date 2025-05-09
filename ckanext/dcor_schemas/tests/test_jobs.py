@@ -14,12 +14,11 @@ import dclab
 import numpy as np
 import pytest
 
-import ckan.lib
 import ckan.tests.factories as factories
 from ckan.tests import helpers
 
 from dcor_shared.testing import (
-    make_dataset, make_dataset_via_s3, synchronous_enqueue_job
+    make_dataset_via_s3, make_resource_via_s3, synchronous_enqueue_job
 )
 import dcor_shared
 import ckanext.dcor_schemas.plugin
@@ -44,17 +43,7 @@ def test_sha256sum(tmp_path):
 @pytest.mark.usefixtures('clean_db', 'with_request_context')
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
-def test_symlink_user_dataset(enqueue_job_mock, create_with_upload,
-                              monkeypatch, ckan_config, tmpdir):
-    monkeypatch.setitem(ckan_config, 'ckan.storage_path', str(tmpdir))
-    monkeypatch.setattr(ckan.lib.uploader,
-                        'get_storage_path',
-                        lambda: str(tmpdir))
-    monkeypatch.setattr(
-        ckanext.dcor_schemas.plugin,
-        'DISABLE_AFTER_DATASET_CREATE_FOR_CONCURRENT_JOB_TESTS',
-        True)
-
+def test_symlink_user_dataset(enqueue_job_mock):
     user = factories.User()
     owner_org = factories.Organization(users=[{
         'name': user['id'],
@@ -65,15 +54,16 @@ def test_symlink_user_dataset(enqueue_job_mock, create_with_upload,
     create_context = {'ignore_auth': False,
                       'user': user['name'],
                       'api_version': 3}
-    ds_dict = make_dataset(create_context, owner_org,
-                           activate=False)
+    ds_dict = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org,
+        activate=False)
 
-    content = (data_dir / "calibration_beads_47.rtdc").read_bytes()
-    result = create_with_upload(
-        content, 'test.rtdc',
-        url="upload",
-        package_id=ds_dict["id"],
-        context=create_context,
+    result = make_resource_via_s3(
+        resource_path=data_dir / "calibration_beads_47.rtdc",
+        organization_id=owner_org['id'],
+        dataset_id=ds_dict['id'],
+        create_context=create_context
     )
 
     resource = helpers.call_action("resource_show", id=result["id"])
@@ -109,17 +99,7 @@ def test_set_etag_job(enqueue_job_mock):
 @pytest.mark.usefixtures('clean_db', 'with_request_context')
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
-def test_set_format_job(enqueue_job_mock, create_with_upload, monkeypatch,
-                        ckan_config, tmpdir):
-    monkeypatch.setitem(ckan_config, 'ckan.storage_path', str(tmpdir))
-    monkeypatch.setattr(ckan.lib.uploader,
-                        'get_storage_path',
-                        lambda: str(tmpdir))
-    monkeypatch.setattr(
-        ckanext.dcor_schemas.plugin,
-        'DISABLE_AFTER_DATASET_CREATE_FOR_CONCURRENT_JOB_TESTS',
-        True)
-
+def test_set_format_job(enqueue_job_mock, tmp_path):
     user = factories.User()
     owner_org = factories.Organization(users=[{
         'name': user['id'],
@@ -129,18 +109,21 @@ def test_set_format_job(enqueue_job_mock, create_with_upload, monkeypatch,
     # create 1st dataset
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
-    ds_dict = make_dataset(create_context, owner_org, activate=False)
+    ds_dict = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org,
+        activate=False)
     path = data_dir / "calibration_beads_47.rtdc"
     # create dataset without fluorescence
-    tmppath = pathlib.Path(tmpdir) / "calibratino_beads_nofl.rtdc"
+    path_ul = tmp_path / "calibratino_beads_nofl.rtdc"
     with dclab.new_dataset(path) as ds:
-        ds.export.hdf5(tmppath, features=["deform", "bright_avg", "area_um"])
-    content = tmppath.read_bytes()
-    result = create_with_upload(
-        content, 'test.rtdc',
-        url="upload",
-        package_id=ds_dict["id"],
-        context=create_context,
+        ds.export.hdf5(path_ul, features=["deform", "bright_avg", "area_um"])
+
+    result = make_resource_via_s3(
+        resource_path=path_ul,
+        organization_id=owner_org['id'],
+        dataset_id=ds_dict['id'],
+        create_context=create_context,
     )
     resource = helpers.call_action("resource_show", id=result["id"])
     assert dcor_shared.get_resource_path(result["id"]).exists()
@@ -151,17 +134,7 @@ def test_set_format_job(enqueue_job_mock, create_with_upload, monkeypatch,
 @pytest.mark.usefixtures('clean_db', 'with_request_context')
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
-def test_set_format_job_fl(enqueue_job_mock, create_with_upload, monkeypatch,
-                           ckan_config, tmpdir):
-    monkeypatch.setitem(ckan_config, 'ckan.storage_path', str(tmpdir))
-    monkeypatch.setattr(ckan.lib.uploader,
-                        'get_storage_path',
-                        lambda: str(tmpdir))
-    monkeypatch.setattr(
-        ckanext.dcor_schemas.plugin,
-        'DISABLE_AFTER_DATASET_CREATE_FOR_CONCURRENT_JOB_TESTS',
-        True)
-
+def test_set_format_job_fl(enqueue_job_mock):
     user = factories.User()
     owner_org = factories.Organization(users=[{
         'name': user['id'],
@@ -171,13 +144,15 @@ def test_set_format_job_fl(enqueue_job_mock, create_with_upload, monkeypatch,
     # create 1st dataset
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
-    ds_dict = make_dataset(create_context, owner_org, activate=False)
-    content = (data_dir / "calibration_beads_47.rtdc").read_bytes()
-    result = create_with_upload(
-        content, 'test.rtdc',
-        url="upload",
-        package_id=ds_dict["id"],
-        context=create_context,
+    ds_dict = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org,
+        activate=False)
+    result = make_resource_via_s3(
+        resource_path=data_dir / "calibration_beads_47.rtdc",
+        organization_id=owner_org['id'],
+        dataset_id=ds_dict['id'],
+        create_context=create_context,
     )
     resource = helpers.call_action("resource_show", id=result["id"])
     assert dcor_shared.get_resource_path(result["id"]).exists()
@@ -188,17 +163,7 @@ def test_set_format_job_fl(enqueue_job_mock, create_with_upload, monkeypatch,
 @pytest.mark.usefixtures('clean_db', 'with_request_context')
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
-def test_set_sha256_job(enqueue_job_mock, create_with_upload, monkeypatch,
-                        ckan_config, tmpdir):
-    monkeypatch.setitem(ckan_config, 'ckan.storage_path', str(tmpdir))
-    monkeypatch.setattr(ckan.lib.uploader,
-                        'get_storage_path',
-                        lambda: str(tmpdir))
-    monkeypatch.setattr(
-        ckanext.dcor_schemas.plugin,
-        'DISABLE_AFTER_DATASET_CREATE_FOR_CONCURRENT_JOB_TESTS',
-        True)
-
+def test_set_sha256_job(enqueue_job_mock):
     user = factories.User()
     owner_org = factories.Organization(users=[{
         'name': user['id'],
@@ -208,13 +173,16 @@ def test_set_sha256_job(enqueue_job_mock, create_with_upload, monkeypatch,
     # create 1st dataset
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
-    ds_dict = make_dataset(create_context, owner_org, activate=False)
-    content = (data_dir / "calibration_beads_47.rtdc").read_bytes()
-    result = create_with_upload(
-        content, 'test.rtdc',
-        url="upload",
-        package_id=ds_dict["id"],
-        context=create_context,
+    ds_dict = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org,
+        activate=False)
+
+    result = make_resource_via_s3(
+        resource_path=data_dir / "calibration_beads_47.rtdc",
+        organization_id=owner_org['id'],
+        dataset_id=ds_dict['id'],
+        create_context=create_context,
     )
     resource = helpers.call_action("resource_show", id=result["id"])
     assert dcor_shared.get_resource_path(result["id"]).exists()
@@ -226,17 +194,7 @@ def test_set_sha256_job(enqueue_job_mock, create_with_upload, monkeypatch,
 @pytest.mark.usefixtures('clean_db', 'with_request_context')
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
-def test_set_sha256_job_empty_file(enqueue_job_mock, create_with_upload,
-                                   monkeypatch, ckan_config, tmpdir):
-    monkeypatch.setitem(ckan_config, 'ckan.storage_path', str(tmpdir))
-    monkeypatch.setattr(ckan.lib.uploader,
-                        'get_storage_path',
-                        lambda: str(tmpdir))
-    monkeypatch.setattr(
-        ckanext.dcor_schemas.plugin,
-        'DISABLE_AFTER_DATASET_CREATE_FOR_CONCURRENT_JOB_TESTS',
-        True)
-
+def test_set_sha256_job_empty_file(enqueue_job_mock, tmp_path):
     user = factories.User()
     owner_org = factories.Organization(users=[{
         'name': user['id'],
@@ -246,12 +204,18 @@ def test_set_sha256_job_empty_file(enqueue_job_mock, create_with_upload,
     # create 1st dataset
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
-    ds_dict = make_dataset(create_context, owner_org, activate=False)
-    result = create_with_upload(
-        b"", 'test.ini',
-        url="upload",
-        package_id=ds_dict["id"],
-        context=create_context,
+    ds_dict = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org,
+        activate=False)
+
+    path = tmp_path / "test.ini"
+    path.touch()
+    result = make_resource_via_s3(
+        resource_path=path,
+        organization_id=owner_org['id'],
+        dataset_id=ds_dict['id'],
+        create_context=create_context,
     )
     resource = helpers.call_action("resource_show", id=result["id"])
     assert dcor_shared.get_resource_path(result["id"]).exists()

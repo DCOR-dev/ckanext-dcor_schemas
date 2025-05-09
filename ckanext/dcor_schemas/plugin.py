@@ -8,7 +8,6 @@ from ckan.lib.plugins import DefaultPermissionLabels
 from ckan import config, common, logic
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
-import pkg_resources
 
 import dclab
 from dcor_shared import DC_MIME_TYPES

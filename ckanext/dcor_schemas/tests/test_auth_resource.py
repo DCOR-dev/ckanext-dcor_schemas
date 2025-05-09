@@ -9,7 +9,7 @@ import ckan.tests.factories as factories
 import ckan.tests.helpers as helpers
 from ckan import model
 
-from dcor_shared.testing import make_dataset, make_resource
+from dcor_shared.testing import make_dataset_via_s3, make_resource_via_s3
 
 
 data_path = pathlib.Path(__file__).parent / "data"
@@ -30,7 +30,10 @@ def test_resource_create_id_forbidden():
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    ds_dict = make_dataset(create_context, owner_org, activate=False)
+    ds_dict = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org,
+        activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     with path.open('rb') as fd:
         upload = cgi.FieldStorage()
@@ -48,7 +51,7 @@ def test_resource_create_id_forbidden():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_resource_create_in_other_users_dataset(create_with_upload):
+def test_resource_create_in_other_users_dataset():
     """User is not allowed to create a resource in another user's dataset"""
     user_a = factories.User()
     user_b = factories.User()
@@ -64,9 +67,9 @@ def test_resource_create_in_other_users_dataset(create_with_upload):
     context_b = {'ignore_auth': False,
                  'user': user_b['name'], 'model': model, 'api_version': 3}
 
-    ds_dict, _ = make_dataset(
-        context_a, owner_org,
-        create_with_upload=create_with_upload,
+    ds_dict, _ = make_dataset_via_s3(
+        create_context=context_a,
+        owner_org=owner_org,
         resource_path=data_path / "calibration_beads_47.rtdc",
         activate=False)
 
@@ -77,7 +80,7 @@ def test_resource_create_in_other_users_dataset(create_with_upload):
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_resource_delete_only_drafts(create_with_upload):
+def test_resource_delete_only_drafts():
     """do not allow deleting resources unless they are drafts"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -90,16 +93,20 @@ def test_resource_delete_only_drafts(create_with_upload):
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    ds_dict = make_dataset(create_context, owner_org)
+    ds_dict = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org)
     assert ds_dict["state"] == "draft", "dataset without res must be draft"
     # assert: draft datasets may be deleted
     assert helpers.call_auth("package_delete", test_context,
                              id=ds_dict["id"])
     # upload resource
-    res = make_resource(resource_path=data_path / "calibration_beads_47.rtdc",
-                        create_with_upload=create_with_upload,
-                        create_context=create_context,
-                        dataset_id=ds_dict["id"])
+    res = make_resource_via_s3(
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        organization_id=owner_org['id'],
+        dataset_id=ds_dict["id"],
+        create_context=create_context,
+        )
     # set dataset state to active
     helpers.call_action("package_patch", create_context,
                         id=ds_dict["id"],
@@ -120,7 +127,7 @@ def test_resource_delete_only_drafts(create_with_upload):
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_resource_patch_only_description(create_with_upload):
+def test_resource_patch_only_description():
     """only allow changing the description"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -133,10 +140,10 @@ def test_resource_patch_only_description(create_with_upload):
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    ds_dict, res_dict = make_dataset(
-        create_context, owner_org,
+    ds_dict, res_dict = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org,
         resource_path=data_path / "calibration_beads_47.rtdc",
-        create_with_upload=create_with_upload,
         activate=False)
     # assert: allow updating the description
     assert helpers.call_auth("resource_patch", test_context,
@@ -169,7 +176,7 @@ def test_resource_patch_only_description(create_with_upload):
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_resource_patch_other_users_dataset(create_with_upload):
+def test_resource_patch_other_users_dataset():
     """User is not allowed to patch other user's datasets"""
     user_a = factories.User()
     user_b = factories.User()
@@ -186,9 +193,9 @@ def test_resource_patch_other_users_dataset(create_with_upload):
                  'user': user_b['name'], 'model': model, 'api_version': 3}
 
     # create a dataset
-    ds_dict, res_dict = make_dataset(
-        context_a, owner_org,
-        create_with_upload=create_with_upload,
+    ds_dict, res_dict = make_dataset_via_s3(
+        create_context=context_a,
+        owner_org=owner_org,
         resource_path=data_path / "calibration_beads_47.rtdc",
         activate=True)
 

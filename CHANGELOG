@@ -1,3 +1,5 @@
+0.21.5
+ - tests: migrate all tests to S3 upload
 0.21.4
  - fix: `get_base_metadata` failed when resource not defined yet
 0.21.3

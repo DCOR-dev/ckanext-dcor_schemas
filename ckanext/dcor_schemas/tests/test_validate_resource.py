@@ -9,7 +9,7 @@ import ckan.logic as logic
 import ckan.tests.factories as factories
 import ckan.tests.helpers as helpers
 
-from dcor_shared.testing import make_dataset
+from dcor_shared.testing import make_dataset_via_s3
 
 data_path = pathlib.Path(__file__).parent / "data"
 
@@ -21,7 +21,7 @@ def test_resource_create_configuration_metadata():
     create_context = {'ignore_auth': True,
                       'user': "default",
                       'api_version': 3}
-    ds_dict = make_dataset(activate=False)
+    ds_dict = make_dataset_via_s3(activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     with path.open('rb') as fd:
         upload = cgi.FieldStorage()
@@ -49,7 +49,7 @@ def test_resource_create_configuration_metadata_invalid():
                       'user': "default",
                       'api_version': 3}
 
-    ds_dict = make_dataset(activate=False)
+    ds_dict = make_dataset_via_s3(activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     with path.open('rb') as fd:
         upload = cgi.FieldStorage()
@@ -80,8 +80,10 @@ def test_resource_create_configuration_supplement():
     create_context1 = {'ignore_auth': False,
                        'user': user['name'],
                        'api_version': 3}
-    ds_dict = make_dataset(create_context1, owner_org,
-                           activate=False)
+    ds_dict = make_dataset_via_s3(
+        create_context=create_context1,
+        owner_org=owner_org,
+        activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     with path.open('rb') as fd:
         upload = cgi.FieldStorage()
@@ -114,8 +116,10 @@ def test_resource_create_configuration_supplement_invalid_value():
     create_context1 = {'ignore_auth': False,
                        'user': user['name'],
                        'api_version': 3}
-    ds_dict = make_dataset(create_context1, owner_org,
-                           activate=False)
+    ds_dict = make_dataset_via_s3(
+        create_context=create_context1,
+        owner_org=owner_org,
+        activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     with path.open('rb') as fd:
         upload = cgi.FieldStorage()
@@ -147,8 +151,10 @@ def test_resource_create_custom_upload_name_overridden():
     create_context1 = {'ignore_auth': False,
                        'user': user['name'],
                        'api_version': 3}
-    ds_dict = make_dataset(create_context1, owner_org,
-                           activate=False)
+    ds_dict = make_dataset_via_s3(
+        create_context=create_context1,
+        owner_org=owner_org,
+        activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     # create the first resource
     with path.open('rb') as fd:
@@ -201,8 +207,10 @@ def test_resource_create_restrict_extensions():
     create_context1 = {'ignore_auth': False,
                        'user': user['name'],
                        'api_version': 3}
-    ds_dict = make_dataset(create_context1, owner_org,
-                           activate=False)
+    ds_dict = make_dataset_via_s3(
+        create_context=create_context1,
+        owner_org=owner_org,
+        activate=False)
     tdir = tempfile.mkdtemp(prefix="test_dcor_schemas_")
     path = pathlib.Path(tdir) / "bad_extension.docx"
     path.write_text("lorem ipsum doesn't want Word in data repositories")
@@ -234,8 +242,10 @@ def test_resource_create_same_name_forbidden():
     create_context1 = {'ignore_auth': False,
                        'user': user['name'],
                        'api_version': 3}
-    ds_dict = make_dataset(create_context1, owner_org,
-                           activate=False)
+    ds_dict = make_dataset_via_s3(
+        create_context=create_context1,
+        owner_org=owner_org,
+        activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     # create the first resource
     with path.open('rb') as fd:
@@ -277,8 +287,10 @@ def test_resource_create_weird_characters():
     # create 1st dataset
     create_context1 = {'ignore_auth': False,
                        'user': user['name'], 'api_version': 3}
-    ds_dict = make_dataset(create_context1, owner_org,
-                           activate=False)
+    ds_dict = make_dataset_via_s3(
+        create_context=create_context1,
+        owner_org=owner_org,
+        activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     tdir = tempfile.mkdtemp(prefix="test_dcor_schemas_")
     path2 = pathlib.Path(tdir) / "µæsdqow.rtdc"

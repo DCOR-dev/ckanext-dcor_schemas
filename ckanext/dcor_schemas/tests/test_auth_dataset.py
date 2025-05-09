@@ -9,14 +9,14 @@ import ckan.tests.factories as factories
 import ckan.tests.helpers as helpers
 from ckan import model
 
-from dcor_shared.testing import make_dataset, make_resource
+from dcor_shared.testing import make_dataset_via_s3, make_resource_via_s3
 
 data_path = pathlib.Path(__file__).parent / "data"
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_add_resources_only_to_drafts(create_with_upload):
+def test_dataset_add_resources_only_to_drafts():
     """do not allow adding resources to non-draft datasets"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -29,9 +29,9 @@ def test_dataset_add_resources_only_to_drafts(create_with_upload):
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    ds_dict, _ = make_dataset(
-        create_context, owner_org,
-        create_with_upload=create_with_upload,
+    ds_dict, _ = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org,
         resource_path=data_path / "calibration_beads_47.rtdc",
         activate=True)
     # assert: adding resources to active datasets forbidden
@@ -87,7 +87,7 @@ def test_dataset_create_missing_org():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_create_bad_collection(create_with_upload):
+def test_dataset_create_bad_collection():
     """cannot create dataset in other user's collection"""
     user_a = factories.User()
     user_b = factories.User()
@@ -103,16 +103,18 @@ def test_dataset_create_bad_collection(create_with_upload):
 
     with pytest.raises(logic.NotAuthorized,
                        match="not authorized to create packages"):
-        make_dataset(context_b, owner_org,
-                     create_with_upload=create_with_upload,
-                     resource_path=data_path / "calibration_beads_47.rtdc",
-                     activate=True,
-                     groups=[{"id": owner_group["id"]}])
+        make_dataset_via_s3(
+            create_context=context_b,
+            owner_org=owner_org,
+            resource_path=data_path / "calibration_beads_47.rtdc",
+            activate=True,
+            groups=[{"id": owner_group["id"]}]
+        )
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_delete_only_drafts(create_with_upload):
+def test_dataset_delete_only_drafts():
     """do not allow deleting datasets unless they are drafts"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -125,16 +127,20 @@ def test_dataset_delete_only_drafts(create_with_upload):
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    ds_dict = make_dataset(create_context, owner_org)
+    ds_dict = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org)
     assert ds_dict["state"] == "draft", "dataset without res must be draft"
     # assert: draft datasets may be deleted
     assert helpers.call_auth("package_delete", test_context,
                              id=ds_dict["id"])
     # upload resource
-    make_resource(resource_path=data_path / "calibration_beads_47.rtdc",
-                  create_with_upload=create_with_upload,
-                  create_context=create_context,
-                  dataset_id=ds_dict["id"])
+    make_resource_via_s3(
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        organization_id=owner_org["id"],
+        dataset_id=ds_dict["id"],
+        create_context=create_context,
+        )
     # set dataset state to active
     helpers.call_action("package_patch", create_context,
                         id=ds_dict["id"],
@@ -165,7 +171,10 @@ def test_dataset_delete_other_user():
     context_b = {'ignore_auth': False,
                  'user': user_b['name'], 'model': model, 'api_version': 3}
 
-    ds_dict = make_dataset(context_a, owner_org, activate=False)
+    ds_dict = make_dataset_via_s3(
+        create_context=context_a,
+        owner_org=owner_org,
+        activate=False)
     # assert: other users cannot delete your drafts
     with pytest.raises(logic.NotAuthorized,
                        match="not authorized to edit package"):
@@ -187,7 +196,10 @@ def test_dataset_delete_anonymous():
     context_b = {'ignore_auth': False, 'user': None,
                  'model': model, 'api_version': 3}
 
-    ds_dict = make_dataset(context_a, owner_org, activate=False)
+    ds_dict = make_dataset_via_s3(
+        create_context=context_a,
+        owner_org=owner_org,
+        activate=False)
     # assert: other users cannot delete your drafts
     with pytest.raises(
             logic.NotAuthorized,
@@ -210,7 +222,10 @@ def test_dataset_edit_anonymous():
     context_b = {'ignore_auth': False, 'user': None,
                  'model': model, 'api_version': 3}
 
-    ds_dict = make_dataset(context_a, owner_org, activate=False)
+    ds_dict = make_dataset_via_s3(
+        create_context=context_a,
+        owner_org=owner_org,
+        activate=False)
     # assert: other users cannot delete your drafts
     with pytest.raises(
             logic.NotAuthorized,
@@ -222,7 +237,7 @@ def test_dataset_edit_anonymous():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_edit_collaborator(create_with_upload):
+def test_dataset_edit_collaborator():
     """collaborator cannot edit dataset"""
     user_a = factories.User()
     user_b = factories.User()
@@ -235,11 +250,12 @@ def test_dataset_edit_collaborator(create_with_upload):
     context_b = {'ignore_auth': False, 'user': user_b['name'],
                  'model': model, 'api_version': 3}
 
-    ds_dict, _ = make_dataset(
-        context_a, owner_org,
-        create_with_upload=create_with_upload,
+    ds_dict, _ = make_dataset_via_s3(
+        create_context=context_a,
+        owner_org=owner_org,
         resource_path=data_path / "calibration_beads_47.rtdc",
-        activate=True, private=True)
+        activate=True,
+        private=True)
     helpers.call_action("package_collaborator_create",
                         id=ds_dict["id"],
                         user_id=user_b["id"],
@@ -268,8 +284,11 @@ def test_dataset_id_cannot_be_specified_by_normal_user():
                        'user': user['name'], 'api_version': 3}
     ds_id = str(uuid.uuid4())
     with pytest.raises(logic.NotAuthorized, match="Only sysadmins"):
-        make_dataset(create_context1, owner_org,
-                     activate=False, id=ds_id)
+        make_dataset_via_s3(
+            create_context=create_context1,
+            owner_org=owner_org,
+            activate=False,
+            id=ds_id)
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -283,14 +302,17 @@ def test_dataset_id_can_only_be_set_by_sysadmin():
     create_context1 = {'ignore_auth': False,
                        'user': user['name'], 'api_version': 3}
     ds_id = str(uuid.uuid4())
-    ds_dict = make_dataset(create_context1, owner_org,
-                           activate=False, id=ds_id)
+    ds_dict = make_dataset_via_s3(
+        create_context=create_context1,
+        owner_org=owner_org,
+        activate=False,
+        id=ds_id)
     assert ds_dict["id"] == ds_id, "admin-specified ID is used"
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_license_more_restrictive_forbidden(create_with_upload):
+def test_dataset_license_more_restrictive_forbidden():
     """do not allow switching to a more restrictive license"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -303,9 +325,9 @@ def test_dataset_license_more_restrictive_forbidden(create_with_upload):
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    dataset, res = make_dataset(
-        create_context, owner_org,
-        create_with_upload=create_with_upload,
+    dataset, res = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org,
         resource_path=data_path / "calibration_beads_47.rtdc",
         activate=True,
         license_id="CC0-1.0")
@@ -333,7 +355,10 @@ def test_dataset_purge_anonymous():
     test_context = {'ignore_auth': False,
                     'user': None, 'model': model, 'api_version': 3}
     # create a dataset
-    ds_dict = make_dataset(create_context, owner_org)
+    ds_dict = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org,
+    )
     # delete a dataset
     helpers.call_action("package_delete", create_context,
                         id=ds_dict["id"]
@@ -361,7 +386,11 @@ def test_dataset_purge_draft():
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    ds_dict = make_dataset(create_context, owner_org, activate=False)
+    ds_dict = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org,
+        activate=False
+    )
     with pytest.raises(logic.NotAuthorized,
                        match="Only deleted datasets can be purged"):
         # assert: cannot purge a draft
@@ -384,7 +413,10 @@ def test_dataset_purge_deleted():
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    ds_dict = make_dataset(create_context, owner_org)
+    ds_dict = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org
+    )
     # delete a dataset
     helpers.call_action("package_delete", create_context,
                         id=ds_dict["id"]
@@ -396,7 +428,7 @@ def test_dataset_purge_deleted():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_slug_editing_forbidden(create_with_upload):
+def test_dataset_slug_editing_forbidden():
     """do not allow changing the name (slug)"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -409,11 +441,12 @@ def test_dataset_slug_editing_forbidden(create_with_upload):
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    ds_dict, res_dict = make_dataset(
-        create_context, owner_org,
-        create_with_upload=create_with_upload,
+    ds_dict, res_dict = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org,
         resource_path=data_path / "calibration_beads_47.rtdc",
-        activate=True)
+        activate=True
+    )
     assert ds_dict["state"] == "active"
     # assert: cannot set state back to draft
     with pytest.raises(
@@ -426,7 +459,7 @@ def test_dataset_slug_editing_forbidden(create_with_upload):
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_state_from_active_to_draft_forbidden(create_with_upload):
+def test_dataset_state_from_active_to_draft_forbidden():
     """do not allow setting the dataset state from active to draft"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -439,11 +472,12 @@ def test_dataset_state_from_active_to_draft_forbidden(create_with_upload):
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    ds_dict, res_dict = make_dataset(
-        create_context, owner_org,
-        create_with_upload=create_with_upload,
+    ds_dict, res_dict = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org,
         resource_path=data_path / "calibration_beads_47.rtdc",
-        activate=True)
+        activate=True
+    )
     assert ds_dict["state"] == "active"
     # assert: cannot set state back to draft
     with pytest.raises(
@@ -470,9 +504,15 @@ def test_dataset_user_anonymous():
     with pytest.raises(
             logic.NotAuthorized,
             match="Action package_create requires an authenticated user"):
-        make_dataset(context_b, owner_org, activate=False)
+        make_dataset_via_s3(
+            create_context=context_b,
+            owner_org=owner_org,
+            activate=False)
 
-    ds = make_dataset(context_a, owner_org, activate=False)
+    ds = make_dataset_via_s3(
+        create_context=context_a,
+        owner_org=owner_org,
+        activate=False)
 
     with pytest.raises(
             logic.NotAuthorized,
@@ -540,7 +580,7 @@ def test_dataset_visibility_create_public_if_not_allowed_control():
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_dataset_visibility_update_1_private2public_allowed(
-        create_with_upload):
+        ):
     """allow changing visibility from private to public"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -553,9 +593,9 @@ def test_dataset_visibility_update_1_private2public_allowed(
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    ds_dict, res_dict = make_dataset(
-        create_context, owner_org,
-        create_with_upload=create_with_upload,
+    ds_dict, res_dict = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org,
         resource_path=data_path / "calibration_beads_47.rtdc",
         activate=True,
         private=True)
@@ -569,7 +609,7 @@ def test_dataset_visibility_update_1_private2public_allowed(
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_dataset_visibility_update_1_public2private_not_allowed(
-        create_with_upload):
+        ):
     """do not allow to set the visibility of a public dataset to private"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -582,11 +622,12 @@ def test_dataset_visibility_update_1_public2private_not_allowed(
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset
-    ds_dict, res_dict = make_dataset(
-        create_context, owner_org,
-        create_with_upload=create_with_upload,
+    ds_dict, res_dict = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org,
         resource_path=data_path / "calibration_beads_47.rtdc",
-        activate=True, private=False)
+        activate=True,
+        private=False)
     # assert: cannot set private to True for active datasets
     with pytest.raises(
             logic.NotAuthorized,
@@ -600,7 +641,7 @@ def test_dataset_visibility_update_1_public2private_not_allowed(
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_dataset_visibility_update_2_private2public_not_allowed(
-        create_with_upload):
+        ):
     """
     do not allow to change visibility from private to public if
     ckanext.dcor_schemas.allow_public_datasets is false
@@ -617,9 +658,9 @@ def test_dataset_visibility_update_2_private2public_not_allowed(
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset (no auth check done during testing, so we can create
     # a public dataset)
-    ds_dict, res_dict = make_dataset(
-        create_context, owner_org,
-        create_with_upload=create_with_upload,
+    ds_dict, res_dict = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org,
         resource_path=data_path / "calibration_beads_47.rtdc",
         activate=True,
         private=True)
@@ -635,7 +676,7 @@ def test_dataset_visibility_update_2_private2public_not_allowed(
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_dataset_visibility_update_2_public2private_allowed(
-        create_with_upload):
+        ):
     """
     allow to change visibility from public to private if
     ckanext.dcor_schemas.allow_public_datasets is false
@@ -651,9 +692,9 @@ def test_dataset_visibility_update_2_public2private_allowed(
                     'user': user['name'], 'model': model, 'api_version': 3}
     # create a dataset (no auth check done during testing, so we can create
     # a public dataset)
-    ds_dict, res_dict = make_dataset(
-        create_context, owner_org,
-        create_with_upload=create_with_upload,
+    ds_dict, res_dict = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org,
         resource_path=data_path / "calibration_beads_47.rtdc",
         activate=True,
         private=False,

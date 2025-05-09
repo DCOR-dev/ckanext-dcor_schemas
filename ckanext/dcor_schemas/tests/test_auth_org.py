@@ -7,8 +7,7 @@ import ckan.tests.factories as factories
 import ckan.tests.helpers as helpers
 from ckan import model
 
-from dcor_shared.testing import make_dataset
-
+from dcor_shared.testing import make_dataset_via_s3
 
 data_path = pathlib.Path(__file__).parent / "data"
 
@@ -64,7 +63,7 @@ def test_org_list_anon_vs_logged_in_control():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_org_admin_bulk_update_delete_forbidden(create_with_upload):
+def test_org_admin_bulk_update_delete_forbidden():
     """do not allow bulk_update_delete"""
     user = factories.User()
     owner_org = factories.Organization(users=[{
@@ -74,16 +73,16 @@ def test_org_admin_bulk_update_delete_forbidden(create_with_upload):
     # create a datasets
     create_context1 = {'ignore_auth': False,
                        'user': user['name'], 'api_version': 3}
-    ds_dict_1, _ = make_dataset(
-        create_context1, owner_org,
-        create_with_upload=create_with_upload,
+    ds_dict_1, _ = make_dataset_via_s3(
+        create_context=create_context1,
+        owner_org=owner_org,
         resource_path=data_path / "calibration_beads_47.rtdc",
         activate=True)
     create_context2 = {'ignore_auth': False,
                        'user': user['name'], 'api_version': 3}
-    ds_dict_2, _ = make_dataset(
-        create_context2, owner_org,
-        create_with_upload=create_with_upload,
+    ds_dict_2, _ = make_dataset_via_s3(
+        create_context=create_context2,
+        owner_org=owner_org,
         resource_path=data_path / "calibration_beads_47.rtdc",
         activate=True)
     # assert: bulk_update_delete is should be forbidden

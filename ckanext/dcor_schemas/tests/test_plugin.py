@@ -9,7 +9,8 @@ import ckan.tests.factories as factories
 import ckan.tests.helpers as helpers
 
 from dcor_shared.testing import (
-    get_ckan_config_option, make_dataset, make_dataset_via_s3,
+    get_ckan_config_option,
+    make_dataset_via_s3,
     synchronous_enqueue_job
 )
 
@@ -19,7 +20,7 @@ data_path = pathlib.Path(__file__).parent / "data"
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_ipermissionlabels_user_group_see_privates(create_with_upload):
+def test_ipermissionlabels_user_group_see_privates():
     """
     Allow a user A to see user B's private dataset if the private dataset
     is in a group that user A is a member of.
@@ -39,9 +40,9 @@ def test_ipermissionlabels_user_group_see_privates(create_with_upload):
     context_b = {'ignore_auth': False,
                  'user': user_b['name'], 'model': model, 'api_version': 3}
 
-    ds_dict, _ = make_dataset(
-        context_a, owner_org,
-        create_with_upload=create_with_upload,
+    ds_dict, _ = make_dataset_via_s3(
+        create_context=context_a,
+        owner_org=owner_org,
         resource_path=data_path / "calibration_beads_47.rtdc",
         activate=True,
         groups=[{"id": owner_group["id"]}],
@@ -56,7 +57,7 @@ def test_ipermissionlabels_user_group_see_privates(create_with_upload):
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_ipermissionlabels_user_group_see_privates_inverted(
-        create_with_upload):
+        ):
     """User is not allowed to see another user's private datasets"""
     user_a = factories.User()
     user_b = factories.User()
@@ -72,9 +73,9 @@ def test_ipermissionlabels_user_group_see_privates_inverted(
     context_b = {'ignore_auth': False,
                  'user': user_b['name'], 'model': model, 'api_version': 3}
 
-    ds_dict, _ = make_dataset(
-        context_a, owner_org,
-        create_with_upload=create_with_upload,
+    ds_dict, _ = make_dataset_via_s3(
+        create_context=context_a,
+        owner_org=owner_org,
         resource_path=data_path / "calibration_beads_47.rtdc",
         activate=True,
         groups=[{"id": owner_group["id"]}],

@@ -3,7 +3,7 @@ import pytest
 
 import ckan.tests.factories as factories
 
-from dcor_shared.testing import make_dataset
+from dcor_shared.testing import make_dataset_via_s3
 
 
 data_path = pathlib.Path(__file__).parent / "data"
@@ -66,7 +66,7 @@ def test_login_and_browse_to_main_locations(url, app):
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_request_context')
-def test_login_and_go_to_dataset_edit_page(app, create_with_upload):
+def test_login_and_go_to_dataset_edit_page(app, ):
     user = factories.UserWithToken()
 
     owner_org = factories.Organization(users=[{
@@ -77,9 +77,9 @@ def test_login_and_go_to_dataset_edit_page(app, create_with_upload):
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
     # create a dataset
-    ds_dict, _ = make_dataset(
-        create_context, owner_org,
-        create_with_upload=create_with_upload,
+    ds_dict, _ = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org,
         resource_path=data_path / "calibration_beads_47.rtdc",
         activate=True)
 
@@ -93,7 +93,7 @@ def test_login_and_go_to_dataset_edit_page(app, create_with_upload):
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_request_context')
 def test_login_and_go_to_dataset_edit_page_and_view_license_options(
-        app, create_with_upload):
+        app, ):
     """Check whether the license options are correct"""
     user = factories.UserWithToken()
     owner_org = factories.Organization(users=[{
@@ -104,11 +104,12 @@ def test_login_and_go_to_dataset_edit_page_and_view_license_options(
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
     # create a dataset
-    ds_dict, _ = make_dataset(
-        create_context, owner_org,
-        create_with_upload=create_with_upload,
+    ds_dict, _ = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org,
         resource_path=data_path / "calibration_beads_47.rtdc",
-        activate=True, license_id="CC-BY-4.0")
+        activate=True,
+        license_id="CC-BY-4.0")
 
     # get the dataset page
     resp = app.get("/dataset/edit/" + ds_dict["id"],
@@ -137,7 +138,7 @@ def test_login_and_go_to_dataset_edit_page_and_view_license_options(
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_request_context')
-def test_resource_view_references(app, create_with_upload):
+def test_resource_view_references(app, ):
     """Test whether the references links render correctly"""
     user = factories.UserWithToken()
     owner_org = factories.Organization(users=[{
@@ -154,9 +155,9 @@ def test_resource_view_references(app, create_with_upload):
         "https://www.biorxiv.org/content/10.1101/862227v2.full.pdf+html",
         "https://dc.readthedocs.io/en/latest/",
     ]
-    ds_dict, _ = make_dataset(
-        create_context, owner_org,
-        create_with_upload=create_with_upload,
+    ds_dict, _ = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org,
         resource_path=data_path / "calibration_beads_47.rtdc",
         activate=True,
         references=",".join(references))
