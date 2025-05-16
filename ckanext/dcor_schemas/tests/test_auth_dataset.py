@@ -61,7 +61,7 @@ def test_dataset_create_anonymous():
     # create a dataset
     with pytest.raises(
             logic.NotAuthorized,
-            match="Action package_create requires an authenticated user"):
+            match="User None not authorized to create packages"):
         helpers.call_auth("package_create", context)
 
 
@@ -503,7 +503,7 @@ def test_dataset_user_anonymous():
 
     with pytest.raises(
             logic.NotAuthorized,
-            match="Action package_create requires an authenticated user"):
+            match="User None not authorized to create packages"):
         make_dataset_via_s3(
             create_context=context_b,
             owner_org=owner_org,

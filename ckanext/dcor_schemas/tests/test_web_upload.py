@@ -34,7 +34,7 @@ def test_upload_to_s3_and_verify(enqueue_job_mock, app):
         "/api/3/action/resource_upload_s3_urls",
         params={"organization_id": owner_org["id"],
                 "file_size": upload_path.stat().st_size},
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=200)
     data_s3 = json.loads(resp_s3.data)["result"]
 
@@ -55,7 +55,7 @@ def test_upload_to_s3_and_verify(enqueue_job_mock, app):
                 "title": "a new world",
                 "license_id": "CC0-1.0",
                 },
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=200)
     data_ds = json.loads(resp_ds.data)["result"]
     assert "id" in data_ds, "sanity check"
@@ -72,7 +72,7 @@ def test_upload_to_s3_and_verify(enqueue_job_mock, app):
         params={"match__id": data_ds["id"],
                 "update__resources__extend": res_str,
                 },
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=200
     )
     data_res = json.loads(resp_res.data)["result"]
@@ -85,7 +85,7 @@ def test_upload_to_s3_and_verify(enqueue_job_mock, app):
         params={"match__id": data_ds["id"],
                 "update__state": "active",
                 },
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=200
     )
 
@@ -93,7 +93,7 @@ def test_upload_to_s3_and_verify(enqueue_job_mock, app):
     resp_res2 = app.get(
         "/api/3/action/resource_show",
         params={"id": rid},
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=200
     )
     data_res2 = json.loads(resp_res2.data)["result"]
@@ -127,7 +127,7 @@ def test_upload_to_s3_and_verify_public(enqueue_job_mock, app):
         "/api/3/action/resource_upload_s3_urls",
         params={"organization_id": owner_org["id"],
                 "file_size": upload_path.stat().st_size},
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=200)
     data_s3 = json.loads(resp_s3.data)["result"]
 
@@ -148,7 +148,7 @@ def test_upload_to_s3_and_verify_public(enqueue_job_mock, app):
                 "title": "a new world",
                 "license_id": "CC0-1.0",
                 },
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=200)
     data_ds = json.loads(resp_ds.data)["result"]
     assert "id" in data_ds, "sanity check"
@@ -165,7 +165,7 @@ def test_upload_to_s3_and_verify_public(enqueue_job_mock, app):
         params={"match__id": data_ds["id"],
                 "update__resources__extend": res_str,
                 },
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=200
     )
     data_res = json.loads(resp_res.data)["result"]
@@ -178,7 +178,7 @@ def test_upload_to_s3_and_verify_public(enqueue_job_mock, app):
         params={"match__id": data_ds["id"],
                 "update__state": "active",
                 },
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=200
     )
 
@@ -186,7 +186,7 @@ def test_upload_to_s3_and_verify_public(enqueue_job_mock, app):
     resp_res2 = app.get(
         "/api/3/action/resource_show",
         params={"id": rid},
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=200
     )
     data_res2 = json.loads(resp_res2.data)["result"]
@@ -224,7 +224,7 @@ def test_upload_to_s3_etag_not_allowed(enqueue_job_mock, app):
         "/api/3/action/resource_upload_s3_urls",
         params={"organization_id": owner_org["id"],
                 "file_size": upload_path.stat().st_size},
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=200)
     data_s3 = json.loads(resp_s3.data)["result"]
 
@@ -245,7 +245,7 @@ def test_upload_to_s3_etag_not_allowed(enqueue_job_mock, app):
                 "title": "a new world",
                 "license_id": "CC0-1.0",
                 },
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=200)
     data_ds = json.loads(resp_ds.data)["result"]
     assert "id" in data_ds, "sanity check"
@@ -264,7 +264,7 @@ def test_upload_to_s3_etag_not_allowed(enqueue_job_mock, app):
         params={"match__id": data_ds["id"],
                 "update__resources__extend": res_str,
                 },
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=403  # User forbidden to set etag
     )
     error = json.loads(resp_res.data)["error"]
@@ -290,7 +290,7 @@ def test_upload_to_s3_sha256_not_allowed(enqueue_job_mock, app):
         "/api/3/action/resource_upload_s3_urls",
         params={"organization_id": owner_org["id"],
                 "file_size": upload_path.stat().st_size},
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=200)
     data_s3 = json.loads(resp_s3.data)["result"]
 
@@ -311,7 +311,7 @@ def test_upload_to_s3_sha256_not_allowed(enqueue_job_mock, app):
                 "title": "a new world",
                 "license_id": "CC0-1.0",
                 },
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=200)
     data_ds = json.loads(resp_ds.data)["result"]
     assert "id" in data_ds, "sanity check"
@@ -330,7 +330,7 @@ def test_upload_to_s3_sha256_not_allowed(enqueue_job_mock, app):
         params={"match__id": data_ds["id"],
                 "update__resources__extend": res_str,
                 },
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=403  # User forbidden to set SHA256
     )
     error = json.loads(resp_res.data)["error"]
@@ -356,7 +356,7 @@ def test_upload_to_s3_sha256_not_allowed_update(enqueue_job_mock, app):
         "/api/3/action/resource_upload_s3_urls",
         params={"organization_id": owner_org["id"],
                 "file_size": upload_path.stat().st_size},
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=200)
     data_s3 = json.loads(resp_s3.data)["result"]
 
@@ -377,7 +377,7 @@ def test_upload_to_s3_sha256_not_allowed_update(enqueue_job_mock, app):
                 "title": "a new world",
                 "license_id": "CC0-1.0",
                 },
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=200)
     data_ds = json.loads(resp_ds.data)["result"]
     assert "id" in data_ds, "sanity check"
@@ -394,7 +394,7 @@ def test_upload_to_s3_sha256_not_allowed_update(enqueue_job_mock, app):
         params={"match__id": data_ds["id"],
                 "update__resources__extend": res_str,
                 },
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=200
     )
 
@@ -411,7 +411,7 @@ def test_upload_to_s3_sha256_not_allowed_update(enqueue_job_mock, app):
         params={"match__id": data_ds["id"],
                 "update__resources__extend": res_str2,
                 },
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=403  # User forbidden to set SHA256
     )
 
@@ -441,7 +441,7 @@ def test_upload_to_s3_wrong_key_fails(enqueue_job_mock, app):
                 "title": "a new world",
                 "license_id": "CC0-1.0",
                 },
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=200)
     data_ds = json.loads(resp_ds.data)["result"]
     assert "id" in data_ds, "sanity check"
@@ -458,7 +458,7 @@ def test_upload_to_s3_wrong_key_fails(enqueue_job_mock, app):
         params={"match__id": data_ds["id"],
                 "update__resources__extend": res_str,
                 },
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=403  # Forbidden
     )
     error = json.loads(resp_res.data)["error"]
@@ -484,7 +484,7 @@ def test_upload_to_s3_not_allowed_to_specify_metadata(enqueue_job_mock, app):
         "/api/3/action/resource_upload_s3_urls",
         params={"organization_id": owner_org["id"],
                 "file_size": upload_path.stat().st_size},
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=200)
     data_s3 = json.loads(resp_s3.data)["result"]
 
@@ -505,7 +505,7 @@ def test_upload_to_s3_not_allowed_to_specify_metadata(enqueue_job_mock, app):
                 "title": "a new world",
                 "license_id": "CC0-1.0",
                 },
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=200)
     data_ds = json.loads(resp_ds.data)["result"]
     assert "id" in data_ds, "sanity check"
@@ -523,6 +523,6 @@ def test_upload_to_s3_not_allowed_to_specify_metadata(enqueue_job_mock, app):
         params={"match__id": data_ds["id"],
                 "update__resources__extend": res_str,
                 },
-        headers={"authorization": user["token"]},
+        headers={"Authorization": user["token"]},
         status=403  # not authorized to set "url"
     )
