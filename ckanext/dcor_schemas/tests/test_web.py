@@ -22,7 +22,7 @@ def test_homepage(url, app):
     user = factories.UserWithToken()
     app.get(url,
             params={u"id": user[u"id"]},
-            headers={u"authorization": user["token"]},
+            headers={"Authorization": user["token"]},
             status=200)
 
 
@@ -40,7 +40,7 @@ def test_login_and_browse_to_dataset_new_fails(app):
     # assert: try to access /dataset
     app.get("/dataset/new",
             params={u"id": user[u"id"]},
-            headers={u"authorization": user["token"]},
+            headers={"Authorization": user["token"]},
             status=403,
             )
 
@@ -59,7 +59,7 @@ def test_login_and_browse_to_main_locations(url, app):
     # assert: try to access /dataset
     app.get(url,
             params={u"id": user[u"id"]},
-            headers={u"authorization": user["token"]},
+            headers={"Authorization": user["token"]},
             status=200,
             )
 
@@ -85,7 +85,7 @@ def test_login_and_go_to_dataset_edit_page(app, ):
 
     app.get("/dataset/edit/" + ds_dict["id"],
             params={u"id": user[u"id"]},
-            headers={u"authorization": user["token"]},
+            headers={"Authorization": user["token"]},
             status=200
             )
 
@@ -114,7 +114,7 @@ def test_login_and_go_to_dataset_edit_page_and_view_license_options(
     # get the dataset page
     resp = app.get("/dataset/edit/" + ds_dict["id"],
                    params={u"id": user[u"id"]},
-                   headers={u"authorization": user["token"]},
+                   headers={"Authorization": user["token"]},
                    status=200
                    )
     available_licenses_strings = [
@@ -165,7 +165,7 @@ def test_resource_view_references(app, ):
     # get the dataset page
     resp = app.get("/dataset/" + ds_dict["id"],
                    params={u"id": user[u"id"]},
-                   headers={u"authorization": user["token"]},
+                   headers={"Authorization": user["token"]},
                    status=200
                    )
     rendered_refs = [
