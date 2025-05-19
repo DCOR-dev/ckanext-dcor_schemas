@@ -45,7 +45,7 @@ def test_dcor_move_dataset_to_circle(enqueue_job_mock, cli):
         users=[{
             'name': user["id"],
             'capacity': 'admin'
-    }])
+        }])
 
     bucket_name_new = bucket_name_old.replace(ds_dict["owner_org"],
                                               new_owner_org["id"])

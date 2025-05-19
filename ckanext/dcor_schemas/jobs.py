@@ -95,7 +95,8 @@ def job_set_dc_config(resource):
                             dckey = f"dc:{sec}:{key}"
                             value = ds.config[sec][key]
                             res_dict[dckey] = value
-        res_dict["last_modified"] = datetime.datetime.now(datetime.timezone.utc)
+        res_dict["last_modified"] = datetime.datetime.now(
+            datetime.timezone.utc)
         patch_resource_noauth(
             package_id=resource["package_id"],
             resource_id=rid,

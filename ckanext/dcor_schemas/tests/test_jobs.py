@@ -20,8 +20,7 @@ from ckan.tests import helpers
 from dcor_shared.testing import (
     make_dataset_via_s3, make_resource_via_s3, synchronous_enqueue_job
 )
-import ckanext.dcor_schemas.plugin
-import ckanext.dcor_schemas.jobs
+from dcor_shared import sha256sum
 
 
 data_dir = pathlib.Path(__file__).parent / "data"
@@ -30,7 +29,7 @@ data_dir = pathlib.Path(__file__).parent / "data"
 def test_sha256sum(tmp_path):
     p = tmp_path / "test.txt"
     p.write_text("Sum this up!")
-    ist = ckanext.dcor_schemas.jobs.sha256sum(p)
+    ist = sha256sum(p)
     soll = "d00df55b97a60c78bbb137540e1b60647a5e6b216262a95ab96cafd4519bcf6a"
     assert ist == soll
 
@@ -96,7 +95,8 @@ def test_set_format_job(enqueue_job_mock, tmp_path):
     # Note: `call_action` bypasses authorization!
     # create 1st dataset
     create_context = {'ignore_auth': False,
-                      'user': user['name'], 'api_version': 3}
+                      'user': user['name'],
+                      'api_version': 3}
     ds_dict = make_dataset_via_s3(
         create_context=create_context,
         owner_org=owner_org,
