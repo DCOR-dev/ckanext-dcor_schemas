@@ -63,7 +63,8 @@ def job_set_resource_metadata_base(resource):
     being triggered.
     """
     res_dict_base = get_base_metadata(resource)
-    res_dict_base["last_modified"] = datetime.datetime.now(datetime.UTC)
+    res_dict_base["last_modified"] = datetime.datetime.now(
+        datetime.timezone.utc)
     patch_resource_noauth(
         package_id=resource["package_id"],
         resource_id=resource["id"],
@@ -93,7 +94,7 @@ def job_set_dc_config(resource):
                             dckey = f"dc:{sec}:{key}"
                             value = ds.config[sec][key]
                             res_dict[dckey] = value
-        res_dict["last_modified"] = datetime.datetime.now(datetime.UTC)
+        res_dict["last_modified"] = datetime.datetime.now(datetime.timezone.utc)
         patch_resource_noauth(
             package_id=resource["package_id"],
             resource_id=rid,
@@ -123,7 +124,8 @@ def job_set_etag(resource):
         if "ETag" in meta:
             etag = meta["ETag"].strip("'").strip('"')
             res_dict = {"etag": etag,
-                        "last_modified": datetime.datetime.now(datetime.UTC),
+                        "last_modified": datetime.datetime.now(
+                            datetime.timezone.utc),
                         }
             patch_resource_noauth(
                 package_id=resource["package_id"],
@@ -155,7 +157,8 @@ def job_set_dc_format(resource):
                 fmt = "RT-DC"
         if rformat != fmt:  # only update if necessary
             res_dict = {"format": fmt,
-                        "last_modified": datetime.datetime.now(datetime.UTC),
+                        "last_modified": datetime.datetime.now(
+                            datetime.timezone.utc),
                         }
             patch_resource_noauth(
                 package_id=resource["package_id"],
@@ -177,7 +180,8 @@ def job_set_s3_resource_metadata(resource):
         s3_url = s3cc.get_s3_url_for_artifact(resource_id=rid)
         res_new_dict = {"s3_available": True,
                         "s3_url": s3_url,
-                        "last_modified": datetime.datetime.now(datetime.UTC),
+                        "last_modified": datetime.datetime.now(
+                            datetime.timezone.utc),
                         }
         if not resource.get("size"):
             # Resource has been uploaded via S3 and CKAN did not pick up
@@ -228,7 +232,8 @@ def job_set_sha256(resource):
         # The file must exist on S3 object storage
         rhash = s3cc.compute_checksum(rid)
         res_dict = {"sha256": rhash,
-                    "last_modified": datetime.datetime.now(datetime.UTC),
+                    "last_modified": datetime.datetime.now(
+                        datetime.timezone.utc),
                     }
         patch_resource_noauth(
             package_id=resource["package_id"],
