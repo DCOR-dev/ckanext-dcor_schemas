@@ -20,7 +20,6 @@ from ckan.tests import helpers
 from dcor_shared.testing import (
     make_dataset_via_s3, make_resource_via_s3, synchronous_enqueue_job
 )
-import dcor_shared
 import ckanext.dcor_schemas.plugin
 import ckanext.dcor_schemas.jobs
 
@@ -80,7 +79,6 @@ def test_set_etag_job(enqueue_job_mock):
         activate=False)
     print(rs_dict)
     resource = helpers.call_action("resource_show", id=rs_dict["id"])
-    assert not dcor_shared.get_resource_path(rs_dict["id"]).exists()
     md5sum = "108d47e80f3e5f35110493b1fdcd30d5"
     assert resource["etag"] == md5sum
 
@@ -139,7 +137,6 @@ def test_set_format_job_fl(enqueue_job_mock):
         activate=False)
 
     resource = helpers.call_action("resource_show", id=res_dict["id"])
-    assert dcor_shared.get_resource_path(res_dict["id"]).exists()
     assert resource["format"] == "RT-FDC"
 
 
@@ -164,7 +161,6 @@ def test_set_sha256_job(enqueue_job_mock):
         activate=False)
 
     resource = helpers.call_action("resource_show", id=res_dict["id"])
-    assert dcor_shared.get_resource_path(res_dict["id"]).exists()
     sha = "490efdf5d9bb4cd4b2a6bcf2fe54d4dc201c38530140bcb168980bf8bf846c73"
     assert resource["sha256"] == sha
 
@@ -196,6 +192,5 @@ def test_set_sha256_job_empty_file(enqueue_job_mock, tmp_path):
         dataset_id=ds_dict['id'],
     )
     resource = helpers.call_action("resource_show", id=rid)
-    assert dcor_shared.get_resource_path(rid).exists()
     sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     assert resource["sha256"] == sha256

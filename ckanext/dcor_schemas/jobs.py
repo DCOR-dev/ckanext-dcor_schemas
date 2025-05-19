@@ -2,8 +2,8 @@ from ckan import logic
 
 import dclab
 from dcor_shared import (
-    DC_MIME_TYPES, get_ckan_config_option, get_dc_instance, get_resource_path,
-    rqjob_register, s3, s3cc, sha256sum, wait_for_resource,
+    DC_MIME_TYPES, get_ckan_config_option, get_dc_instance,
+    rqjob_register, s3, s3cc, wait_for_resource,
 )
 from dcor_shared import RQJob  # noqa: F401
 
@@ -111,23 +111,17 @@ def job_set_etag(resource):
     # - "81a89c74b50282fc02e4faa7b654a05a-4": multipart upload
     if len(etag.split("-")[0]) != 32:  # only compute if necessary
         wait_for_resource(rid)
-        path = get_resource_path(rid)
-        if path.exists():
-            # We just don't do it. ETags are only for datasets that
-            # were uploaded to S3.
-            pass
-        else:
-            # The file exists on S3 object storage
-            bucket_name, object_name = s3cc.get_s3_bucket_object_for_artifact(
-                resource_id=rid, artifact="resource")
-            s3_client, _, _ = s3.get_s3()
-            meta = s3_client.head_object(Bucket=bucket_name, Key=object_name)
-            if "ETag" in meta:
-                etag = meta["ETag"].strip("'").strip('"')
-                patch_resource_noauth(
-                    package_id=resource["package_id"],
-                    resource_id=resource["id"],
-                    data_dict={"etag": etag})
+        # The file must exist on S3 object storage
+        bucket_name, object_name = s3cc.get_s3_bucket_object_for_artifact(
+            resource_id=rid, artifact="resource")
+        s3_client, _, _ = s3.get_s3()
+        meta = s3_client.head_object(Bucket=bucket_name, Key=object_name)
+        if "ETag" in meta:
+            etag = meta["ETag"].strip("'").strip('"')
+            patch_resource_noauth(
+                package_id=resource["package_id"],
+                resource_id=resource["id"],
+                data_dict={"etag": etag})
             return True
     return False
 
@@ -220,13 +214,8 @@ def job_set_sha256(resource):
     rid = resource["id"]
     if len(sha) != 64:  # only compute if necessary
         wait_for_resource(rid)
-        path = get_resource_path(rid)
-        if path.exists():
-            # The file exists locally on block storage
-            rhash = sha256sum(path)
-        else:
-            # The file exists on S3 object storage
-            rhash = s3cc.compute_checksum(rid)
+        # The file must exist on S3 object storage
+        rhash = s3cc.compute_checksum(rid)
         patch_resource_noauth(
             package_id=resource["package_id"],
             resource_id=resource["id"],
