@@ -75,7 +75,8 @@ def job_set_resource_metadata_base(resource):
 @rqjob_register(ckanext="dcor_schemas",
                 queue="dcor-normal",
                 timeout=500,
-                depends_on=["job_set_resource_metadata_base",
+                depends_on=["job_set_s3_resource_metadata",
+                            "job_set_resource_metadata_base",
                             "job_set_dc_format",
                             ])
 def job_set_dc_config(resource):
@@ -106,7 +107,9 @@ def job_set_dc_config(resource):
 @rqjob_register(ckanext="dcor_schemas",
                 queue="dcor-short",
                 timeout=300,
-                at_front=True)
+                at_front=True,
+                depends_on=["job_set_s3_resource_metadata"],
+                )
 def job_set_etag(resource):
     """Set the resource ETag extracted from S3"""
     etag = str(resource.get("etag", ""))
@@ -138,7 +141,8 @@ def job_set_etag(resource):
 @rqjob_register(ckanext="dcor_schemas",
                 queue="dcor-short",
                 timeout=500,
-                depends_on=["job_set_resource_metadata_base",
+                depends_on=["job_set_s3_resource_metadata",
+                            "job_set_resource_metadata_base",
                             "job_set_etag",
                             ])
 def job_set_dc_format(resource):
@@ -222,6 +226,7 @@ def job_set_s3_resource_public_tag(resource):
 @rqjob_register(ckanext="dcor_schemas",
                 queue="dcor-long",
                 timeout=3600,
+                depends_on=["job_set_s3_resource_metadata"],
                 )
 def job_set_sha256(resource):
     """Computes the sha256 hash and writes it to the resource metadata"""
