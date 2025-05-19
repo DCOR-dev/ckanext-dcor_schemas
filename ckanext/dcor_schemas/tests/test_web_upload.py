@@ -447,7 +447,7 @@ def test_upload_to_s3_wrong_key_fails(enqueue_job_mock, app):
     assert "id" in data_ds, "sanity check"
 
     # Add the resource to the dataset
-    rid = str(uuid.uuid1())
+    rid = str(uuid.uuid4())
     res_str = ('[{'
                '"name":"data.rtdc",'
                f'"id":"{rid}"'

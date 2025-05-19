@@ -133,7 +133,7 @@ def test_list_zombie_users_basic_clean_db(cli):
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_list_zombie_users_with_a_user(cli):
-    factories.User(name=f"test_user_{uuid.uuid1()}")
+    factories.User(name=f"test_user_{uuid.uuid4()}")
     result = cli.invoke(ckan_cli,
                         ["list-zombie-users", "--last-activity-weeks", "0"])
     print(result)  # for debugging

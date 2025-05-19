@@ -113,7 +113,7 @@ def dataset_name_create(key, data, errors, context):
     if package_id and package_id is not df.missing:
         rand = package_id
     else:
-        rand = uuid.uuid1().hex
+        rand = uuid.uuid4().hex
 
     # convert title to slug
     title_slug = slugify(package_title)

@@ -112,7 +112,7 @@ def test_dataset_add_resources_set_id_not_allowed_package_revise(
     resources.append({"name": "peter.rtdc",
                       "url": "upload",
                       "package_id": ds_dict["id"],
-                      "id": str(uuid.uuid1())})
+                      "id": str(uuid.uuid4())})
     with pytest.raises(logic.NotAuthorized, match="not available on S3"):
         helpers.call_auth(
             "package_revise", test_context,
