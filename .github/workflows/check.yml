@@ -93,6 +93,7 @@ jobs:
         run: |
           pip install -e .
           pip install -r ./ckanext/dcor_schemas/tests/requirements.txt
+          dcor inspect --assume-yes
 
       - name: Run tests
         run: |
