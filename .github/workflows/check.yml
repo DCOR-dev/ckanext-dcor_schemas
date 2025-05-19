@@ -101,4 +101,4 @@ jobs:
              --cov=ckanext.dcor_schemas \
              --cov-report=xml \
              --cov-append \
-             ckanext/dcor_schemas/tests/
+             ckanext
