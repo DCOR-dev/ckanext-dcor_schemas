@@ -14,7 +14,23 @@
      "cell line",
      "artificial"
      ]
+   },
+  {"key": "condition",
+   "name": "Condition",
+   "hint": "Have you treated the sample or is this a control measurement?",
+   "type": "string",
+   "example": "treatment",
+   "choices": [
+     "control",
+     "treatment",
+     "treatment A"
+     ]
+   },
+  {"key": "replicate",
+   "name": "Replicate",
+   "hint": "If this is an experiments with multiple repetitions, enter the replicate number here.",
+   "type": "integer",
+   "example": 1
    }
   ]
 }
-
