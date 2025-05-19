@@ -19,13 +19,11 @@ data_path = pathlib.Path(__file__).parent / "data"
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dc_serve dc_view')
-@pytest.mark.usefixtures('clean_db')
-# We have to use synchronous_enqueue_job, because the background workers
-# are running as www-data and cannot move files across the file system.
+@pytest.mark.usefixtures('clean_db', 'with_request_context')
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
 def test_dcor_move_dataset_to_circle(enqueue_job_mock, cli):
-    user = factories.UserWithToken()
+    user = factories.User()
     create_context = {'ignore_auth': False,
                       'user': user['name'],
                       'api_version': 3}
