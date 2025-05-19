@@ -1,3 +1,5 @@
+import datetime
+
 from ckan import logic
 
 import dclab
@@ -9,9 +11,9 @@ from dcor_shared import RQJob  # noqa: F401
 
 
 def admin_background_context():
-    return {'ignore_auth': True,
-            'user': 'default',
-            'is_background_job': True,
+    return {"ignore_auth": True,
+            "user": "default",
+            "is_background_job": True,
             }
 
 
@@ -27,9 +29,9 @@ def get_base_metadata(resource):
     site_url = get_ckan_config_option("ckan.site_url")
     if "package_id" in resource and "id" in resource:
         meta_url = (f"{site_url}"
-                    f"/dataset/{resource['package_id']}"
-                    f"/resource/{resource['id']}"
-                    f"/download/{resource['name'].lower()}")
+                    f"/dataset/{resource["package_id"]}"
+                    f"/resource/{resource["id"]}"
+                    f"/download/{resource["name"].lower()}")
         res_dict_base["url"] = meta_url
     return res_dict_base
 
@@ -61,6 +63,7 @@ def job_set_resource_metadata_base(resource):
     being triggered.
     """
     res_dict_base = get_base_metadata(resource)
+    res_dict_base["last_modified"] = datetime.datetime.now(datetime.UTC)
     patch_resource_noauth(
         package_id=resource["package_id"],
         resource_id=resource["id"],
@@ -77,23 +80,24 @@ def job_set_resource_metadata_base(resource):
 def job_set_dc_config(resource):
     """Store all DC config metadata"""
     resource.update(get_base_metadata(resource))
-    if (resource.get('mimetype') in DC_MIME_TYPES
+    if (resource.get("mimetype") in DC_MIME_TYPES
             and resource.get("dc:setup:channel width", None) is None):
         rid = resource["id"]
         wait_for_resource(rid)
-        data_dict = {}
+        res_dict = {}
         with get_dc_instance(rid) as ds:
             for sec in dclab.dfn.CFG_METADATA:
                 if sec in ds.config:
                     for key in dclab.dfn.config_keys[sec]:
                         if key in ds.config[sec]:
-                            dckey = 'dc:{}:{}'.format(sec, key)
+                            dckey = f"dc:{sec}:{key}"
                             value = ds.config[sec][key]
-                            data_dict[dckey] = value
+                            res_dict[dckey] = value
+        res_dict["last_modified"] = datetime.datetime.now(datetime.UTC)
         patch_resource_noauth(
             package_id=resource["package_id"],
             resource_id=rid,
-            data_dict=data_dict)
+            data_dict=res_dict)
         return True
     return False
 
@@ -118,10 +122,13 @@ def job_set_etag(resource):
         meta = s3_client.head_object(Bucket=bucket_name, Key=object_name)
         if "ETag" in meta:
             etag = meta["ETag"].strip("'").strip('"')
+            res_dict = {"etag": etag,
+                        "last_modified": datetime.datetime.now(datetime.UTC),
+                        }
             patch_resource_noauth(
                 package_id=resource["package_id"],
                 resource_id=resource["id"],
-                data_dict={"etag": etag})
+                data_dict=res_dict)
             return True
     return False
 
@@ -147,10 +154,13 @@ def job_set_dc_format(resource):
             else:
                 fmt = "RT-DC"
         if rformat != fmt:  # only update if necessary
+            res_dict = {"format": fmt,
+                        "last_modified": datetime.datetime.now(datetime.UTC),
+                        }
             patch_resource_noauth(
                 package_id=resource["package_id"],
                 resource_id=rid,
-                data_dict={"format": fmt})
+                data_dict=res_dict)
             return True
     return False
 
@@ -167,6 +177,7 @@ def job_set_s3_resource_metadata(resource):
         s3_url = s3cc.get_s3_url_for_artifact(resource_id=rid)
         res_new_dict = {"s3_available": True,
                         "s3_url": s3_url,
+                        "last_modified": datetime.datetime.now(datetime.UTC),
                         }
         if not resource.get("size"):
             # Resource has been uploaded via S3 and CKAN did not pick up
@@ -191,9 +202,9 @@ def job_set_s3_resource_metadata(resource):
 def job_set_s3_resource_public_tag(resource):
     """Set the public=True tag to an S3 object if the dataset is public"""
     # Determine whether the resource is public
-    ds_dict = logic.get_action('package_show')(
+    ds_dict = logic.get_action("package_show")(
         admin_background_context(),
-        {'id': resource["package_id"]})
+        {"id": resource["package_id"]})
     private = ds_dict.get("private")
     if private is not None and not private:
         s3cc.make_resource_public(
@@ -216,9 +227,12 @@ def job_set_sha256(resource):
         wait_for_resource(rid)
         # The file must exist on S3 object storage
         rhash = s3cc.compute_checksum(rid)
+        res_dict = {"sha256": rhash,
+                    "last_modified": datetime.datetime.now(datetime.UTC),
+                    }
         patch_resource_noauth(
             package_id=resource["package_id"],
             resource_id=resource["id"],
-            data_dict={"sha256": rhash})
+            data_dict=res_dict)
         return True
     return False
