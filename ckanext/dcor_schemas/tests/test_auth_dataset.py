@@ -281,7 +281,7 @@ def test_dataset_id_cannot_be_specified_by_normal_user():
     }])
     create_context1 = {'ignore_auth': False,
                        'user': user['name'], 'api_version': 3}
-    ds_id = str(uuid.uuid4())
+    ds_id = str(uuid.uuid1())
     with pytest.raises(logic.NotAuthorized, match="Only sysadmins"):
         make_dataset_via_s3(
             create_context=create_context1,
@@ -300,7 +300,7 @@ def test_dataset_id_can_only_be_set_by_sysadmin():
     }])
     create_context1 = {'ignore_auth': False,
                        'user': user['name'], 'api_version': 3}
-    ds_id = str(uuid.uuid4())
+    ds_id = str(uuid.uuid1())
     ds_dict = make_dataset_via_s3(
         create_context=create_context1,
         owner_org=owner_org,

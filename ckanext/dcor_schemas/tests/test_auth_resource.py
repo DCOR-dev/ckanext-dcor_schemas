@@ -45,7 +45,7 @@ def test_resource_create_id_forbidden():
                               upload=upload,
                               url="upload",
                               name=path.name,
-                              id=str(uuid.uuid4()),
+                              id=str(uuid.uuid1()),
                               )
 
 
