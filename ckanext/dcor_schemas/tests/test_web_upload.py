@@ -16,7 +16,7 @@ data_path = pathlib.Path(__file__).parent / "data"
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
-@pytest.mark.usefixtures('clean_db', 'with_request_context')
+@pytest.mark.usefixtures('clean_db')
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
 def test_upload_to_s3_and_verify(enqueue_job_mock, app):
@@ -109,7 +109,7 @@ def test_upload_to_s3_and_verify(enqueue_job_mock, app):
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
-@pytest.mark.usefixtures('clean_db', 'with_request_context')
+@pytest.mark.usefixtures('clean_db')
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
 def test_upload_to_s3_and_verify_public(enqueue_job_mock, app):
@@ -206,7 +206,7 @@ def test_upload_to_s3_and_verify_public(enqueue_job_mock, app):
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
-@pytest.mark.usefixtures('clean_db', 'with_request_context')
+@pytest.mark.usefixtures('clean_db')
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
 def test_upload_to_s3_etag_not_allowed(enqueue_job_mock, app):
@@ -272,7 +272,7 @@ def test_upload_to_s3_etag_not_allowed(enqueue_job_mock, app):
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
-@pytest.mark.usefixtures('clean_db', 'with_request_context')
+@pytest.mark.usefixtures('clean_db')
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
 def test_upload_to_s3_sha256_not_allowed(enqueue_job_mock, app):
@@ -338,7 +338,7 @@ def test_upload_to_s3_sha256_not_allowed(enqueue_job_mock, app):
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
-@pytest.mark.usefixtures('clean_db', 'with_request_context')
+@pytest.mark.usefixtures('clean_db')
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
 def test_upload_to_s3_sha256_not_allowed_update(enqueue_job_mock, app):
@@ -420,7 +420,7 @@ def test_upload_to_s3_sha256_not_allowed_update(enqueue_job_mock, app):
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
-@pytest.mark.usefixtures('clean_db', 'with_request_context')
+@pytest.mark.usefixtures('clean_db')
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
 def test_upload_to_s3_wrong_key_fails(enqueue_job_mock, app):
@@ -466,7 +466,7 @@ def test_upload_to_s3_wrong_key_fails(enqueue_job_mock, app):
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
-@pytest.mark.usefixtures('clean_db', 'with_request_context')
+@pytest.mark.usefixtures('clean_db')
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
 def test_upload_to_s3_not_allowed_to_specify_metadata(enqueue_job_mock, app):

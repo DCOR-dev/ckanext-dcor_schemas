@@ -32,7 +32,7 @@ def test_homepage_bad_link(app):
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
-@pytest.mark.usefixtures('clean_db', 'with_request_context')
+@pytest.mark.usefixtures('clean_db')
 def test_login_and_browse_to_dataset_new_fails(app):
     """We disabled dataset creation with #20"""
     user = factories.UserWithToken()
@@ -46,7 +46,7 @@ def test_login_and_browse_to_dataset_new_fails(app):
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
-@pytest.mark.usefixtures('clean_db', 'with_request_context')
+@pytest.mark.usefixtures('clean_db')
 @pytest.mark.parametrize("url", ["/dataset",
                                  "/group",
                                  "/group/new",
@@ -65,7 +65,7 @@ def test_login_and_browse_to_main_locations(url, app):
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
-@pytest.mark.usefixtures('clean_db', 'with_request_context')
+@pytest.mark.usefixtures('clean_db')
 def test_login_and_go_to_dataset_edit_page(app, ):
     user = factories.UserWithToken()
 
@@ -91,7 +91,7 @@ def test_login_and_go_to_dataset_edit_page(app, ):
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
-@pytest.mark.usefixtures('clean_db', 'with_request_context')
+@pytest.mark.usefixtures('clean_db')
 def test_login_and_go_to_dataset_edit_page_and_view_license_options(
         app, ):
     """Check whether the license options are correct"""
@@ -137,7 +137,7 @@ def test_login_and_go_to_dataset_edit_page_and_view_license_options(
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
-@pytest.mark.usefixtures('clean_db', 'with_request_context')
+@pytest.mark.usefixtures('clean_db')
 def test_resource_view_references(app, ):
     """Test whether the references links render correctly"""
     user = factories.UserWithToken()

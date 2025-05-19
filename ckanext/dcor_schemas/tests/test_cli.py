@@ -20,7 +20,7 @@ data_path = pathlib.Path(__file__).parent / "data"
 
 @pytest.mark.ckan_config('ckan.plugins',
                          'dcor_depot dcor_schemas dc_serve dc_view')
-@pytest.mark.usefixtures('clean_db', 'with_request_context')
+@pytest.mark.usefixtures('clean_db')
 # We have to use synchronous_enqueue_job, because the background workers
 # are running as www-data and cannot move files across the file system.
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
