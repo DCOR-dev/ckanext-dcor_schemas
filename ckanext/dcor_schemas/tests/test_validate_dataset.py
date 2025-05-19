@@ -468,7 +468,6 @@ def test_dataset_state_from_draft_to_active_without_rtdc_forbidden():
         resource_path=path,
         organization_id=owner_org['id'],
         dataset_id=ds_dict['id'],
-        create_context=create_context,
     )
     # assert: cannot activate dataset without valid .rtdc file
     with pytest.raises(
@@ -512,7 +511,6 @@ def test_dataset_state_from_draft_to_active_without_rtdc_forbidden_2():
         resource_path=path,
         organization_id=owner_org['id'],
         dataset_id=ds_dict['id'],
-        create_context=create_context,
     )
     # assert: cannot activate dataset without valid .rtdc file
     with pytest.raises(
@@ -546,7 +544,6 @@ def test_dataset_state_from_draft_to_active_without_rtdc_forbidden_control():
         resource_path=(data_path / "calibration_beads_47.rtdc"),
         organization_id=owner_org['id'],
         dataset_id=ds_dict['id'],
-        create_context=create_context,
     )
     # assert: *can* activate dataset *with* valid .rtdc file
     helpers.call_action("package_patch", test_context,

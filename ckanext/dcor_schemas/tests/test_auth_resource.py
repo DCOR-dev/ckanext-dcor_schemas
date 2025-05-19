@@ -101,11 +101,10 @@ def test_resource_delete_only_drafts():
     assert helpers.call_auth("package_delete", test_context,
                              id=ds_dict["id"])
     # upload resource
-    res = make_resource_via_s3(
+    rid = make_resource_via_s3(
         resource_path=data_path / "calibration_beads_47.rtdc",
         organization_id=owner_org['id'],
         dataset_id=ds_dict["id"],
-        create_context=create_context,
         )
     # set dataset state to active
     helpers.call_action("package_patch", create_context,
@@ -117,12 +116,12 @@ def test_resource_delete_only_drafts():
     assert dataset2["state"] == "active"
     # check resource state
     res2 = helpers.call_action("resource_show", create_context,
-                               id=res["id"])
+                               id=rid)
     assert res2["state"] == "active"
     # assert: active resources may not be deleted
     with pytest.raises(logic.NotAuthorized):
         helpers.call_auth("resource_delete", test_context,
-                          id=res["id"])
+                          id=rid)
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')

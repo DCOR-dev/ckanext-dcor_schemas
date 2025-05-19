@@ -36,14 +36,11 @@ def test_sha256sum(tmp_path):
     assert ist == soll
 
 
-# dcor_depot must come first, because jobs are run in sequence and the
-# symlink_user_dataset jobs must be executed first so that dcor_schemas
-# does not complain about resources not available in wait_for_resource.
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_depot dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_request_context')
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
-def test_symlink_user_dataset(enqueue_job_mock):
+def test_check_dc_metadata(enqueue_job_mock):
     user = factories.User()
     owner_org = factories.Organization(users=[{
         'name': user['id'],
@@ -54,20 +51,13 @@ def test_symlink_user_dataset(enqueue_job_mock):
     create_context = {'ignore_auth': False,
                       'user': user['name'],
                       'api_version': 3}
-    ds_dict = make_dataset_via_s3(
+    ds_dict, res_dict = make_dataset_via_s3(
         create_context=create_context,
+        resource_path=data_dir / "calibration_beads_47.rtdc",
         owner_org=owner_org,
         activate=False)
 
-    result = make_resource_via_s3(
-        resource_path=data_dir / "calibration_beads_47.rtdc",
-        organization_id=owner_org['id'],
-        dataset_id=ds_dict['id'],
-        create_context=create_context
-    )
-
-    resource = helpers.call_action("resource_show", id=result["id"])
-    assert dcor_shared.get_resource_path(result["id"]).exists()
+    resource = helpers.call_action("resource_show", id=res_dict["id"])
     assert resource["dc:experiment:date"] == "2018-12-11"
     assert resource["dc:experiment:event count"] == 47
     assert np.allclose(resource["dc:setup:flow rate"], 0.06)
@@ -119,14 +109,12 @@ def test_set_format_job(enqueue_job_mock, tmp_path):
     with dclab.new_dataset(path) as ds:
         ds.export.hdf5(path_ul, features=["deform", "bright_avg", "area_um"])
 
-    result = make_resource_via_s3(
+    rid = make_resource_via_s3(
         resource_path=path_ul,
         organization_id=owner_org['id'],
         dataset_id=ds_dict['id'],
-        create_context=create_context,
     )
-    resource = helpers.call_action("resource_show", id=result["id"])
-    assert dcor_shared.get_resource_path(result["id"]).exists()
+    resource = helpers.call_action("resource_show", id=rid)
     assert resource["format"] == "RT-DC"
 
 
@@ -144,18 +132,14 @@ def test_set_format_job_fl(enqueue_job_mock):
     # create 1st dataset
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
-    ds_dict = make_dataset_via_s3(
+    _, res_dict = make_dataset_via_s3(
         create_context=create_context,
+        resource_path=data_dir / "calibration_beads_47.rtdc",
         owner_org=owner_org,
         activate=False)
-    result = make_resource_via_s3(
-        resource_path=data_dir / "calibration_beads_47.rtdc",
-        organization_id=owner_org['id'],
-        dataset_id=ds_dict['id'],
-        create_context=create_context,
-    )
-    resource = helpers.call_action("resource_show", id=result["id"])
-    assert dcor_shared.get_resource_path(result["id"]).exists()
+
+    resource = helpers.call_action("resource_show", id=res_dict["id"])
+    assert dcor_shared.get_resource_path(res_dict["id"]).exists()
     assert resource["format"] == "RT-FDC"
 
 
@@ -173,19 +157,14 @@ def test_set_sha256_job(enqueue_job_mock):
     # create 1st dataset
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
-    ds_dict = make_dataset_via_s3(
+    _, res_dict = make_dataset_via_s3(
         create_context=create_context,
+        resource_path=data_dir / "calibration_beads_47.rtdc",
         owner_org=owner_org,
         activate=False)
 
-    result = make_resource_via_s3(
-        resource_path=data_dir / "calibration_beads_47.rtdc",
-        organization_id=owner_org['id'],
-        dataset_id=ds_dict['id'],
-        create_context=create_context,
-    )
-    resource = helpers.call_action("resource_show", id=result["id"])
-    assert dcor_shared.get_resource_path(result["id"]).exists()
+    resource = helpers.call_action("resource_show", id=res_dict["id"])
+    assert dcor_shared.get_resource_path(res_dict["id"]).exists()
     sha = "490efdf5d9bb4cd4b2a6bcf2fe54d4dc201c38530140bcb168980bf8bf846c73"
     assert resource["sha256"] == sha
 
@@ -211,13 +190,12 @@ def test_set_sha256_job_empty_file(enqueue_job_mock, tmp_path):
 
     path = tmp_path / "test.ini"
     path.touch()
-    result = make_resource_via_s3(
+    rid = make_resource_via_s3(
         resource_path=path,
         organization_id=owner_org['id'],
         dataset_id=ds_dict['id'],
-        create_context=create_context,
     )
-    resource = helpers.call_action("resource_show", id=result["id"])
-    assert dcor_shared.get_resource_path(result["id"]).exists()
+    resource = helpers.call_action("resource_show", id=rid)
+    assert dcor_shared.get_resource_path(rid).exists()
     sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     assert resource["sha256"] == sha256

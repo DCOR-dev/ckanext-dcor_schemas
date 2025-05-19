@@ -139,7 +139,6 @@ def test_dataset_delete_only_drafts():
         resource_path=data_path / "calibration_beads_47.rtdc",
         organization_id=owner_org["id"],
         dataset_id=ds_dict["id"],
-        create_context=create_context,
         )
     # set dataset state to active
     helpers.call_action("package_patch", create_context,
