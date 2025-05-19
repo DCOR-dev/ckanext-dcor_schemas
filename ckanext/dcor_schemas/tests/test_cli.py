@@ -18,8 +18,7 @@ from dcor_shared import s3, s3cc
 data_path = pathlib.Path(__file__).parent / "data"
 
 
-@pytest.mark.ckan_config('ckan.plugins',
-                         'dcor_depot dcor_schemas dc_serve dc_view')
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dc_serve dc_view')
 @pytest.mark.usefixtures('clean_db')
 # We have to use synchronous_enqueue_job, because the background workers
 # are running as www-data and cannot move files across the file system.
@@ -27,7 +26,6 @@ data_path = pathlib.Path(__file__).parent / "data"
             side_effect=synchronous_enqueue_job)
 def test_dcor_move_dataset_to_circle(enqueue_job_mock, cli):
     user = factories.UserWithToken()
-    # Note: `call_action` bypasses authorization!
     create_context = {'ignore_auth': False,
                       'user': user['name'],
                       'api_version': 3}
@@ -43,9 +41,10 @@ def test_dcor_move_dataset_to_circle(enqueue_job_mock, cli):
         artifact="resource"
     )
 
-    new_owner_org = factories.Organization(users=[{
-        'name': ds_dict["creator_user_id"],
-        'capacity': 'admin'
+    new_owner_org = factories.Organization(
+        users=[{
+            'name': user["id"],
+            'capacity': 'admin'
     }])
 
     bucket_name_new = bucket_name_old.replace(ds_dict["owner_org"],
