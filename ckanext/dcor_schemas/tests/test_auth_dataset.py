@@ -488,7 +488,7 @@ def test_dataset_state_from_active_to_draft_forbidden():
 
 
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dataset_user_anonymous():
+def test_dataset_user_anonymous_a():
     """anonymous users cannot do much"""
     user_a = factories.User()
     owner_org = factories.Organization(users=[{
@@ -509,6 +509,22 @@ def test_dataset_user_anonymous():
             create_context=context_b,
             owner_org=owner_org,
             activate=False)
+
+
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dataset_user_anonymous_b():
+    """anonymous users cannot do much"""
+    user_a = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user_a['id'],
+        'capacity': 'admin'
+    }])
+    context_a = {'ignore_auth': False,
+                 'user': user_a["name"],
+                 'api_version': 3}
+    context_b = {'ignore_auth': False,
+                 'user': None,
+                 'api_version': 3}
 
     ds = make_dataset_via_s3(
         create_context=context_a,

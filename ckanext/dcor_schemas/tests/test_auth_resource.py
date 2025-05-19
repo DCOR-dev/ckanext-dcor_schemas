@@ -136,8 +136,7 @@ def test_resource_patch_only_description():
     # Note: `call_action` bypasses authorization!
     create_context = {'ignore_auth': False,
                       'user': user['name'], 'api_version': 3}
-    test_context = {'ignore_auth': False,
-                    'user': user['name'], 'model': model, 'api_version': 3}
+
     # create a dataset
     ds_dict, res_dict = make_dataset_via_s3(
         create_context=create_context,
@@ -145,29 +144,29 @@ def test_resource_patch_only_description():
         resource_path=data_path / "calibration_beads_47.rtdc",
         activate=False)
     # assert: allow updating the description
-    assert helpers.call_auth("resource_patch", test_context,
+    assert helpers.call_auth("resource_patch", create_context,
                              id=res_dict["id"],
                              package_id=ds_dict["id"],
                              description="my nice text")
     # assert: do not allow updating other things
     with pytest.raises(logic.NotAuthorized):
-        helpers.call_auth("resource_patch", test_context,
+        helpers.call_auth("resource_patch", create_context,
                           id=res_dict["id"],
                           package_id=ds_dict["id"],
                           name="hans.rtdc")
     with pytest.raises(logic.NotAuthorized):
-        helpers.call_auth("resource_patch", test_context,
+        helpers.call_auth("resource_patch", create_context,
                           id=res_dict["id"],
                           package_id=ds_dict["id"],
                           format="UnknownDC")
     with pytest.raises(logic.NotAuthorized):
-        helpers.call_auth("resource_patch", test_context,
+        helpers.call_auth("resource_patch", create_context,
                           id=res_dict["id"],
                           package_id=ds_dict["id"],
                           hash="doesntmakesense")
     sha = "490efdf5d9bb4cd4b2a6bcf2fe54d4dc201c38530140bcb168980bf8bf846c72"
     with pytest.raises(logic.NotAuthorized):
-        helpers.call_auth("resource_patch", test_context,
+        helpers.call_auth("resource_patch", create_context,
                           id=res_dict["id"],
                           package_id=ds_dict["id"],
                           sha256=sha)
