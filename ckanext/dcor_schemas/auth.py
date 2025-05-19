@@ -380,7 +380,9 @@ def resource_update(context, data_dict=None):
     if not aut["success"]:
         return aut
 
-    data_dict["package_id"] = get_package_id(context, data_dict)
+    package = context.get('package')
+    if package:
+        data_dict["package_id"] = package.id
 
     return resource_update_check(context, data_dict)
 

@@ -135,7 +135,8 @@ def test_resource_patch_only_description():
     }])
     # Note: `call_action` bypasses authorization!
     create_context = {'ignore_auth': False,
-                      'user': user['name'], 'api_version': 3}
+                      'user': user['name'],
+                      'api_version': 3}
 
     # create a dataset
     ds_dict, res_dict = make_dataset_via_s3(

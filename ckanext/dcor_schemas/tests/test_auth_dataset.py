@@ -495,9 +495,7 @@ def test_dataset_user_anonymous_a():
         'name': user_a['id'],
         'capacity': 'admin'
     }])
-    context_a = {'ignore_auth': False,
-                 'user': user_a["name"],
-                 'api_version': 3}
+
     context_b = {'ignore_auth': False,
                  'user': None,
                  'api_version': 3}

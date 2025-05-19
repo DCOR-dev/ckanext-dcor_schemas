@@ -1,4 +1,5 @@
 0.21.5
+ - fix: extract correct package_id when updating resource
  - ci: update GitHub Actions workflow to use Docker for testing
  - tests: migrate all tests to S3 upload
 0.21.4
