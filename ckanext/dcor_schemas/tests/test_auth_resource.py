@@ -125,7 +125,7 @@ def test_resource_delete_only_drafts():
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.usefixtures('clean_db', 'with_request_context')
 def test_resource_patch_only_description():
     """only allow changing the description"""
     user = factories.User()
