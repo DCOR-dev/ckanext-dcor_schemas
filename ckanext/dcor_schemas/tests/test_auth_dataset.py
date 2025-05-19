@@ -61,7 +61,7 @@ def test_dataset_create_anonymous():
     # create a dataset
     with pytest.raises(
             logic.NotAuthorized,
-            match="User None not authorized to create packages"):
+            match="Action package_create requires an authenticated user"):
         helpers.call_auth("package_create", context)
 
 
@@ -496,9 +496,11 @@ def test_dataset_user_anonymous():
         'capacity': 'admin'
     }])
     context_a = {'ignore_auth': False,
-                 'user': user_a["name"], 'model': model, 'api_version': 3}
-    context_b = {'ignore_auth': False, 'user': None,
-                 'model': model, 'api_version': 3}
+                 'user': user_a["name"],
+                 'api_version': 3}
+    context_b = {'ignore_auth': False,
+                 'user': None,
+                 'api_version': 3}
 
     with pytest.raises(
             logic.NotAuthorized,
