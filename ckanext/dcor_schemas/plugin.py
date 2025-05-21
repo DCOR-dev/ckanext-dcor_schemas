@@ -107,13 +107,13 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         for key in DC_MIME_TYPES:
             mimetypes.add_type(key, DC_MIME_TYPES[key])
         # Set licenses path if no licenses_group_url was given
-        if not common.config.get("licenses_group_url", "").strip():
+        if not (common.config.get("licenses_group_url") or "").strip():
             logger.error("`licenses_group_url` is not set. Consider "
                          "running `dcor inspect`.")
 
     def update_config_schema(self, schema):
         ignore_missing = toolkit.get_validator('ignore_missing')
-        if not common.config.get("licenses_group_url", "").strip():
+        if not (common.config.get("licenses_group_url") or "").strip():
             # Only update the schema if no licenses_group_url was given
             schema.update({
                 # This is an existing CKAN core configuration option, we are
