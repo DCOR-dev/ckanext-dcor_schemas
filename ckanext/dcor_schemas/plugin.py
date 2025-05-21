@@ -24,9 +24,6 @@ from . import validate as dcor_validate
 
 logger = logging.getLogger(__name__)
 
-# This is used for job testing. Set it to True if you need concurrent
-# background jobs and are using resource_create and the likes.
-DISABLE_AFTER_DATASET_CREATE_FOR_CONCURRENT_JOB_TESTS = False
 # Used for disabling `after_resource_create` in background jobs
 IS_BACKGROUND_JOB = bool(" ".join(sys.argv).count("jobs worker"))
 
@@ -343,13 +340,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
 
     # IPackageController
     def after_dataset_update(self, context, data_dict):
-        # TODO: Find a way to avoid using this constant.
-        # Trigger Background Jobs.
-        # `DISABLE_AFTER_DATASET_CREATE_FOR_CONCURRENT_JOB_TESTS` is used in
-        # concurrent job testing that do not involve `package_update` and
-        # `package_revise`.
-        if not (DISABLE_AFTER_DATASET_CREATE_FOR_CONCURRENT_JOB_TESTS
-                or IS_BACKGROUND_JOB
+        if not (IS_BACKGROUND_JOB
                 or bool(context.get("is_background_job")) is True
                 ):
             # Check for resources that have been added (e.g. using
