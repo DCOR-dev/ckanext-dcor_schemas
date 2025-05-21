@@ -36,7 +36,7 @@ accordingly:
   - datasets: the state of a dataset that does not contain at least one
     valid .rtdc resource cannot be set to "active"
   - resources: do not allow uploading resources with the same name
-    for a dataset (important for ckanext-dcor_depot)
+    for a dataset (important for archiving and reproducibility)
   - resources: make sure the resource name matches the file name of the
     upload; this is actually implemented in plugin.before_create
     (IResourceController) and not in validate.py

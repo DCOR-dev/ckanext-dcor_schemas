@@ -34,7 +34,7 @@ def test_sha256sum(tmp_path):
     assert ist == soll
 
 
-@pytest.mark.ckan_config('ckan.plugins', 'dcor_depot dcor_schemas')
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_request_context')
 @mock.patch('ckan.plugins.toolkit.enqueue_job',
             side_effect=synchronous_enqueue_job)
