@@ -1,5 +1,6 @@
 0.22.0
  - BREAKING: remove `DISABLE_AFTER_DATASET_CREATE_FOR_CONCURRENT_JOB_TESTS`
+ - ref: migrate S3 public-tagging of resources from ckanext-dcor_depot
  - enh: add condition and replicate to supplementary resource schemas
 0.21.5
  - fix: extract correct package_id when updating resource
