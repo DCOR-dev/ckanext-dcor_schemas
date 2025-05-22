@@ -9,11 +9,22 @@ from dcor_shared.testing import make_dataset_via_s3
 data_path = pathlib.Path(__file__).parent / "data"
 
 
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 def test_status(app):
     app.get("/api/3/action/status_show",
             status=200)
 
 
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+def test_get_license_list(app):
+    resp = app.get("/api/3/action/license_list",
+                   status=200)
+    data = resp.json()
+    assert data['success']
+    assert len(data['result']) > 0, "there should be at least one license"
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.parametrize("url", ["/dataset",
                                  "/group",
                                  "/organization",
