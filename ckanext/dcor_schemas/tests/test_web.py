@@ -19,7 +19,7 @@ def test_status(app):
 def test_get_license_list(app):
     resp = app.get("/api/3/action/license_list",
                    status=200)
-    data = resp.json()
+    data = resp.json
     assert data['success']
     assert len(data['result']) > 0, "there should be at least one license"
 
