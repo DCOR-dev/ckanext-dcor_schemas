@@ -1,4 +1,5 @@
 pytest
 pytest-ckan
 requests
-dcor_shared[tests]
+dcor_shared
+pytest_factoryboy
