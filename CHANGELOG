@@ -1,4 +1,5 @@
 0.22.0
+ - integration with DCOR version bump for CKAN 2.11.3
  - BREAKING: remove `DISABLE_AFTER_DATASET_CREATE_FOR_CONCURRENT_JOB_TESTS`
  - fix: correctly detect missing `licenses_grou_url`
  - fix: hide featured collections and circles on landing page for CKAN 2.11
