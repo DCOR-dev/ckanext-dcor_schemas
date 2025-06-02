@@ -67,6 +67,14 @@ def test_dcor_move_dataset_to_circle(enqueue_job_mock, cli):
     assert not s3.object_exists(bucket_name=bucket_name_old,
                                 object_name=resource_key)
 
+    # Also make sure that the condensed and preview resources were moved
+    for name in ["condensed", "preview"]:
+        other_key = resource_key.replace("resource", name)
+        assert s3.object_exists(bucket_name=bucket_name_new,
+                                object_name=other_key)
+        assert not s3.object_exists(bucket_name=bucket_name_old,
+                                    object_name=other_key)
+
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')

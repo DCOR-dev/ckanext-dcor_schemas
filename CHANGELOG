@@ -1,3 +1,5 @@
+0.22.1
+ - tests: improve dataset migration tests
 0.22.0
  - integration with DCOR version bump for CKAN 2.11.3
  - BREAKING: remove `DISABLE_AFTER_DATASET_CREATE_FOR_CONCURRENT_JOB_TESTS`
