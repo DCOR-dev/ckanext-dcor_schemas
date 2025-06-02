@@ -340,6 +340,13 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
 
     # IPackageController
     def after_dataset_update(self, context, data_dict):
+        # This is a workaround for https://github.com/ckan/ckan/issues/6472.
+        # `after_resource_create` is not triggered when updating a dataset
+        # via `package_revise`. The workaround is to check in
+        # `after_dataset_upgrade` which *is* triggered by `package_revise`.
+        # To avoid running all of this every time a background job updates
+        # a resource, we have this background-check case.
+        # DCOR isue: https://github.com/DCOR-dev/ckanext-dcor_schemas/issues/19
         if not (IS_BACKGROUND_JOB
                 or bool(context.get("is_background_job")) is True
                 ):
