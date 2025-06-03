@@ -83,8 +83,8 @@ def test_auth_user_show():
     assert helpers.call_auth(
         "user_show",
         context={'ignore_auth': False,
-                 'user': None,
-                 'model': admin['name'],
+                 'user': admin['name'],
+                 'model': model,
                  'api_version': 3},
         id=user["name"])
 
@@ -98,11 +98,11 @@ def test_auth_user_list():
     # valid user
     with pytest.raises(logic.NotAuthorized):
         helpers.call_auth(
-        "user_list",
-        context={'ignore_auth': False,
-                 'user': user['name'],
-                 'model': model,
-                 'api_version': 3},
+            "user_list",
+            context={'ignore_auth': False,
+                     'user': user['name'],
+                     'model': model,
+                     'api_version': 3},
         )
     # anonymous user
     with pytest.raises(logic.NotAuthorized):
