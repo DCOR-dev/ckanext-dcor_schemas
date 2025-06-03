@@ -73,7 +73,7 @@ def test_auth_user_show():
     # anonymous user
     with pytest.raises(logic.NotAuthorized):
         helpers.call_auth(
-            "group_show",
+            "user_show",
             context={'ignore_auth': False,
                      'user': None,
                      'model': model,
@@ -81,7 +81,7 @@ def test_auth_user_show():
             id=user["name"])
     # admin
     assert helpers.call_auth(
-        "group_show",
+        "user_show",
         context={'ignore_auth': False,
                  'user': None,
                  'model': admin['name'],
@@ -96,7 +96,8 @@ def test_auth_user_list():
     user = factories.User()
     admin = factories.Sysadmin()
     # valid user
-    assert not helpers.call_auth(
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth(
         "user_list",
         context={'ignore_auth': False,
                  'user': user['name'],
