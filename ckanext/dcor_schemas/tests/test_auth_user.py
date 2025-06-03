@@ -19,7 +19,7 @@ def test_auth_group_show_list_users():
                  'user': user['name'],
                  'model': model,
                  'api_version': 3},
-        id=group.name,
+        id=group["name"],
         include_users=True,
     )
     # anonymous user
@@ -29,7 +29,7 @@ def test_auth_group_show_list_users():
                  'user': None,
                  'model': model,
                  'api_version': 3},
-        id=group.name,
+        id=group["name"],
         include_users=True,
     )
     # admin
@@ -39,7 +39,7 @@ def test_auth_group_show_list_users():
                  'user': admin['name'],
                  'model': model,
                  'api_version': 3},
-        id=group.name,
+        id=group["name"],
         include_users=True,
     )
 
@@ -57,7 +57,7 @@ def test_auth_user_show():
                  'user': user['name'],
                  'model': model,
                  'api_version': 3},
-        id=user.name)
+        id=user["name"])
     # anonymous user
     assert not helpers.call_auth(
         "group_show",
@@ -65,7 +65,7 @@ def test_auth_user_show():
                  'user': None,
                  'model': model,
                  'api_version': 3},
-        id=user.name)
+        id=user["name"])
     # admin
     assert helpers.call_auth(
         "group_show",
@@ -73,7 +73,7 @@ def test_auth_user_show():
                  'user': None,
                  'model': admin['name'],
                  'api_version': 3},
-        id=user.name)
+        id=user["name"])
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
