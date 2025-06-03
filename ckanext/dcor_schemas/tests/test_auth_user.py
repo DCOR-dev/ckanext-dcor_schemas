@@ -7,6 +7,109 @@ from ckan import model
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_auth_group_show_list_users():
+    """Anonymous user not allowed to list group with users"""
+    user = factories.User()
+    group = factories.Group(user=user)
+    admin = factories.Sysadmin()
+    # valid user
+    assert helpers.call_auth(
+        "group_show",
+        context={'ignore_auth': False,
+                 'user': user['name'],
+                 'model': model,
+                 'api_version': 3},
+        id=group.name,
+        include_users=True,
+    )
+    # anonymous user
+    assert not helpers.call_auth(
+        "group_show",
+        context={'ignore_auth': False,
+                 'user': None,
+                 'model': model,
+                 'api_version': 3},
+        id=group.name,
+        include_users=True,
+    )
+    # admin
+    assert helpers.call_auth(
+        "group_show",
+        context={'ignore_auth': False,
+                 'user': admin['name'],
+                 'model': model,
+                 'api_version': 3},
+        id=group.name,
+        include_users=True,
+    )
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_auth_user_show():
+    """Anonymous user not allowed to list users"""
+    user = factories.User()
+    admin = factories.Sysadmin()
+    # valid user
+    assert helpers.call_auth(
+        "user_show",
+        context={'ignore_auth': False,
+                 'user': user['name'],
+                 'model': model,
+                 'api_version': 3},
+        id=user.name)
+    # anonymous user
+    assert not helpers.call_auth(
+        "group_show",
+        context={'ignore_auth': False,
+                 'user': None,
+                 'model': model,
+                 'api_version': 3},
+        id=user.name)
+    # admin
+    assert helpers.call_auth(
+        "group_show",
+        context={'ignore_auth': False,
+                 'user': None,
+                 'model': admin['name'],
+                 'api_version': 3},
+        id=user.name)
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_auth_user_list():
+    """Nobody is allowed to list users except admins"""
+    user = factories.User()
+    admin = factories.Sysadmin()
+    # valid user
+    assert not helpers.call_auth(
+        "user_list",
+        context={'ignore_auth': False,
+                 'user': user['name'],
+                 'model': model,
+                 'api_version': 3},
+        )
+    # anonymous user
+    assert not helpers.call_auth(
+        "user_list",
+        context={'ignore_auth': False,
+                 'user': None,
+                 'model': model,
+                 'api_version': 3},
+        )
+    # admin
+    assert helpers.call_auth(
+        "user_list",
+        context={'ignore_auth': False,
+                 'user': admin['name'],
+                 'model': model,
+                 'api_version': 3},
+        )
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_login_user_create_datasets():
     """allow all logged-in users to create datasets"""
     user = factories.User()
