@@ -1,5 +1,6 @@
 import pytest
 
+from ckan import logic
 import ckan.tests.factories as factories
 import ckan.tests.helpers as helpers
 from ckan import model
@@ -23,15 +24,16 @@ def test_auth_group_show_list_users():
         include_users=True,
     )
     # anonymous user
-    assert not helpers.call_auth(
-        "group_show",
-        context={'ignore_auth': False,
-                 'user': None,
-                 'model': model,
-                 'api_version': 3},
-        id=group["name"],
-        include_users=True,
-    )
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth(
+            "group_show",
+            context={'ignore_auth': False,
+                     'user': None,
+                     'model': model,
+                     'api_version': 3},
+            id=group["name"],
+            include_users=True,
+        )
     # admin
     assert helpers.call_auth(
         "group_show",
@@ -49,6 +51,7 @@ def test_auth_group_show_list_users():
 def test_auth_user_show():
     """Anonymous user not allowed to list users"""
     user = factories.User()
+    user2 = factories.User()
     admin = factories.Sysadmin()
     # valid user
     assert helpers.call_auth(
@@ -58,14 +61,24 @@ def test_auth_user_show():
                  'model': model,
                  'api_version': 3},
         id=user["name"])
+    # other user
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth(
+            "user_show",
+            context={'ignore_auth': False,
+                     'user': user2['name'],
+                     'model': model,
+                     'api_version': 3},
+            id=user["name"])
     # anonymous user
-    assert not helpers.call_auth(
-        "group_show",
-        context={'ignore_auth': False,
-                 'user': None,
-                 'model': model,
-                 'api_version': 3},
-        id=user["name"])
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth(
+            "group_show",
+            context={'ignore_auth': False,
+                     'user': None,
+                     'model': model,
+                     'api_version': 3},
+            id=user["name"])
     # admin
     assert helpers.call_auth(
         "group_show",
@@ -91,13 +104,14 @@ def test_auth_user_list():
                  'api_version': 3},
         )
     # anonymous user
-    assert not helpers.call_auth(
-        "user_list",
-        context={'ignore_auth': False,
-                 'user': None,
-                 'model': model,
-                 'api_version': 3},
-        )
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth(
+            "user_list",
+            context={'ignore_auth': False,
+                     'user': None,
+                     'model': model,
+                     'api_version': 3},
+            )
     # admin
     assert helpers.call_auth(
         "user_list",
