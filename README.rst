@@ -126,7 +126,7 @@ accordingly:
     jobs for all resources (if not already done)
   - CKAN command `dcor-move-dataset-to-circle` for moving a dataset to
     a different circle
-
+  - CKAN command `send_mail` for sending emails using the CKAN email credentials
 
 Installation
 ------------

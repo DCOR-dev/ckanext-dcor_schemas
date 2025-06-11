@@ -1,8 +1,10 @@
 import datetime
+import pathlib
 import sys
 import time
 import traceback
 
+from ckan.lib import mailer
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
 import click
@@ -228,6 +230,27 @@ def run_jobs_dcor_schemas(modified_days=-1):
     click.echo("Done!")
 
 
+@click.argument('recipient',
+                help='Recipient email address')
+@click.argument('subject',
+                help='Subject of the email')
+@click.argument('file_body',
+                help='File containing the body of the email')
+@click.command()
+def send_mail(recipient, subject, file_body):
+    """Send email to `recipient` with `subject` with content of `file_body`
+
+    The SMTP settings of the CKAN instance are used to send the email.
+    """
+    mailer.mail_recipient(
+        recipient_name=recipient,
+        recipient_email=recipient,
+        subject=subject,
+        body=file_body.read_text(),
+    )
+    click.echo("Done!")
+
+
 def get_commands():
     return [
         dcor_move_dataset_to_circle,
@@ -235,4 +258,6 @@ def get_commands():
         list_collections,
         list_group_resources,
         list_zombie_users,
-        run_jobs_dcor_schemas]
+        run_jobs_dcor_schemas,
+        send_mail,
+    ]

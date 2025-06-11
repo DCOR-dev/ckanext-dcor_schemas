@@ -1,4 +1,5 @@
-0.22.1
+0.23.0
+ - feat: add `send_mail` CLI plugin for sending emails with CKAN SMTP
  - enh: restrict fetching user info for unauthorized parties
  - tests: improve dataset migration tests
 0.22.0
