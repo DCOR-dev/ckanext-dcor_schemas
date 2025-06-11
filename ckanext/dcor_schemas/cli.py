@@ -230,12 +230,9 @@ def run_jobs_dcor_schemas(modified_days=-1):
     click.echo("Done!")
 
 
-@click.argument('recipient',
-                help='Recipient email address')
-@click.argument('subject',
-                help='Subject of the email')
-@click.argument('file_body',
-                help='File containing the body of the email')
+@click.argument('recipient')
+@click.argument('subject')
+@click.argument('file_body')
 @click.command()
 def send_mail(recipient, subject, file_body):
     """Send email to `recipient` with `subject` with content of `file_body`
