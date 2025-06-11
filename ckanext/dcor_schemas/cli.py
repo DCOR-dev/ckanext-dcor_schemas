@@ -230,24 +230,29 @@ def run_jobs_dcor_schemas(modified_days=-1):
     click.echo("Done!")
 
 
-@click.argument('recipient', type=str)
-@click.argument('subject', type=str)
-@click.argument('file_body',
-                type=click.Path(exists=True,
-                                dir_okay=False,
-                                resolve_path=True,
-                                path_type=pathlib.Path))
+@click.option('--recipient', type=str)
+@click.option('--subject', type=str, default="DCOR Email")
+@click.option('--file_body',
+              type=click.Path(exists=True,
+                              dir_okay=False,
+                              resolve_path=True,
+                              path_type=pathlib.Path),
+              default=None,
+              )
 @click.command()
-def send_mail(recipient, subject, file_body):
+def send_mail(recipient, subject=None, file_body=None):
     """Send email to `recipient` with `subject` with content of `file_body`
 
     The SMTP settings of the CKAN instance are used to send the email.
     """
+    if not recipient:
+        raise ValueError("No recipient specified")
+    click.echo(f"Sending mail to {recipient} with subject {subject}")
     mailer.mail_recipient(
         recipient_name=recipient,
         recipient_email=recipient,
         subject=subject,
-        body=file_body.read_text(),
+        body=file_body.read_text(errors="ignore"),
     )
     click.echo("Done!")
 
