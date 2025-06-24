@@ -139,9 +139,7 @@ def dcor_move_dataset_to_circle(dataset, circle):
 @click.option('--dry-run', is_flag=True,
               help='Do not actually remove anything')
 @click.command()
-def dcor_prune_draft_datasets(older_than_days=21,
-                              keep_orphan_buckets=False,
-                              dry_run=False):
+def dcor_prune_draft_datasets(older_than_days=21, dry_run=False):
     """Remove draft datasets from the CKAN database"""
     # Iterate over all packages
     # data_dict will be overridden each time it is used
@@ -360,6 +358,7 @@ def send_mail(recipient, subject=None, file_body=None):
 def get_commands():
     return [
         dcor_move_dataset_to_circle,
+        dcor_prune_draft_datasets,
         dcor_prune_orphaned_s3_artifacts,
         list_circles,
         list_collections,
