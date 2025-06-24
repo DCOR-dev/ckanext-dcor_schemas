@@ -13,6 +13,7 @@ from dcor_shared.testing import (
     make_dataset_via_s3,
     synchronous_enqueue_job
 )
+from dcor_shared import s3cc
 
 import requests
 
@@ -168,3 +169,25 @@ def test_ipackagecontroller_after_dataset_update_make_private_public_on_s3(
     response = requests.get(res_dict["s3_url"])
     assert response.ok
     assert response.status_code == 200
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_request_context')
+# We have to use synchronous_enqueue_job, because the background workers
+# are running as www-data and cannot move files across the file system.
+@mock.patch('ckan.plugins.toolkit.enqueue_job',
+            side_effect=synchronous_enqueue_job)
+def test_iresourcecontroller_before_resource_delete(enqueue_job_mock,
+                                                    tmp_path):
+    ds_dict, res_dict = make_dataset_via_s3(
+        activate=True,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+    )
+    # Make sure the resource exists on S3
+    assert s3cc.artifact_exists(res_dict["id"], artifact="resource")
+
+    # Delete the dataset
+    helpers.call_action("package_purge", id=ds_dict["id"])
+
+    # Make sure the resource has been deleted as well
+    assert not s3cc.artifact_exists(res_dict["id"], artifact="resource")
