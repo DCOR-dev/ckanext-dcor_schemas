@@ -287,8 +287,11 @@ def test_dcor_prune_orphaned_s3_artifacts(cli):
     assert s3.object_exists(bucket_name, object_name)
 
     # Perform the actual cleanup
-    cli.invoke(ckan_cli,
+    res = cli.invoke(ckan_cli,
                ["dcor-prune-orphaned-s3-artifacts",
                 "--older-than-days", "-1",
                 ])
+    print(res)
+    print(rid)
+    print(ds_dict["id"])
     assert not s3.object_exists(bucket_name, object_name)
