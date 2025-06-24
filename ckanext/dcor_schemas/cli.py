@@ -4,7 +4,7 @@ import sys
 import time
 import traceback
 
-from ckan.lib import mailer
+from ckan.lib import mailer, search
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
 import click
@@ -145,7 +145,7 @@ def dcor_prune_orphaned_s3_artifacts(older_than_days=21,
                                      dry_run=False):
     """Remove resources from S3 that are not in the CKAN database"""
     s3_client, _, _ = s3.get_s3()
-    buckets_exist = sorted(s3.bucket_iter())
+    buckets_exist = sorted(s3.iter_buckets())
     buckets_used = []
     for grp in model.Group.all():
         if grp.is_organization:
