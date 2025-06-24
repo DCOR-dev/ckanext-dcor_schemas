@@ -151,6 +151,7 @@ def dcor_prune_draft_datasets(older_than_days=21, dry_run=False):
     }
     query = search.query_for(model.Package)
     ds_found = 0
+    ds_ignored = 0
     package_delete = logic.get_action('package_delete')
     dataset_purge = logic.get_action('dataset_purge')
     package_show = logic.get_action('package_show')
@@ -158,7 +159,6 @@ def dcor_prune_draft_datasets(older_than_days=21, dry_run=False):
         res = query.run(copy.copy(data_dict))
         if not res.get("results"):
             # no more results
-            print("")
             break
         for name in res["results"]:
             ds_dict = package_show(context=admin_context(),
@@ -168,13 +168,18 @@ def dcor_prune_draft_datasets(older_than_days=21, dry_run=False):
             pd = datetime.datetime.fromisoformat(ds_dict["metadata_modified"])
             if pd < threshold:
                 ds_found += 1
-                print(f"Found {ds_found} datasets", end="\r", flush=True)
+                click.secho(f"Found dataset {name}")
                 if not dry_run:
                     package_delete(context=admin_context(),
                                    data_dict={'id': name})
                     dataset_purge(context=admin_context(),
                                   data_dict={'id': name})
-    print("Done")
+            else:
+                ds_ignored += 1
+
+    click.secho(f"Number of draft datasets found:   {ds_found}")
+    click.secho(f"Number of draft datasets ignored: {ds_ignored}")
+    click.secho("Done!")
 
 
 @click.option('--older-than-days', default=21,
@@ -192,6 +197,7 @@ def dcor_prune_orphaned_s3_artifacts(older_than_days=21,
     s3_client, _, _ = s3.get_s3()
     buckets_exist = sorted(s3.iter_buckets())
     buckets_used = []
+    obj_found = 0
     for grp in model.Group.all():
         if grp.is_organization:
             org_bucket = get_ckan_config_option(
@@ -205,6 +211,7 @@ def dcor_prune_orphaned_s3_artifacts(older_than_days=21,
                     older_than_days=older_than_days):
                 rid = "".join(obj.split("/")[1:])
                 if rid not in resources:
+                    obj_found += 1
                     click.secho(f"Found object {org_bucket}:{obj}")
                     if not dry_run:
                         s3_client.delete_object(Bucket=org_bucket,
@@ -224,6 +231,8 @@ def dcor_prune_orphaned_s3_artifacts(older_than_days=21,
                     except s3_client.exceptions.NoSuchBucket:
                         # bucket has been deleted in the meantime
                         pass
+    click.secho(f"Number of orphaned objects found: {obj_found}")
+    click.secho("Done!")
 
 
 @click.command()
