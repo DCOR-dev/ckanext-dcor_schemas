@@ -13,7 +13,6 @@ from dcor_shared.testing import (
     make_dataset_via_s3,
     synchronous_enqueue_job
 )
-from dcor_shared import s3cc
 
 import requests
 

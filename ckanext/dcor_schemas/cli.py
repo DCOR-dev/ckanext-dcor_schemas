@@ -8,7 +8,7 @@ from ckan.lib import mailer
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
 import click
-from dcor_shared import s3, s3cc
+from dcor_shared import s3, s3cc, get_ckan_config_option
 from dcor_shared import RQJob  # noqa: F401
 
 from . import jobs
@@ -16,6 +16,24 @@ from . import jobs
 
 def admin_context():
     return {'ignore_auth': True, 'user': 'default'}
+
+
+def iter_group_resources(group_id):
+    # print the list of resources of that group
+    query = model.meta.Session.query(model.package.Package). \
+        filter(model.group.group_table.c["id"] == group_id)
+    # copy-pasted from CKAN's model.group.Group.packages()
+    query = query.join(
+        model.group.member_table,
+        model.group.member_table.c["table_id"] == model.package.Package.id)
+    query = query.join(
+        model.group.group_table,
+        model.group.group_table.c["id"]
+        == model.group.member_table.c["group_id"])
+
+    for dataset in query.all():
+        for resource in dataset.resources:
+            yield resource
 
 
 @click.command()
@@ -114,6 +132,55 @@ def dcor_move_dataset_to_circle(dataset, circle):
     print("...deleted old S3 objects")
 
 
+@click.option('--older-than-days', default=21,
+              help='Only prune artifacts that were created before a given '
+                   + 'number of days (set to -1 to prune all)')
+@click.option('--keep-orphan-buckets', is_flag=True,
+              help='Keep buckets that do not represent a circle')
+@click.option('--dry-run', is_flag=True,
+              help='Do not actually remove things')
+@click.command()
+def dcor_prune_orphaned_s3_artifacts(older_than_days=21,
+                                     keep_orphan_buckets=False,
+                                     dry_run=False):
+    """Check all buckets for resources not on DCOR"""
+    s3_client, _, _ = s3.get_s3()
+    buckets_exist = sorted(s3.bucket_iter())
+    buckets_used = []
+    for grp in model.Group.all():
+        if grp.is_organization:
+            org_bucket = get_ckan_config_option(
+                "dcor_object_store.bucket_name").format(organization_id=grp.id)
+            buckets_used.append(org_bucket)
+            # List of resources in that circle
+            resources = [r.id for r in iter_group_resources(grp.id)]
+            # Iterate over present objects and remove when necessary
+            for obj in s3.iter_bucket_objects(
+                    bucket_name=org_bucket,
+                    older_than_days=older_than_days):
+                rid = "".join(obj.split("/")[1:])
+                if rid not in resources:
+                    click.secho(f"Found object {org_bucket}:{obj}")
+                    if not dry_run:
+                        s3_client.delete_object(Bucket=org_bucket,
+                                                Key=obj)
+
+    # Remove orphaned buckets
+    if not keep_orphan_buckets:
+        for bucket_name in buckets_exist:
+            if bucket_name not in buckets_used:
+                click.secho(f"Found bucket {bucket_name}")
+                if not dry_run:
+                    for obj in s3.iter_bucket_objects(bucket_name):
+                        s3_client.delete_object(Bucket=bucket_name,
+                                                Key=obj)
+                    try:
+                        s3_client.delete_bucket(Bucket=bucket_name)
+                    except s3_client.exceptions.NoSuchBucket:
+                        # bucket has been deleted in the meantime
+                        pass
+
+
 @click.command()
 def list_circles():
     """List all circles/organizations"""
@@ -143,21 +210,8 @@ def list_group_resources(group_id_or_name):
         click.secho(f"Group '{group_id_or_name}' not found", fg="red")
         return sys.exit(1)
     else:
-        # print the list of resources of that group
-        query = model.meta.Session.query(model.package.Package).\
-            filter(model.group.group_table.c["id"] == group.id)
-        # copy-pasted from CKAN's model.group.Group.packages()
-        query = query.join(
-            model.group.member_table,
-            model.group.member_table.c["table_id"] == model.package.Package.id)
-        query = query.join(
-            model.group.group_table,
-            model.group.group_table.c["id"]
-            == model.group.member_table.c["group_id"])
-
-        for dataset in query.all():
-            for resource in dataset.resources:
-                click.echo(resource.id)
+        for resource in iter_group_resources(group.id):
+            click.echo(resource.id)
 
 
 @click.option('--last-activity-weeks', default=12,
@@ -260,6 +314,7 @@ def send_mail(recipient, subject=None, file_body=None):
 def get_commands():
     return [
         dcor_move_dataset_to_circle,
+        dcor_prune_orphaned_s3_artifacts,
         list_circles,
         list_collections,
         list_group_resources,

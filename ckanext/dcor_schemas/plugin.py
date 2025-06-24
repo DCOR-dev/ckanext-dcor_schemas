@@ -10,7 +10,7 @@ import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 
 import dclab
-from dcor_shared import DC_MIME_TYPES, s3, s3cc
+from dcor_shared import DC_MIME_TYPES, s3cc
 
 
 from . import actions

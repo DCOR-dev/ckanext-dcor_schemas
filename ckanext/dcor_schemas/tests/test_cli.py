@@ -5,7 +5,7 @@ import uuid
 import pytest
 
 from ckan.cli.cli import ckan as ckan_cli
-from ckan import model
+from ckan import logic, model
 import ckan.tests.helpers as helpers
 import ckan.tests.factories as factories
 
@@ -230,3 +230,65 @@ def test_list_zombie_users_with_admin(cli):
             continue
         else:
             assert False, "sysadmin should have been ignored"
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dcor_prune_orphaned_s3_artifacts(cli):
+    ds_dict, res_dict = make_dataset_via_s3(
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True,
+        private=False,
+        authors="Peter Pan")
+
+    rid = res_dict["id"]
+
+    bucket_name, object_name = s3cc.get_s3_bucket_object_for_artifact(rid)
+
+    # Check whether the S3 resource exists
+    assert s3.object_exists(bucket_name, object_name)
+    # Check that the organization exists
+    org_list = logic.get_action("organization_list")()
+    assert ds_dict["organization"]["name"] in org_list
+
+    # Attempt to remove objects from S3, the object should still be there
+    # afterward.
+    cli.invoke(ckan_cli,
+               ["dcor-prune-orphaned-s3-artifacts",
+                "--older-than-days", "0"])
+    assert s3.object_exists(bucket_name, object_name)
+
+    # Delete the entire dataset
+    helpers.call_action(action_name="package_delete",
+                        context={'ignore_auth': True, 'user': 'default'},
+                        id=ds_dict["id"]
+                        )
+    helpers.call_action(action_name="dataset_purge",
+                        context={'ignore_auth': True, 'user': 'default'},
+                        id=ds_dict["id"]
+                        )
+
+    # Make sure that the S3 object is still there
+    assert s3.object_exists(bucket_name, object_name)
+
+    # Perform a cleanup that does not take into account the new data
+    cli.invoke(ckan_cli,
+               ["dcor-prune-orphaned-s3-artifacts",
+                "--older-than-days", "1"])
+    # Make sure that the S3 object is still there
+    assert s3.object_exists(bucket_name, object_name)
+
+    # Perform a dry run
+    cli.invoke(ckan_cli,
+               ["dcor-prune-orphaned-s3-artifacts",
+                "--older-than-days", "0",
+                "--dry-run"
+                ])
+    assert s3.object_exists(bucket_name, object_name)
+
+    # Perform the actual cleanup
+    cli.invoke(ckan_cli,
+               ["dcor-prune-orphaned-s3-artifacts",
+                "--older-than-days", "0",
+                ])
+    assert not s3.object_exists(bucket_name, object_name)

@@ -116,17 +116,22 @@ accordingly:
 
 - CLI:
 
-  - CKAN command `list-circles` returns the list of DCOR circles
-  - CKAN command `list-collections` returns the list of DCOR collections
-  - CKAN command `list-group-resources <NAME>` returns the list of resources in
+  - CKAN command ``list-circles`` returns the list of DCOR circles
+  - CKAN command ``list-collections`` returns the list of DCOR collections
+  - CKAN command ``list-group-resources <NAME>`` returns the list of resources in
     a DCOR circle or collection
-  - CKAN command `list-zombie-users` for users with no datasets and
+  - CKAN command ``list-zombie-users`` for users with no datasets and
     no activity for a certain amount of time
-  - CKAN command `run-jobs-dcor-schemas` that runs all background
+  - CKAN command ``run-jobs-dcor-schemas`` that runs all background
     jobs for all resources (if not already done)
-  - CKAN command `dcor-move-dataset-to-circle` for moving a dataset to
+  - CKAN command ``dcor-move-dataset-to-circle`` for moving a dataset to
     a different circle
-  - CKAN command `send_mail` for sending emails using the CKAN email credentials
+  - CKAN command ``dcor-prune-orphaned-s3-artifacts`` for removing objects
+    from S3 that are not in the database::
+
+        ckan dcor-prune-orphaned-s3-artifacts --older-than-days 21 --dry-run
+
+  - CKAN command ``send_mail`` for sending emails using the CKAN email credentials
 
 Installation
 ------------
