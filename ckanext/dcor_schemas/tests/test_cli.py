@@ -262,7 +262,6 @@ def test_dcor_prune_draft_datasets(cli):
     cli.invoke(ckan_cli,
                ["dcor-prune-draft-datasets",
                 "--older-than-days", "-1",
-                "--dry-run"
                 ])
     assert not helpers.call_action("package_show", id=ds_dict["id"])
 
