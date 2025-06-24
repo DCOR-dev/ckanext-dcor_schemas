@@ -1,3 +1,4 @@
+import copy
 import datetime
 import pathlib
 import sys
@@ -154,7 +155,7 @@ def dcor_prune_draft_datasets(older_than_days=21, dry_run=False):
     dataset_purge = logic.get_action('dataset_purge')
     package_show = logic.get_action('package_show')
     while True:
-        res = query.run(data_dict)
+        res = query.run(copy.copy(data_dict))
         if not res.get("results"):
             # no more results
             print("")
