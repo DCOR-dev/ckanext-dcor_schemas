@@ -126,8 +126,13 @@ accordingly:
     jobs for all resources (if not already done)
   - CKAN command ``dcor-move-dataset-to-circle`` for moving a dataset to
     a different circle
+  - CKAN command ``dcor-prune-draft-datasets`` for removing old draft datasets
+    from the CKAN database::
+
+        ckan dcor-prune-draft-datasets --older-than-days 21 --dry-run
+
   - CKAN command ``dcor-prune-orphaned-s3-artifacts`` for removing objects
-    from S3 that are not in the database::
+    from S3 that are not in the CKAN database::
 
         ckan dcor-prune-orphaned-s3-artifacts --older-than-days 21 --dry-run
 

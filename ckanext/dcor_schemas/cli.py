@@ -4,6 +4,7 @@ import sys
 import time
 import traceback
 
+from ckan import logic
 from ckan.lib import mailer, search
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
@@ -130,6 +131,51 @@ def dcor_move_dataset_to_circle(dataset, circle):
     for bucket, key in to_delete:
         s3_client.delete_object(Bucket=bucket, Key=key)
     print("...deleted old S3 objects")
+
+
+@click.option('--older-than-days', default=21,
+              help='Only prune datasets that were created before a given '
+                   + 'number of days (set to -1 to prune all)')
+@click.option('--dry-run', is_flag=True,
+              help='Do not actually remove anything')
+@click.command()
+def dcor_prune_draft_datasets(older_than_days=21,
+                              keep_orphan_buckets=False,
+                              dry_run=False):
+    """Remove draft datasets from the CKAN database"""
+    # Iterate over all packages
+    # data_dict will be overridden each time it is used
+    data_dict = {
+        "q": "*:*",
+        "fq": "+state:draft",
+        "rows": 100,
+    }
+    query = search.query_for(model.Package)
+    ds_found = 0
+    package_delete = logic.get_action('package_delete')
+    dataset_purge = logic.get_action('dataset_purge')
+    package_show = logic.get_action('package_show')
+    while True:
+        res = query.run(data_dict)
+        if not res.get("results"):
+            # no more results
+            print("")
+            break
+        for name in res["results"]:
+            ds_dict = package_show(context=admin_context(),
+                                   data_dict={'id': name})
+            threshold = (datetime.datetime.now()
+                         - datetime.timedelta(days=older_than_days))
+            pd = datetime.datetime.fromisoformat(ds_dict["metadata_modified"])
+            if pd < threshold:
+                ds_found += 1
+                print(f"Found {ds_found} datasets", end="\r", flush=True)
+                if not dry_run:
+                    package_delete(context=admin_context(),
+                                   data_dict={'id': name})
+                    dataset_purge(context=admin_context(),
+                                  data_dict={'id': name})
+    print("Done")
 
 
 @click.option('--older-than-days', default=21,

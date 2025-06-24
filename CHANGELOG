@@ -1,5 +1,6 @@
 0.24.0
  - feat: new CLI script `dcor-prune-orphaned-s3-artifacts`
+ - feat: new CLI script `dcor-prune-draft-datasets`
 0.23.0
  - feat: add `send_mail` CLI plugin for sending emails with CKAN SMTP
  - enh: restrict fetching user info for unauthorized parties

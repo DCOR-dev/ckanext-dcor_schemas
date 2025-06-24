@@ -234,6 +234,41 @@ def test_list_zombie_users_with_admin(cli):
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dcor_prune_draft_datasets(cli):
+    ds_dict, res_dict = make_dataset_via_s3(
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=False,
+        private=False,
+        authors="Peter Pan")
+
+    # Check whether the dataset exists
+    assert helpers.call_action("package_show", id=ds_dict["id"])
+
+    # Remove older draft datasets, will not remove the current one
+    cli.invoke(ckan_cli,
+               ["dcor-prune-draft-datasets",
+                "--older-than-days", "1"])
+    assert helpers.call_action("package_show", id=ds_dict["id"])
+
+    # Dry run
+    cli.invoke(ckan_cli,
+               ["dcor-prune-draft-datasets",
+                "--older-than-days", "-1",
+                "--dry-run"
+                ])
+    assert helpers.call_action("package_show", id=ds_dict["id"])
+
+    # Actual run
+    cli.invoke(ckan_cli,
+               ["dcor-prune-draft-datasets",
+                "--older-than-days", "-1",
+                "--dry-run"
+                ])
+    assert not helpers.call_action("package_show", id=ds_dict["id"])
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_dcor_prune_orphaned_s3_artifacts(cli):
     ds_dict, res_dict = make_dataset_via_s3(
         resource_path=data_path / "calibration_beads_47.rtdc",
@@ -288,9 +323,9 @@ def test_dcor_prune_orphaned_s3_artifacts(cli):
 
     # Perform the actual cleanup
     res = cli.invoke(ckan_cli,
-               ["dcor-prune-orphaned-s3-artifacts",
-                "--older-than-days", "-1",
-                ])
+                     ["dcor-prune-orphaned-s3-artifacts",
+                      "--older-than-days", "-1",
+                      ])
     print(res)
     print(rid)
     print(ds_dict["id"])
