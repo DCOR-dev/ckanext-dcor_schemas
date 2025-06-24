@@ -263,7 +263,8 @@ def test_dcor_prune_draft_datasets(cli):
                ["dcor-prune-draft-datasets",
                 "--older-than-days", "-1",
                 ])
-    assert not helpers.call_action("package_show", id=ds_dict["id"])
+    with pytest.raises(logic.NotFound):
+        helpers.call_action("package_show", id=ds_dict["id"])
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
