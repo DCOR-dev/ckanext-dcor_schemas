@@ -186,8 +186,9 @@ def test_iresourcecontroller_before_resource_delete(enqueue_job_mock,
     # Make sure the resource exists on S3
     assert s3cc.artifact_exists(res_dict["id"], artifact="resource")
 
-    # Delete the dataset
-    helpers.call_action("package_purge", id=ds_dict["id"])
+    # Delete the dataset (which calls `membership.delete()`).
+    # Note that "dataset_purge" only removes the dataset from the database.
+    helpers.call_action("package_delete", id=ds_dict["id"])
 
     # Make sure the resource has been deleted as well
     assert not s3cc.artifact_exists(res_dict["id"], artifact="resource")
