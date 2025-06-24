@@ -1,5 +1,3 @@
-0.23.1
- - enh: automatically delete resources from S3 when deleting a dataset
 0.23.0
  - feat: add `send_mail` CLI plugin for sending emails with CKAN SMTP
  - enh: restrict fetching user info for unauthorized parties

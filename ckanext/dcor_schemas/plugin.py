@@ -445,18 +445,6 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             datapreview.add_views_to_resource(context={"ignore_auth": True},
                                               resource_dict=resource)
 
-    def before_resource_delete(self, context, data_dict, resources):
-        """When deleting a resource, also delete any objects on S3"""
-        resource_id = logic.get_or_bust(data_dict, 'id')
-        for artifact in ["condensed", "preview", "resource"]:
-            bucket_name, object_name = s3cc.get_s3_bucket_object_for_artifact(
-                resource_id=resource_id, artifact=artifact)
-            if s3.object_exists(bucket_name=bucket_name,
-                                object_name=object_name):
-                s3_client, _, _ = s3.get_s3()
-                s3_client.delete_object(Bucket=bucket_name,
-                                        Key=object_name)
-
     # ITemplateHelpers
     def get_helpers(self):
         # Template helper function names should begin with the name of the
