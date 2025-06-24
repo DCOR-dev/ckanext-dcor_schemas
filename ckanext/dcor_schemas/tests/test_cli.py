@@ -255,7 +255,7 @@ def test_dcor_prune_orphaned_s3_artifacts(cli):
     # afterward.
     cli.invoke(ckan_cli,
                ["dcor-prune-orphaned-s3-artifacts",
-                "--older-than-days", "0"])
+                "--older-than-days", "-1"])
     assert s3.object_exists(bucket_name, object_name)
 
     # Delete the entire dataset
@@ -281,7 +281,7 @@ def test_dcor_prune_orphaned_s3_artifacts(cli):
     # Perform a dry run
     cli.invoke(ckan_cli,
                ["dcor-prune-orphaned-s3-artifacts",
-                "--older-than-days", "0",
+                "--older-than-days", "-1",
                 "--dry-run"
                 ])
     assert s3.object_exists(bucket_name, object_name)
@@ -289,6 +289,6 @@ def test_dcor_prune_orphaned_s3_artifacts(cli):
     # Perform the actual cleanup
     cli.invoke(ckan_cli,
                ["dcor-prune-orphaned-s3-artifacts",
-                "--older-than-days", "0",
+                "--older-than-days", "-1",
                 ])
     assert not s3.object_exists(bucket_name, object_name)

@@ -138,12 +138,12 @@ def dcor_move_dataset_to_circle(dataset, circle):
 @click.option('--keep-orphan-buckets', is_flag=True,
               help='Keep buckets that do not represent a circle')
 @click.option('--dry-run', is_flag=True,
-              help='Do not actually remove things')
+              help='Do not actually remove anything')
 @click.command()
 def dcor_prune_orphaned_s3_artifacts(older_than_days=21,
                                      keep_orphan_buckets=False,
                                      dry_run=False):
-    """Check all buckets for resources not on DCOR"""
+    """Remove resources from S3 that are not in the CKAN database"""
     s3_client, _, _ = s3.get_s3()
     buckets_exist = sorted(s3.bucket_iter())
     buckets_used = []
