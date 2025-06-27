@@ -497,7 +497,7 @@ def user_create(context, data_dict=None):
             spam_score += 1
         if name_val.count("+"):
             spam_score += 1
-        if len(name_val) > 30:
+        if len(name_val) > 40:
             spam_score += 1
 
     if "image_url" in data_dict:
