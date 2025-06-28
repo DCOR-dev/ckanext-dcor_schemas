@@ -82,7 +82,7 @@
 0.18.8
  - fix: list-zombie-users still relied on activities
 0.18.7
- - enh: let admin users validate invalid RT-DC resources
+ - enh: let admin users validate invalid DC resources
 0.18.6
  - fix: create default resource views since CKAN 2.10.1 does not
  - fix: deprecation in dclab.dfn

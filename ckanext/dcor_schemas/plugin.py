@@ -106,7 +106,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         # that CKAN will use this plugin's custom templates.
         toolkit.add_template_directory(config, 'templates')
         toolkit.add_resource('assets', 'dcor_schemas')
-        # Add RT-DC mime types
+        # Add DC mime types
         for key in DC_MIME_TYPES:
             mimetypes.add_type(key, DC_MIME_TYPES[key])
         # Set licenses path if no licenses_group_url was given
