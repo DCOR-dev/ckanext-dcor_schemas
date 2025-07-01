@@ -1,4 +1,5 @@
 0.24.1
+ - enh: ignore invalid, non-JSON-encodable resource metadata
  - enh: relax maximum email length to 40 characters
  - tests: add test for displaying dataset on web interface as anon user (#21)
 0.24.0

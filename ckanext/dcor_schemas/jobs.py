@@ -1,7 +1,7 @@
 import datetime
+import json
 
 from ckan import logic
-
 import dclab
 from dcor_shared import (
     DC_MIME_TYPES, get_ckan_config_option, get_dc_instance,
@@ -94,7 +94,17 @@ def job_set_dc_config(resource):
                         if key in ds.config[sec]:
                             dckey = f"dc:{sec}:{key}"
                             value = ds.config[sec][key]
-                            res_dict[dckey] = value
+                            # Only allow values that are JSON compliant.
+                            # This is necessary, because CKAN stores and
+                            # loads these values as plain JSON.
+                            try:
+                                json.dumps(value,
+                                           allow_nan=False,
+                                           ensure_ascii=False)
+                            except ValueError:
+                                pass
+                            else:
+                                res_dict[dckey] = value
         res_dict["last_modified"] = datetime.datetime.now(
             datetime.timezone.utc)
         patch_resource_noauth(

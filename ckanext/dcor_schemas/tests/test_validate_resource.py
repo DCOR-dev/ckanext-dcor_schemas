@@ -2,6 +2,7 @@ import cgi
 import pathlib
 import shutil
 import tempfile
+from unittest import mock
 
 import pytest
 
@@ -9,7 +10,10 @@ import ckan.logic as logic
 import ckan.tests.factories as factories
 import ckan.tests.helpers as helpers
 
-from dcor_shared.testing import make_dataset_via_s3
+from dcor_shared.testing import make_dataset_via_s3, synchronous_enqueue_job
+
+import h5py
+import numpy as np
 
 data_path = pathlib.Path(__file__).parent / "data"
 
@@ -307,3 +311,30 @@ def test_resource_create_weird_characters():
                                 url="upload",
                                 name=path2.name,
                                 )
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dc_serve dc_view')
+@pytest.mark.usefixtures('clean_db', 'with_request_context')
+@mock.patch('ckan.plugins.toolkit.enqueue_job',
+            side_effect=synchronous_enqueue_job)
+def test_resource_metadata_has_nan_value_ignored(enqueue_job_mock, tmp_path):
+    """author list "authors" is CSV"""
+    res_path = tmp_path / "custom_data.rtdc"
+    shutil.copy2(data_path / "calibration_beads_47.rtdc", res_path)
+
+    # Put NaN in the metadata
+    with h5py.File(res_path, "a") as h5:
+        h5.attrs["setup:flow rate"] = np.nan
+
+    _, res_dict = make_dataset_via_s3(
+        resource_path=res_path,
+        activate=True,
+        private=False,
+        )
+
+    # Fetch the metadata.
+    res_dict = helpers.call_action("resource_show",
+                                   id=res_dict["id"],
+                                   )
+    assert res_dict["dc:setup:channel width"] == 20
+    assert "dc:setup:flow rate" not in res_dict
