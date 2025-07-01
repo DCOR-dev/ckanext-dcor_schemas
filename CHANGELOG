@@ -1,5 +1,6 @@
 0.24.1
  - enh: relax maximum email length to 40 characters
+ - tests: add test for displaying dataset on web interface as anon user (#21)
 0.24.0
  - feat: new CLI script `dcor-prune-orphaned-s3-artifacts`
  - feat: new CLI script `dcor-prune-draft-datasets`

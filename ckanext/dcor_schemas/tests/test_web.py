@@ -1,9 +1,10 @@
 import pathlib
 import pytest
+from unittest import mock
 
 import ckan.tests.factories as factories
 
-from dcor_shared.testing import make_dataset_via_s3
+from dcor_shared.testing import make_dataset_via_s3, synchronous_enqueue_job
 
 
 data_path = pathlib.Path(__file__).parent / "data"
@@ -13,6 +14,21 @@ data_path = pathlib.Path(__file__).parent / "data"
 def test_status(app):
     app.get("/api/3/action/status_show",
             status=200)
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_request_context')
+@mock.patch('ckan.plugins.toolkit.enqueue_job',
+            side_effect=synchronous_enqueue_job)
+def test_display_dataset_as_anon(enqueue_job_mock, app):
+    """Display a dataset as an anonymous user."""
+    ds_dict, res_dict = make_dataset_via_s3(
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        private=False,
+        activate=True)
+
+    app.get(f"/dataset/{ds_dict['id']}", status=200)
+    app.get(f"/dataset/{ds_dict['id']}/resource/{res_dict['id']}", status=200)
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
