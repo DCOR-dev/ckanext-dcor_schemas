@@ -1,3 +1,5 @@
+0.24.2
+ - enh: removing draft datasets did not work when search index was outdated
 0.24.1
  - enh: ignore invalid, non-JSON-encodable resource metadata
  - enh: relax maximum email length to 40 characters

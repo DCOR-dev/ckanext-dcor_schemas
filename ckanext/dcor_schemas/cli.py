@@ -161,8 +161,13 @@ def dcor_prune_draft_datasets(older_than_days=21, dry_run=False):
             # no more results
             break
         for name in res["results"]:
-            ds_dict = package_show(context=admin_context(),
-                                   data_dict={'id': name})
+            try:
+                ds_dict = package_show(context=admin_context(),
+                                       data_dict={'id': name})
+            except logic.NotFound:
+                click.secho(f"Dataset {name} does not exist. Consider "
+                            f"rebuilding the search index.")
+                continue
             threshold = (datetime.datetime.now()
                          - datetime.timedelta(days=older_than_days))
             pd = datetime.datetime.fromisoformat(ds_dict["metadata_modified"])
