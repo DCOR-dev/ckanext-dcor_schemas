@@ -1,3 +1,5 @@
+0.24.4
+ - reg: double check whether resource changed when setting basic metadata
 0.24.3
  - fix: only update basic resource metadata in background job when necessary
  - enh: add "licenses_medical.json" for non-open instances

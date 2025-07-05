@@ -67,9 +67,15 @@ def job_set_resource_metadata_base(resource):
     running this background job manually via the CLI.
     """
     res_dict_base = get_base_metadata(resource)
+    # Do not compare against `resource`, because this dictionary might
+    # not be the one that we have in the database.
+    resource_show = logic.get_action("resource_show")
+    res_dict_act = resource_show(context={'ignore_auth': True,
+                                          'user': 'default'},
+                                 data_dict={"id": resource['id']})
 
     for key in res_dict_base:
-        if res_dict_base[key] != resource.get(key):
+        if res_dict_base[key] != res_dict_act.get(key):
             changes_required = True
             break
     else:
