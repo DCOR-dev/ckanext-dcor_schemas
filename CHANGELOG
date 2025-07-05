@@ -1,4 +1,5 @@
 0.24.3
+ - fix: only update basic resource metadata in background job when necessary
  - enh: add "licenses_medical.json" for non-open instances
 0.24.2
  - enh: removing draft datasets did not work when search index was outdated

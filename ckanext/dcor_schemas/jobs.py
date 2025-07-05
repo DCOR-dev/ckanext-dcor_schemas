@@ -61,15 +61,30 @@ def job_set_resource_metadata_base(resource):
     method calls `patch_resource_noauth`, it does so with the
     `admin_background_context`, preventing any other background jobs from
     being triggered.
+
+    When a resource is migrated to a different instance, then its "url"
+    metadata field must change. This can be taken care of by simply
+    running this background job manually via the CLI.
     """
     res_dict_base = get_base_metadata(resource)
-    res_dict_base["last_modified"] = datetime.datetime.now(
-        datetime.timezone.utc)
-    patch_resource_noauth(
-        package_id=resource["package_id"],
-        resource_id=resource["id"],
-        data_dict=res_dict_base)
-    return True
+
+    for key in res_dict_base:
+        if res_dict_base[key] != resource.get(key):
+            changes_required = True
+            break
+    else:
+        changes_required = False
+
+    if changes_required:
+        res_dict_base["last_modified"] = datetime.datetime.now(
+            datetime.timezone.utc)
+        patch_resource_noauth(
+            package_id=resource["package_id"],
+            resource_id=resource["id"],
+            data_dict=res_dict_base)
+        return True
+    else:
+        return False
 
 
 @rqjob_register(ckanext="dcor_schemas",
