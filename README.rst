@@ -96,7 +96,7 @@ accordingly:
     ``package`` which means that the supplementary resource schema of
     this extension is used.
 
-  - These DCOR-wide configuratio options for accessing S3 object storage
+  - These DCOR-wide configuration options for accessing S3 object storage
 
     - ``endpoint_url``
     - ``bucket_name``
