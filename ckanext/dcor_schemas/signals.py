@@ -20,4 +20,4 @@ Handle: {user.name}
 Email: {user.email}
 About: {(user.about or '')[:20]}...
 """,
-        )
+            )
