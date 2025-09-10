@@ -95,6 +95,9 @@ accordingly:
     define the supplementary resource schema. The default is
     ``package`` which means that the supplementary resource schema of
     this extension is used.
+  - the ``ckanext.dcor_schemas.notify_user_create`` boolean
+    parameter defines whether the site maintainer receives an email
+    for ever user that is created.
 
   - These DCOR-wide configuration options for accessing S3 object storage
 
@@ -113,6 +116,10 @@ accordingly:
     current supplementary resource schema
   - ``supported_resource_suffixes`` returns a list of supported
     resource suffixes
+
+- Signals:
+
+  - Send an email to the maintainer when a user is created.
 
 - CLI:
 

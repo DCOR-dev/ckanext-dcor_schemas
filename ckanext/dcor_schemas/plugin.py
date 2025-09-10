@@ -152,6 +152,11 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             "resource schema"
         )
 
+        declaration.declare_bool(
+            schema_group.notify_user_create, True).set_description(
+            "notify the maintainer when a new user is created"
+        )
+
         dcor_group = key.dcor_object_store
 
         declaration.declare(

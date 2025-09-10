@@ -1,5 +1,5 @@
 0.25.0
- - enh: send email to maintainer for new users (#36)
+ - feat: send email to maintainer for new users (#36)
 0.24.5
  - fix: add anonymous user check when extending group listing
 0.24.4
