@@ -37,10 +37,10 @@ RESOURCE_EXTS = [
     # analysis
     ".py",
     ".ipynb",
-    # dclab/Shape-Out filter files
+    # dclab/DCscope filter files
     ".poly",
     ".sof",
-    # Shape-Out sessions
+    # DCscope sessions
     ".so2",
 ]
 
