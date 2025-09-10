@@ -19,6 +19,6 @@ Handle: {user_dict.get('name')}
 Email: {user_dict.get('email')}
 ID: {user_dict.get('id')}
 Time: {user_dict.get('created')}
-About: {user_dict.get('about', '')[:20]}...
+About: {(user_dict.get('about') or '')[:20]}...
 """,
         )
