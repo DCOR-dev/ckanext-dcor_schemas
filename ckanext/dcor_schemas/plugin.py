@@ -5,6 +5,7 @@ import sys
 
 import ckan.lib.datapreview as datapreview
 from ckan.lib.plugins import DefaultPermissionLabels
+import ckan.lib.signals
 from ckan import config, common, logic
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
@@ -19,6 +20,7 @@ from .cli import get_commands
 from . import jobs
 from . import helpers as dcor_helpers
 from . import resource_schema_supplements as rss
+from . import signals
 from . import validate as dcor_validate
 
 
@@ -52,6 +54,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
     plugins.implements(plugins.IPermissionLabels, inherit=True)
     plugins.implements(plugins.IResourceController, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
+    plugins.implements(plugins.ISignal, inherit=True)
     plugins.implements(plugins.ITemplateHelpers, inherit=True)
     plugins.implements(plugins.IValidators, inherit=True)
 
@@ -444,6 +447,13 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             # https://github.com/ckan/ckan/issues/7837
             datapreview.add_views_to_resource(context={"ignore_auth": True},
                                               resource_dict=resource)
+
+    # ISignal
+    def get_signal_subscriptions(self):
+        # Let the admin know that a new user signed up
+        subs = {}
+        subs[ckan.lib.signals.user_created] = [signals.notify_user_created]
+        return subs
 
     # ITemplateHelpers
     def get_helpers(self):
