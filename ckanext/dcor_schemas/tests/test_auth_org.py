@@ -85,7 +85,7 @@ def test_org_admin_bulk_update_delete_forbidden():
         owner_org=owner_org,
         resource_path=data_path / "calibration_beads_47.rtdc",
         activate=True)
-    # assert: bulk_update_delete is should be forbidden
+    # assert: bulk_update_delete should be forbidden
     test_context = {'ignore_auth': False,
                     'user': user['name'], 'model': model, 'api_version': 3}
     with pytest.raises(logic.NotAuthorized):
