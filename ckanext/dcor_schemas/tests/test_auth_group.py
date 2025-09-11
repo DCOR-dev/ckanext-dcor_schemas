@@ -6,12 +6,10 @@ import pytest
 import ckan.logic as logic
 import ckan.tests.factories as factories
 import ckan.tests.helpers as helpers
-from ckan import model
 
 from dcor_shared.testing import make_dataset_via_s3
 
 data_path = pathlib.Path(__file__).parent / "data"
-
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -118,7 +116,7 @@ def test_group_no_delete_from_other_users_even_if_member():
         name=f"deleteme-{uuid.uuid4()}",
         title="This is a group that can only be deleted by its owner",
         packages=[ds_dict_1],
-        users={"name": user2['name']},
+        users=[{"name": user2['name']}],
         context=create_context1,
         )
 
