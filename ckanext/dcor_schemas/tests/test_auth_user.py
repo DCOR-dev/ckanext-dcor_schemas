@@ -8,7 +8,7 @@ from ckan import model
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_auth_group_show_list_users():
+def test_auth_group_show():
     """Anonymous user not allowed to list group with users"""
     user = factories.User()
     group = factories.Group(user=user)
@@ -94,6 +94,11 @@ def test_auth_user_show():
 def test_auth_user_list():
     """Nobody is allowed to list users except admins"""
     user = factories.User()
+    # create an organization of which the user is an admin
+    factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
     admin = factories.Sysadmin()
     # valid user
     with pytest.raises(logic.NotAuthorized):
