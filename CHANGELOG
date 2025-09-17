@@ -1,3 +1,5 @@
+1.0.1
+ - fix: deny user listing for non-admins
 1.0.0
  - feat: send email to maintainer for new users (#36)
  - tests: add test methods for deleting collections/groups (#26)
