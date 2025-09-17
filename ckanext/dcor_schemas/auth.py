@@ -21,7 +21,7 @@ def content_listing(context, data_dict):
 
 
 def dataset_purge(context, data_dict):
-    """Only allow deletion of deleted datasets"""
+    """Only allow purging of deleted datasets"""
     # original auth function
     # (usually, only sysadmins are allowed to purge, so we test against
     # package_update)
@@ -456,6 +456,29 @@ def resource_upload_s3_urls(context, data_dict):
                 'msg': f'User {context["user"]} not a member of '
                        f'the circle {org_id} or circle does not exist'}
     return {'success': True}
+
+
+def user_autocomplete(context, data_dict=None):
+    """Allow logged-in users to fetch a list of usernames
+
+    In contrast to `user_list`, this does not return details of the
+    user (such as recent activity). Data protection is thus not such
+    a big issue, and we can just check whether the user exists.
+
+    Note that this method should probably not be used as a chained
+    auth function, because the original auth function just checks
+    against `user_list` which will always be forbidden.
+    """
+    requester = context.get('user')
+    user_id = data_dict.get('id', None)
+    if user_id:
+        user_obj = model.User.get(user_id)
+    else:
+        user_obj = data_dict.get('user_obj', None)
+    if user_obj:
+        return {'success': True}
+    return {'success': False,
+            'msg': "Only logged-in users may use autocomplete."}
 
 
 @logic.auth_allow_anonymous_access

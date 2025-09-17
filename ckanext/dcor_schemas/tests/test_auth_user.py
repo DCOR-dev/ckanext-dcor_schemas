@@ -48,6 +48,39 @@ def test_auth_group_show():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_auth_user_autocomplete():
+    """Logged-in users may fetch a list of usernames"""
+    user = factories.User()
+    admin = factories.Sysadmin()
+    # valid user
+    assert helpers.call_auth(
+        "user_autocomplete",
+        context={'ignore_auth': False,
+                 'user': user['name'],
+                 'model': model,
+                 'api_version': 3},
+    )
+    # anonymous user
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth(
+            "user_autocomplete",
+            context={'ignore_auth': False,
+                     'user': None,
+                     'model': model,
+                     'api_version': 3},
+            )
+    # admin
+    assert helpers.call_auth(
+        "user_autocomplete",
+        context={'ignore_auth': False,
+                 'user': admin['name'],
+                 'model': model,
+                 'api_version': 3},
+        )
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_auth_user_show():
     """Anonymous user not allowed to list users"""
     user = factories.User()
