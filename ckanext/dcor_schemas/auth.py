@@ -470,12 +470,7 @@ def user_autocomplete(context, data_dict=None):
     against `user_list` which will always be forbidden.
     """
     requester = context.get('user')
-    user_id = data_dict.get('id', None)
-    if user_id:
-        user_obj = model.User.get(user_id)
-    else:
-        user_obj = data_dict.get('user_obj', None)
-    if user_obj:
+    if requester:
         return {'success': True}
     return {'success': False,
             'msg': "Only logged-in users may use autocomplete."}
