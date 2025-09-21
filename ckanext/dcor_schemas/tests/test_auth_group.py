@@ -370,13 +370,3 @@ def test_group_show_by_user():
                            'user': None,
                            'api_version': 3},
                           id=group_dict["id"])
-
-    # Nobody is allowed to view user details
-    for user in [user1, user2, user3, user4, {"name": None}]:
-        with pytest.raises(logic.NotAuthorized):
-            helpers.call_auth("group_show",
-                              {'ignore_auth': False,
-                               'user': user['name'],
-                               'api_version': 3},
-                              id=group_dict["id"],
-                              include_users=True)

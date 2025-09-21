@@ -616,26 +616,3 @@ def group_list(context, data_dict):
         return {'success': False,
                 'msg': "Fetching user info via 'group_list' is not allowed."}
     return content_listing(context, data_dict)
-
-
-@logic.auth_allow_anonymous_access
-def group_show(context, data_dict):
-    """Check whether access to a group is authorised.
-
-    If user metadata is requested, access is denied. Otherwise, users
-    could just add other users to groups to crawl their user details.
-    """
-    user = context.get('user')
-    group = logic.auth.get_group_object(context, data_dict)
-
-    if data_dict.get('include_users', False):
-        return {'success': False,
-                'msg': "Fetching user info via 'group_show' is not allowed."}
-
-    authorized = authz.has_user_permission_for_group_or_org(
-        group.id, user, 'read')
-    if authorized:
-        return {'success': True}
-    else:
-        return {'success': False,
-                'msg': f'User {user} not authorized to read group {group.id}'}
