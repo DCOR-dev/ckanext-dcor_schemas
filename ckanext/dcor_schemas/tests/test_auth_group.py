@@ -50,7 +50,7 @@ def test_group_dataset_create():
     ]:
         helpers.call_action("member_create",
                             id=group_dict["id"],
-                            object=user,
+                            object=user["id"],
                             object_type='user',
                             capacity=capacity)
 
@@ -254,7 +254,7 @@ def test_group_user_add():
     ]:
         helpers.call_action("member_create",
                             id=group_dict["id"],
-                            object=user,
+                            object=user["id"],
                             object_type='user',
                             capacity=capacity)
 
