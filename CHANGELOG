@@ -1,3 +1,6 @@
+1.0.2
+ - fix: only group admins and editors may add or remove datasets
+ - fix: only group admins may add or remove users
 1.0.1
  - fix: deny user listing for non-admins
  - enh: add auth function for "user_autocomplete"

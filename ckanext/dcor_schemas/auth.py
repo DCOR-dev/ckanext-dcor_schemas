@@ -64,6 +64,33 @@ def get_package_id(context, data_dict):
     return convert_package_name_or_id_to_id(package_id, context)
 
 
+def member_create(context, data_dict):
+    """In contrast to CKAN defaults, only editors of groups may add datasets"""
+    group = logic.auth.get_group_object(context, data_dict)
+    user = context["user"]
+
+    if not group.is_organization:
+        if data_dict.get("object_type") == "package":
+            permission = "create_dataset"
+        elif data_dict.get("object_typ") == "user":
+            permission = "membership"
+        else:
+            raise ValueError("`permission` should be 'package' or 'user'. "
+                             "The application logic did not check this case.")
+
+        authorized = authz.has_user_permission_for_group_or_org(group.id,
+                                                                user,
+                                                                permission)
+        if not authorized:
+            return {"success": False,
+                    "msg": f'User {user} not authorized to '
+                           f'edit collection {group.id}'
+                    }
+
+    # Run the original auth function
+    return logic.auth.create.member_create(context, data_dict)
+
+
 def package_create(context, data_dict):
     # Note that we did not decorate this function with
     # @logic.auth_allow_anonymous_access. This effectively

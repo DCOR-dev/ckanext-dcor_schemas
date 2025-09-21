@@ -14,6 +14,92 @@ data_path = pathlib.Path(__file__).parent / "data"
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_group_dataset_create():
+    """Only editors of a group are allowed to add create datasets in it"""
+    user1 = factories.User()
+    user2 = factories.User()
+    user3 = factories.User()
+    user4 = factories.User()
+    owner_org = factories.Organization(users=[
+        {'name': user1['id'], 'capacity': 'editor'},
+        {'name': user2['id'], 'capacity': 'member'},
+    ])
+    # create a datasets
+    create_context1 = {'ignore_auth': False,
+                       'user': user1['name'],
+                       'api_version': 3}
+    ds_dict_1, _ = make_dataset_via_s3(
+        create_context=create_context1,
+        owner_org=owner_org,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True)
+
+    # create group for user1
+    group_dict = helpers.call_action(
+        "group_create",
+        name=f"test_group-{uuid.uuid4()}",
+        title="Tests for group permissions",
+        packages=[ds_dict_1],
+        context=create_context1,
+        )
+
+    # add users 2 and 3 to the group in different capacities
+    for user, capacity in [
+        [user2, "editor"],
+        [user3, "member"],
+    ]:
+        helpers.call_action("member_create",
+                            id=group_dict["id"],
+                            object=user,
+                            object_type='user',
+                            capacity=capacity)
+
+    # The admin of the group should be able to create a dataset
+    helpers.call_auth("member_create",
+                      {'ignore_auth': False,
+                       'user': user1['name'],
+                       'api_version': 3},
+                      object_type="package",
+                      id=group_dict["id"])
+
+    # The editor of a group should be able to create a dataset
+    helpers.call_auth("member_create",
+                      {'ignore_auth': False,
+                       'user': user2['name'],
+                       'api_version': 3},
+                      object_type="package",
+                      id=group_dict["id"])
+
+    # A member of a group is not allowed to add a dataset
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth("member_create",
+                          {'ignore_auth': False,
+                           'user': user3['name'],
+                           'api_version': 3},
+                          object_type="package",
+                          id=group_dict["id"])
+
+    # A random user is not allowed to add a dataset
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth("member_create",
+                          {'ignore_auth': False,
+                           'user': user4['name'],
+                           'api_version': 3},
+                          object_type="package",
+                          id=group_dict["id"])
+
+    # An anonymous user is also not allowed
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth("member_create",
+                          {'ignore_auth': False,
+                           'user': None,
+                           'api_version': 3},
+                          object_type="package",
+                          id=group_dict["id"])
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_group_delete():
     """Make sure users can delete their groups"""
     user = factories.User()
@@ -127,4 +213,91 @@ def test_group_no_delete_from_other_users_even_if_member():
     with pytest.raises(logic.NotAuthorized):
         helpers.call_auth("group_delete",
                           test_context2,
+                          id=group_dict["id"])
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_group_user_add():
+    """Only editors of a group are allowed to add create datasets in it"""
+    user1 = factories.User()
+    user2 = factories.User()
+    user3 = factories.User()
+    user4 = factories.User()
+    owner_org = factories.Organization(users=[
+        {'name': user1['id'], 'capacity': 'editor'},
+        {'name': user2['id'], 'capacity': 'member'},
+    ])
+    # create a datasets
+    create_context1 = {'ignore_auth': False,
+                       'user': user1['name'],
+                       'api_version': 3}
+    ds_dict_1, _ = make_dataset_via_s3(
+        create_context=create_context1,
+        owner_org=owner_org,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True)
+
+    # create group for user1
+    group_dict = helpers.call_action(
+        "group_create",
+        name=f"test_group-{uuid.uuid4()}",
+        title="Tests for group permissions",
+        packages=[ds_dict_1],
+        context=create_context1,
+        )
+
+    # add users 2 and 3 to the group in different capacities
+    for user, capacity in [
+        [user2, "editor"],
+        [user3, "member"],
+    ]:
+        helpers.call_action("member_create",
+                            id=group_dict["id"],
+                            object=user,
+                            object_type='user',
+                            capacity=capacity)
+
+    # The admin of the group should be able to add a user
+    helpers.call_auth("member_create",
+                      {'ignore_auth': False,
+                       'user': user1['name'],
+                       'api_version': 3},
+                      object_type="user",
+                      id=group_dict["id"])
+
+    # An editor of a group should not be able to add a user
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth("member_create",
+                          {'ignore_auth': False,
+                           'user': user2['name'],
+                           'api_version': 3},
+                          object_type="user",
+                          id=group_dict["id"])
+
+    # A simple member of a group is not allowed to add another member
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth("member_create",
+                          {'ignore_auth': False,
+                           'user': user3['name'],
+                           'api_version': 3},
+                          object_type="user",
+                          id=group_dict["id"])
+
+    # A random user is not allowed to add another member
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth("member_create",
+                          {'ignore_auth': False,
+                           'user': user4['name'],
+                           'api_version': 3},
+                          object_type="user",
+                          id=group_dict["id"])
+
+    # An anonymous user is also not allowed
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth("member_create",
+                          {'ignore_auth': False,
+                           'user': None,
+                           'api_version': 3},
+                          object_type="package",
                           id=group_dict["id"])
