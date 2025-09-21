@@ -72,11 +72,12 @@ def member_create(context, data_dict):
     if not group.is_organization:
         if data_dict.get("object_type") == "package":
             permission = "create_dataset"
-        elif data_dict.get("object_typ") == "user":
+        elif data_dict.get("object_type") == "user":
             permission = "membership"
         else:
-            raise ValueError("`permission` should be 'package' or 'user'. "
-                             "The application logic did not check this case.")
+            raise ValueError(f"`object_type` should be 'package' or 'user',"
+                             f"got '{data_dict.get('object_type')}'. "
+                             f"The application logic did not check this case.")
 
         authorized = authz.has_user_permission_for_group_or_org(group.id,
                                                                 user,
