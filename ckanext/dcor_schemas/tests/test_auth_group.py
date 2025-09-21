@@ -301,3 +301,82 @@ def test_group_user_add():
                            'api_version': 3},
                           object_type="package",
                           id=group_dict["id"])
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_group_show_by_user():
+    """
+    Only members of a group are allowed to show it
+    """
+    user1 = factories.User()
+    user2 = factories.User()
+    user3 = factories.User()
+    user4 = factories.User()
+    owner_org = factories.Organization(users=[
+        {'name': user1['id'], 'capacity': 'editor'},
+        {'name': user2['id'], 'capacity': 'member'},
+    ])
+    # create a datasets
+    create_context1 = {'ignore_auth': False,
+                       'user': user1['name'],
+                       'api_version': 3}
+    ds_dict_1, _ = make_dataset_via_s3(
+        create_context=create_context1,
+        owner_org=owner_org,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True)
+
+    # create group for user1
+    group_dict = helpers.call_action(
+        "group_create",
+        name=f"test_group-{uuid.uuid4()}",
+        title="Tests for group permissions",
+        packages=[ds_dict_1],
+        context=create_context1,
+        )
+
+    # add users 2 and 3 to the group in different capacities
+    for user, capacity in [
+        [user2, "editor"],
+        [user3, "member"],
+    ]:
+        helpers.call_action("member_create",
+                            id=group_dict["id"],
+                            object=user["id"],
+                            object_type='user',
+                            capacity=capacity)
+
+    # The admin, editor, and member should be able to view the group
+    for user in [user1, user2, user3]:
+        helpers.call_auth("group_show",
+                          {'ignore_auth': False,
+                           'user': user['name'],
+                           'api_version': 3},
+                          id=group_dict["id"])
+
+    # A random user is not allowed to view it
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth("group_show",
+                          {'ignore_auth': False,
+                           'user': user4['name'],
+                           'api_version': 3},
+                          id=group_dict["id"])
+
+    # An anonymous user is also not allowed
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth("group_show",
+                          {'ignore_auth': False,
+                           'user': None,
+                           'api_version': 3},
+                          id=group_dict["id"])
+
+    # Nobody is allowed to view user details
+    for user in [user1, user2, user3, user4, {"name": None}]:
+        with pytest.raises(logic.NotAuthorized):
+            helpers.call_auth("group_show",
+                              {'ignore_auth': False,
+                               'user': user['name'],
+                               'api_version': 3},
+                              id=group_dict["id"],
+                              include_users=True)
