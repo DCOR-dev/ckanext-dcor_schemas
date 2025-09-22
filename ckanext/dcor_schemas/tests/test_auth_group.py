@@ -15,7 +15,7 @@ data_path = pathlib.Path(__file__).parent / "data"
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_group_dataset_create():
-    """Only editors of a group are allowed to add create datasets in it"""
+    """Only admins and editors of a group are allowed to add datasets"""
     user1 = factories.User()
     user2 = factories.User()
     user3 = factories.User()
@@ -219,7 +219,7 @@ def test_group_no_delete_from_other_users_even_if_member():
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_group_user_add():
-    """Only editors of a group are allowed to add create datasets in it"""
+    """Only admins of a group are allowed to add users to it"""
     user1 = factories.User()
     user2 = factories.User()
     user3 = factories.User()
@@ -304,6 +304,8 @@ def test_group_user_add():
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.ckan_config('ckanext.dcor_schemas.allow_content_listing_for_anon',
+                         'false')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_group_show_by_user():
     """

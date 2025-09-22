@@ -8,6 +8,8 @@ from ckan import model
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.ckan_config('ckanext.dcor_schemas.allow_content_listing_for_anon',
+                         'false')
 def test_auth_group_show():
     """Anonymous user not allowed to list group with users"""
     user = factories.User()
