@@ -54,48 +54,34 @@ def test_group_dataset_create():
                             object_type='user',
                             capacity=capacity)
 
-    # The admin of the group should be able to create a dataset
-    helpers.call_auth("member_create",
-                      {'ignore_auth': False,
-                       'user': user1['name'],
-                       'api_version': 3},
-                      object_type="package",
-                      id=group_dict["id"])
-
-    # The editor of a group should be able to create a dataset
-    helpers.call_auth("member_create",
-                      {'ignore_auth': False,
-                       'user': user2['name'],
-                       'api_version': 3},
-                      object_type="package",
-                      id=group_dict["id"])
-
-    # A member of a group is not allowed to add a dataset
-    with pytest.raises(logic.NotAuthorized):
+    # admin and editor of the group should be able to create a dataset
+    for user in [user1, user2]:
         helpers.call_auth("member_create",
                           {'ignore_auth': False,
-                           'user': user3['name'],
+                           'user': user['name'],
                            'api_version': 3},
                           object_type="package",
                           id=group_dict["id"])
 
-    # A random user is not allowed to add a dataset
-    with pytest.raises(logic.NotAuthorized):
-        helpers.call_auth("member_create",
-                          {'ignore_auth': False,
-                           'user': user4['name'],
-                           'api_version': 3},
-                          object_type="package",
-                          id=group_dict["id"])
+        # This must also be reflected in group_list_authz
+        groups = helpers.call_action("group_list_authz")
+        assert len(groups) == 1
+        assert groups[0]["id"] == group_dict["id"]
 
-    # An anonymous user is also not allowed
-    with pytest.raises(logic.NotAuthorized):
-        helpers.call_auth("member_create",
-                          {'ignore_auth': False,
-                           'user': None,
-                           'api_version': 3},
-                          object_type="package",
-                          id=group_dict["id"])
+
+    # A member, random user, or anon may not add dataset
+    for user in [user3, user4, {"name": None}]:
+        with pytest.raises(logic.NotAuthorized):
+            helpers.call_auth("member_create",
+                              {'ignore_auth': False,
+                               'user': user['name'],
+                               'api_version': 3},
+                              object_type="package",
+                              id=group_dict["id"])
+
+        # This must also be reflected in group_list_authz
+        groups = helpers.call_action("group_list_authz")
+        assert len(groups) == 0
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
