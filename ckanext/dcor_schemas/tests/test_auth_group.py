@@ -58,7 +58,7 @@ def test_group_dataset_create():
     for user in [user1, user2]:
         context = {'ignore_auth': False,
                    'user': user['name'],
-                   'api_version': 3},
+                   'api_version': 3}
         helpers.call_auth("member_create",
                           context,
                           object_type="package",
