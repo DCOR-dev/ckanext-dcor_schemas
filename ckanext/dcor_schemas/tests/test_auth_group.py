@@ -56,30 +56,32 @@ def test_group_dataset_create():
 
     # admin and editor of the group should be able to create a dataset
     for user in [user1, user2]:
+        context = {'ignore_auth': False,
+                   'user': user['name'],
+                   'api_version': 3},
         helpers.call_auth("member_create",
-                          {'ignore_auth': False,
-                           'user': user['name'],
-                           'api_version': 3},
+                          context,
                           object_type="package",
                           id=group_dict["id"])
 
         # This must also be reflected in group_list_authz
-        groups = helpers.call_action("group_list_authz")
+        groups = helpers.call_action("group_list_authz", context)
         assert len(groups) == 1
         assert groups[0]["id"] == group_dict["id"]
 
     # A member, random user, or anon may not add dataset
     for user in [user3, user4, {"name": None}]:
+        context = {'ignore_auth': False,
+                   'user': user['name'],
+                   'api_version': 3}
         with pytest.raises(logic.NotAuthorized):
             helpers.call_auth("member_create",
-                              {'ignore_auth': False,
-                               'user': user['name'],
-                               'api_version': 3},
+                              context,
                               object_type="package",
                               id=group_dict["id"])
 
         # This must also be reflected in group_list_authz
-        groups = helpers.call_action("group_list_authz")
+        groups = helpers.call_action("group_list_authz", context)
         assert len(groups) == 0
 
 
