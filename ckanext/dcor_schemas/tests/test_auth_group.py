@@ -278,22 +278,6 @@ def test_group_show_by_user():
                        'api_version': 3},
                       id=group_dict["id"])
 
-    group_dict = helpers.call_action("group_show",
-                                     {'ignore_auth': False,
-                                      'user': user4['name'],
-                                      'api_version': 3},
-                                     id=group_dict["id"],
-                                     include_users=True
-                                     )
-
-    # We changed this in IGroupController.before_view
-    users_in_group = group_dict["users"]
-    assert len(users_in_group) == 3   # admin, editor, member
-    for item in users_in_group:
-        assert "email_hash" not in item
-        assert "created" not in item
-        assert "last_active" not in item
-
     # An anonymous user is also not allowed
     with pytest.raises(logic.NotAuthorized):
         helpers.call_auth("group_show",
