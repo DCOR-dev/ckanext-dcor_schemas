@@ -68,7 +68,6 @@ def test_group_dataset_create():
         assert len(groups) == 1
         assert groups[0]["id"] == group_dict["id"]
 
-
     # A member, random user, or anon may not add dataset
     for user in [user3, user4, {"name": None}]:
         with pytest.raises(logic.NotAuthorized):
