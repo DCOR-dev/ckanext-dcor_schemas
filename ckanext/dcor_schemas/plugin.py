@@ -6,7 +6,7 @@ import sys
 import ckan.lib.datapreview as datapreview
 from ckan.lib.plugins import DefaultPermissionLabels
 import ckan.lib.signals
-from ckan import authz, config, common, logic
+from ckan import authz, config, common, logic, model
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 
@@ -429,9 +429,18 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         labels = super(DCORDatasetFormPlugin, self
                        ).get_user_dataset_labels(user_obj)
         if user_obj and not user_obj.is_anonymous and hasattr(user_obj, "id"):
-            grps = logic.get_action("group_list_authz")(
-                {'user': user_obj.id},
-                {'am_member': True})
+            # I initially meant to use `group_authz_list` for this, but
+            # this one checks for `manage_group` while regular members only
+            # have the `read` permission. Thus, directly ask the DB:
+            q = (model.Session.query(model.Member.group_id)
+                 .filter(model.Member.table_name == 'user')
+                 .filter(model.Member.capacity.in_(["member"]))
+                 .filter(model.Member.table_id == user_obj.id)
+                 .filter(model.Member.state == 'active')
+                 )
+            grps = []
+            for row in q:
+                grps.append(row.group_id)
             labels.extend(u'group-%s' % o['id'] for o in grps)
         return labels
 
