@@ -441,7 +441,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             grps = []
             for row in q:
                 grps.append(row.group_id)
-            labels.extend(u'group-%s' % o['id'] for o in grps)
+            labels.extend(u'group-%s' % g for g in grps)
         return labels
 
     # IResourceController
