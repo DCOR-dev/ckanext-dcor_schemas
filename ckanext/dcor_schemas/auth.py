@@ -64,6 +64,34 @@ def get_package_id(context, data_dict):
     return convert_package_name_or_id_to_id(package_id, context)
 
 
+@logic.auth_allow_anonymous_access
+def group_list(context, data_dict):
+    """Check whether access to individual group details is authorised"""
+    if data_dict.get('include_users', False):
+        return {'success': False,
+                'msg': "Fetching user info via 'group_list' is not allowed."}
+    return content_listing(context, data_dict)
+
+
+@logic.auth_allow_anonymous_access
+def group_show(context, data_dict):
+    base_auth = content_listing(context, data_dict)
+    if not base_auth:
+        return base_auth
+    # check whether the user is a member of the group
+    group = logic.auth.get_group_object(context, data_dict)
+    user = context["user"]
+    authorized = authz.has_user_permission_for_group_or_org(group.id,
+                                                            user,
+                                                            "read")
+    if authorized:
+        return {'success': True}
+    else:
+        return {'success': False,
+                'msg': "Only group members may show group content."
+                }
+
+
 def member_create(context, data_dict):
     """In contrast to CKAN defaults, only editors of groups may add datasets"""
     group = logic.auth.get_group_object(context, data_dict)
@@ -607,12 +635,3 @@ def user_show(context, data_dict):
 
     return {'success': False,
             'msg': "Users may only view their own details"}
-
-
-@logic.auth_allow_anonymous_access
-def group_list(context, data_dict):
-    """Check whether access to individual group details is authorised"""
-    if data_dict.get('include_users', False):
-        return {'success': False,
-                'msg': "Fetching user info via 'group_list' is not allowed."}
-    return content_listing(context, data_dict)
