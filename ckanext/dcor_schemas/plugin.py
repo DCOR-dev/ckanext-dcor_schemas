@@ -6,7 +6,7 @@ import sys
 import ckan.lib.datapreview as datapreview
 from ckan.lib.plugins import DefaultPermissionLabels
 import ckan.lib.signals
-from ckan import config, common, logic
+from ckan import authz, config, common, logic
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 
@@ -41,6 +41,13 @@ REMOVE_PACKAGE_FIELDS = [
 ]
 
 
+# Monkey-patch away the `manage_group` permission for group members.
+# We need this to prevent simple group members (non-editors and non-admins)
+# from adding or removing datasets to a group.
+if "manage_group" in authz.ROLE_PERMISSIONS["member"]:
+    authz.ROLE_PERMISSIONS["member"].remove("manage_group")
+
+
 class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                             toolkit.DefaultDatasetForm,
                             DefaultPermissionLabels):
@@ -51,7 +58,6 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
     plugins.implements(plugins.IConfigurer, inherit=True)
     plugins.implements(plugins.IConfigDeclaration, inherit=True)
     plugins.implements(plugins.IDatasetForm, inherit=True)
-    plugins.implements(plugins.IGroupController, inherit=True)
     plugins.implements(plugins.IPermissionLabels, inherit=True)
     plugins.implements(plugins.IResourceController, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
@@ -403,32 +409,6 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                 # Make sure the S3 resources get the "public:true" tag.
                 for res in data_dict["resources"]:
                     s3cc.make_resource_public(res["id"])
-
-    # IGroupController | IOrganizationController
-    def before_view(self, data_dict):
-        """
-        Strip user-sensitive data from returned group dictionaries.
-        This includes "email_hash", "created", "about". The things
-        that we are mostly interested in are "capacity", "id", and "name".
-        """
-        for ii in range(len(data_dict.get("users", []))):
-            remove_keys = [
-                "about",
-                "activity_streams_email_notifications",
-                "created",
-                "display_name",
-                "email_hash",
-                "fullname",
-                "image_display_url",
-                "image_url",
-                "last_active",
-                "number_created_packages",
-                "state",
-                "sysadmin",
-            ]
-            for key in remove_keys:
-                data_dict["users"][ii].pop(key)
-        return data_dict
 
     # IPermissionLabels
     def get_dataset_labels(self, dataset_obj):
