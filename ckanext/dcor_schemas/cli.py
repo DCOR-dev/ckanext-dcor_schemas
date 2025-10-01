@@ -252,21 +252,25 @@ def dcor_purge_unused_collections_and_circles(
     """Purge old collections and circles that don't contain any datasets"""
     # Iterate over all collections
     for group in model.Group.iterall():
+        # Check group children
         if group.get_children_groups():
             print(f"Ignoring group '{group.id}' with children")
             continue
+
+        # Check group age
+        if group.created >= (
+                datetime.datetime.now()
+                - datetime.timedelta(days=31 * modified_before_months)):
+            # Group not old enough
+            continue
+
         # Does this group contain any datasets?
         query = (
             model.meta.Session.query(model.package.Package)
             # table with all active datasets
             .filter(model.package.Package.state == model.core.State.ACTIVE)
             # group table of the current group
-            .filter(model.group.group_table.c["id"] == group.id,
-                    # and additionally only the old groups
-                    model.group.group_table.c["created"]
-                    < (datetime.datetime.now()
-                       - datetime.timedelta(days=31 * modified_before_months))
-                    )
+            .filter(model.group.group_table.c["id"] == group.id)
             # member table with all active members
             .filter(model.group.member_table.c["state"] == 'active')
             # intersection of the members and package tables

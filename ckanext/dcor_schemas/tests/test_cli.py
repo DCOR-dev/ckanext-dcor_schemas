@@ -338,9 +338,9 @@ def test_dcor_purge_unused_collections_and_circles(cli):
     user = factories.User()
     user_obj = model.User.by_name(user["name"])
     context = {'ignore_auth': False,
-                      'auth_user_obj': user_obj,
-                      'user': user['name'],
-                      'api_version': 3}
+               'auth_user_obj': user_obj,
+               'user': user['name'],
+               'api_version': 3}
     circle_keep = factories.Organization(users=[{
         'name': user['id'],
         'capacity': 'admin'
