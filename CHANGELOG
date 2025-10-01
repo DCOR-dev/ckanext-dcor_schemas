@@ -1,5 +1,6 @@
 1.1.0
  - feat: implement CLI command `dcor-purge-unused-collections-and-circles`
+ - ref: rewrite `dcor_prune_draft_datasets` with database queries
 1.0.2
  - fix: only group admins and editors may add or remove datasets
  - fix: only group admins may add or remove users

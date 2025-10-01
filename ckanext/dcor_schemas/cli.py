@@ -1,4 +1,3 @@
-import copy
 import datetime
 import pathlib
 import sys
@@ -6,7 +5,7 @@ import time
 import traceback
 
 from ckan import logic
-from ckan.lib import mailer, search
+from ckan.lib import mailer
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
 import click
@@ -144,43 +143,34 @@ def dcor_prune_draft_datasets(older_than_days=21, dry_run=False):
     """Remove draft datasets from the CKAN database"""
     # Iterate over all packages
     # data_dict will be overridden each time it is used
-    data_dict = {
-        "q": "*:*",
-        "fq": "+state:draft",
-        "rows": 100,
-    }
-    query = search.query_for(model.Package)
+    query = (
+        model.meta.Session.query(model.package.Package)
+        # all inactive datasets
+        .filter(model.package.Package.state != model.core.State.ACTIVE)
+    )
+
     ds_found = 0
     ds_ignored = 0
+
     package_delete = logic.get_action('package_delete')
     dataset_purge = logic.get_action('dataset_purge')
-    package_show = logic.get_action('package_show')
-    while True:
-        res = query.run(copy.copy(data_dict))
-        if not res.get("results"):
-            # no more results
-            break
-        for name in res["results"]:
-            try:
-                ds_dict = package_show(context=admin_context(),
-                                       data_dict={'id': name})
-            except logic.NotFound:
-                click.secho(f"Dataset {name} does not exist. Consider "
-                            f"rebuilding the search index.")
-                continue
-            threshold = (datetime.datetime.now()
-                         - datetime.timedelta(days=older_than_days))
-            pd = datetime.datetime.fromisoformat(ds_dict["metadata_modified"])
-            if pd < threshold:
-                ds_found += 1
-                click.secho(f"Found dataset {name}")
-                if not dry_run:
-                    package_delete(context=admin_context(),
-                                   data_dict={'id': name})
-                    dataset_purge(context=admin_context(),
-                                  data_dict={'id': name})
-            else:
-                ds_ignored += 1
+
+    for dataset in query.all():
+        if not dataset.state == "draft":
+            ds_ignored += 1
+            continue
+        threshold = (datetime.datetime.now()
+                     - datetime.timedelta(days=older_than_days))
+        if dataset.metadata_modified < threshold:
+            ds_found += 1
+            click.secho(f"Found dataset {dataset.name}")
+            if not dry_run:
+                package_delete(context=admin_context(),
+                               data_dict={'id': dataset.id})
+                dataset_purge(context=admin_context(),
+                              data_dict={'id': dataset.id})
+        else:
+            ds_ignored += 1
 
     click.secho(f"Number of draft datasets found:   {ds_found}")
     click.secho(f"Number of draft datasets ignored: {ds_ignored}")
@@ -251,8 +241,7 @@ def dcor_purge_unused_collections_and_circles(
         dry_run: bool = False):
     """Purge old collections and circles that don't contain any datasets"""
     # Iterate over all collections
-    for (group_id,) in model.Session.query(model.Group.id).all():
-        group = model.Group.get(group_id)
+    for group in model.Group.all():
         # Check group children
         if group.get_children_groups():
             print(f"Ignoring group '{group.id}' with children")
