@@ -296,7 +296,11 @@ def dcor_purge_unused_collections_and_circles(
             if not dry_run:
                 # The `group_purge` method makes sure that all the memberships
                 # (users) are deleted before removing the group.
-                purge_method(admin_context(), {"id": group.id})
+                purge_method({'ignore_auth': True,
+                              'user': 'default',
+                              'model': model},
+                             {"id": group.id}
+                             )
 
 
 @click.command()
