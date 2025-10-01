@@ -48,10 +48,11 @@ def test_dcor_move_dataset_to_circle(enqueue_job_mock, cli):
     bucket_name_new = bucket_name_old.replace(ds_dict["owner_org"],
                                               new_owner_org["id"])
 
-    cli.invoke(ckan_cli, ["dcor-move-dataset-to-circle",
-                          ds_dict["id"],
-                          new_owner_org["id"]
-                          ])
+    res = cli.invoke(ckan_cli, ["dcor-move-dataset-to-circle",
+                                ds_dict["id"],
+                                new_owner_org["id"]
+                                ])
+    assert res.exit_code == 0
 
     context = {'ignore_auth': False,
                'user': ds_dict["creator_user_id"],
@@ -87,6 +88,7 @@ def test_list_group_resources(cli, activate):
         activate=activate)
     org_id = ds_dict['organization']['id']
     result = cli.invoke(ckan_cli, ["list-group-resources", org_id])
+    assert result.exit_code == 0
     assert result.output.strip().split()[-1] == res_dict["id"]
 
 
@@ -110,6 +112,7 @@ def test_list_group_resources_delete_purge(cli, activate):
     helpers.call_action("package_delete", context, id=ds_dict["id"])
     # It should still be listed
     result = cli.invoke(ckan_cli, ["list-group-resources", org_id])
+    assert result.exit_code == 0
     assert result.output.strip().split()[-1] == res_dict["id"]
     assert res_dict["id"] in result.output.strip().split()  # same test
 
@@ -117,6 +120,7 @@ def test_list_group_resources_delete_purge(cli, activate):
     helpers.call_action("dataset_purge", context, id=ds_dict["id"])
     # It should not be there anymore
     result2 = cli.invoke(ckan_cli, ["list-group-resources", org_id])
+    assert result2.exit_code == 0
     assert res_dict["id"] not in result2.output.strip().split()
 
 
@@ -124,6 +128,7 @@ def test_list_group_resources_delete_purge(cli, activate):
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_list_zombie_users_basic_clean_db(cli):
     result = cli.invoke(ckan_cli, ["list-zombie-users"])
+    assert result.exit_code == 0
     for line in result.output.split("\n"):
         if not line.strip():
             continue
@@ -141,6 +146,7 @@ def test_list_zombie_users_with_a_user(cli):
     factories.User(name=f"test_user_{uuid.uuid4()}")
     result = cli.invoke(ckan_cli,
                         ["list-zombie-users", "--last-activity-weeks", "0"])
+    assert result.exit_code == 0
     print(result)  # for debugging
     for line in result.output.split("\n"):
         if not line.strip():
@@ -175,6 +181,7 @@ def test_list_zombie_users_with_a_user_with_dataset(cli):
 
     result = cli.invoke(ckan_cli,
                         ["list-zombie-users", "--last-activity-weeks", "0"])
+    assert result.exit_code == 0
     for line in result.output.split("\n"):
         if not line.strip():
             continue
@@ -204,6 +211,7 @@ def test_list_zombie_users_with_active_user(cli):
 
     result = cli.invoke(ckan_cli,
                         ["list-zombie-users", "--last-activity-weeks", "12"])
+    assert result.exit_code == 0
     for line in result.output.split("\n"):
         if not line.strip():
             continue
@@ -221,6 +229,7 @@ def test_list_zombie_users_with_admin(cli):
     factories.Sysadmin()
     result = cli.invoke(ckan_cli,
                         ["list-zombie-users", "--last-activity-weeks", "0"])
+    assert result.exit_code == 0
     for line in result.output.split("\n"):
         if not line.strip():
             continue
@@ -245,24 +254,27 @@ def test_dcor_prune_draft_datasets(cli):
     assert helpers.call_action("package_show", id=ds_dict["id"])
 
     # Remove older draft datasets, will not remove the current one
-    cli.invoke(ckan_cli,
-               ["dcor-prune-draft-datasets",
-                "--older-than-days", "1"])
+    res = cli.invoke(ckan_cli,
+                     ["dcor-prune-draft-datasets",
+                      "--older-than-days", "1"])
+    assert res.exit_code == 0
     assert helpers.call_action("package_show", id=ds_dict["id"])
 
     # Dry run
-    cli.invoke(ckan_cli,
-               ["dcor-prune-draft-datasets",
-                "--older-than-days", "-1",
-                "--dry-run"
-                ])
+    res = cli.invoke(ckan_cli,
+                     ["dcor-prune-draft-datasets",
+                      "--older-than-days", "-1",
+                      "--dry-run"
+                      ])
+    assert res.exit_code == 0
     assert helpers.call_action("package_show", id=ds_dict["id"])
 
     # Actual run
-    cli.invoke(ckan_cli,
-               ["dcor-prune-draft-datasets",
-                "--older-than-days", "-1",
-                ])
+    res = cli.invoke(ckan_cli,
+                     ["dcor-prune-draft-datasets",
+                      "--older-than-days", "-1",
+                      ])
+    assert res.exit_code == 0
     with pytest.raises(logic.NotFound):
         helpers.call_action("package_show", id=ds_dict["id"])
 
@@ -288,9 +300,10 @@ def test_dcor_prune_orphaned_s3_artifacts(cli):
 
     # Attempt to remove objects from S3, the object should still be there
     # afterward.
-    cli.invoke(ckan_cli,
-               ["dcor-prune-orphaned-s3-artifacts",
-                "--older-than-days", "-1"])
+    res = cli.invoke(ckan_cli,
+                     ["dcor-prune-orphaned-s3-artifacts",
+                      "--older-than-days", "-1"])
+    assert res.exit_code == 0
     assert s3.object_exists(bucket_name, object_name)
 
     # Delete the entire dataset
@@ -307,18 +320,20 @@ def test_dcor_prune_orphaned_s3_artifacts(cli):
     assert s3.object_exists(bucket_name, object_name)
 
     # Perform a cleanup that does not take into account the new data
-    cli.invoke(ckan_cli,
-               ["dcor-prune-orphaned-s3-artifacts",
-                "--older-than-days", "1"])
+    res = cli.invoke(ckan_cli,
+                     ["dcor-prune-orphaned-s3-artifacts",
+                      "--older-than-days", "1"])
+    assert res.exit_code == 0
     # Make sure that the S3 object is still there
     assert s3.object_exists(bucket_name, object_name)
 
     # Perform a dry run
-    cli.invoke(ckan_cli,
-               ["dcor-prune-orphaned-s3-artifacts",
-                "--older-than-days", "-1",
-                "--dry-run"
-                ])
+    res = cli.invoke(ckan_cli,
+                     ["dcor-prune-orphaned-s3-artifacts",
+                      "--older-than-days", "-1",
+                      "--dry-run"
+                      ])
+    assert res.exit_code == 0
     assert s3.object_exists(bucket_name, object_name)
 
     # Perform the actual cleanup
@@ -326,6 +341,7 @@ def test_dcor_prune_orphaned_s3_artifacts(cli):
                      ["dcor-prune-orphaned-s3-artifacts",
                       "--older-than-days", "-1",
                       ])
+    assert res.exit_code == 0
     print(res)
     print(rid)
     print(ds_dict["id"])
@@ -379,8 +395,9 @@ def test_dcor_purge_unused_collections_and_circles(cli):
 
     # circle_remove and group_remove should still be there after this,
     # since they were just created.
-    cli.invoke(ckan_cli,
-               ["dcor-purge-unused-collections-and_circles"])
+    res = cli.invoke(ckan_cli,
+                     ["dcor-purge-unused-collections-and-circles"])
+    assert res.exit_code == 0
     assert helpers.call_action("group_show",
                                context,
                                id=group_keep["id"]
@@ -399,10 +416,11 @@ def test_dcor_purge_unused_collections_and_circles(cli):
                                )["id"] == circle_remove["id"]
 
     # The same thing happens when we use --dry-run
-    cli.invoke(ckan_cli,
-               ["dcor-purge-unused-collections-and_circles",
-                "--modified-before-months", "0",
-                "--dry-run"])
+    res = cli.invoke(ckan_cli,
+                     ["dcor-purge-unused-collections-and-circles",
+                      "--modified-before-months", "0",
+                      "--dry-run"])
+    assert res.exit_code == 0
     assert helpers.call_action("group_show",
                                context,
                                id=group_keep["id"]
@@ -421,9 +439,10 @@ def test_dcor_purge_unused_collections_and_circles(cli):
                                )["id"] == circle_remove["id"]
 
     # But if we actually remove things, only the *_keep stuff should stay
-    cli.invoke(ckan_cli,
-               ["dcor-purge-unused-collections-and_circles",
-                "--modified-before-months", "0"])
+    res = cli.invoke(ckan_cli,
+                     ["dcor-purge-unused-collections-and-circles",
+                      "--modified-before-months", "0"])
+    assert res.exit_code == 0
     assert helpers.call_action("group_show",
                                context,
                                id=group_keep["id"]
