@@ -336,8 +336,11 @@ def test_dcor_prune_orphaned_s3_artifacts(cli):
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_dcor_purge_unused_collections_and_circles(cli):
     user = factories.User()
-    context = {'user': user['id']}
-
+    user_obj = model.User.by_name(user["name"])
+    context = {'ignore_auth': False,
+                      'auth_user_obj': user_obj,
+                      'user': user['name'],
+                      'api_version': 3}
     circle_keep = factories.Organization(users=[{
         'name': user['id'],
         'capacity': 'admin'
