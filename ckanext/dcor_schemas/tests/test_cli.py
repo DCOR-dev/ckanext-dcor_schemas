@@ -257,7 +257,7 @@ def test_dcor_prune_draft_datasets(cli):
     res = cli.invoke(ckan_cli,
                      ["dcor-prune-draft-datasets",
                       "--older-than-days", "1"])
-    print(res.output_bytes)
+    print(res.output)
     assert res.exit_code == 0
     assert helpers.call_action("package_show", id=ds_dict["id"])
 
@@ -398,7 +398,7 @@ def test_dcor_purge_unused_collections_and_circles(cli):
     # since they were just created.
     res = cli.invoke(ckan_cli,
                      ["dcor-purge-unused-collections-and-circles"])
-    print(res.output_bytes)
+    print(res.output)
     assert res.exit_code == 0
     assert helpers.call_action("group_show",
                                context,
