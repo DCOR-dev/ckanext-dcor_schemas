@@ -278,7 +278,7 @@ def dcor_purge_unused_collections_and_circles(
         if not query.count():
             if group.is_organization:
                 print(f"Delete circle {group.id}")
-                purge_method = logic.action.delete.group_organization
+                purge_method = logic.action.delete.organization_purge
             else:
                 print(f"Delete collection {group.id}")
                 purge_method = logic.action.delete.group_purge
