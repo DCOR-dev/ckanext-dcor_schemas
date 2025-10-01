@@ -251,7 +251,7 @@ def dcor_purge_unused_collections_and_circles(
         dry_run: bool = False):
     """Purge old collections and circles that don't contain any datasets"""
     # Iterate over all collections
-    for group in model.Group.iterall():
+    for (group,) in model.Session.query(model.Group.id).all():
         # Check group children
         if group.get_children_groups():
             print(f"Ignoring group '{group.id}' with children")
