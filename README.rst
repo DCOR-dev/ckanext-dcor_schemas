@@ -143,6 +143,11 @@ accordingly:
 
         ckan dcor-prune-orphaned-s3-artifacts --older-than-days 21 --dry-run
 
+  - CKAN command ``dcor-purge-unused-collections-and-circles`` for removing collections
+    and circles that are old and don't contain any datasets::
+
+        ckan dcor-purge-unused-collections-and-circles --older-than-months 12 --dry-run
+
   - CKAN command ``send_mail`` for sending emails using the CKAN email credentials
 
 Installation

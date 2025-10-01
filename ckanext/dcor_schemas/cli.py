@@ -134,12 +134,12 @@ def dcor_move_dataset_to_circle(dataset, circle):
     print("...deleted old S3 objects")
 
 
+@click.command()
 @click.option('--older-than-days', default=21,
               help='Only prune datasets that were created before a given '
                    + 'number of days (set to -1 to prune all)')
 @click.option('--dry-run', is_flag=True,
               help='Do not actually remove anything')
-@click.command()
 def dcor_prune_draft_datasets(older_than_days=21, dry_run=False):
     """Remove draft datasets from the CKAN database"""
     # Iterate over all packages
@@ -187,6 +187,7 @@ def dcor_prune_draft_datasets(older_than_days=21, dry_run=False):
     click.secho("Done!")
 
 
+@click.command()
 @click.option('--older-than-days', default=21,
               help='Only prune artifacts that were created before a given '
                    + 'number of days (set to -1 to prune all)')
@@ -194,7 +195,6 @@ def dcor_prune_draft_datasets(older_than_days=21, dry_run=False):
               help='Keep buckets that do not represent a circle')
 @click.option('--dry-run', is_flag=True,
               help='Do not actually remove anything')
-@click.command()
 def dcor_prune_orphaned_s3_artifacts(older_than_days=21,
                                      keep_orphan_buckets=False,
                                      dry_run=False):
@@ -238,6 +238,61 @@ def dcor_prune_orphaned_s3_artifacts(older_than_days=21,
                         pass
     click.secho(f"Number of orphaned objects found: {obj_found}")
     click.secho("Done!")
+
+
+@click.command()
+@click.option('--modified-before-months', default=24,
+              help='Only delete collections that were last modified before '
+                   'a given number of months (set to -1 to delete all)')
+@click.option('--dry-run', is_flag=True,
+              help='Do not actually delete anything')
+def dcor_purge_unused_collections_and_circles(
+        modified_before_months: int = 24,
+        dry_run: bool = False):
+    """Purge old collections and circles that don't contain any datasets"""
+    # Iterate over all collections
+    for group in model.Group.iterall():
+        if group.get_children_groups():
+            print(f"Ignoring group '{group.id}' with children")
+            continue
+        # Does this group contain any datasets?
+        query = (
+            model.meta.Session.query(model.package.Package)
+            # table with all active datasets
+            .filter(model.package.Package.state == model.core.State.ACTIVE)
+            # group table of the current group
+            .filter(model.group.group_table.c["id"] == group.id,
+                    # and additionally only the old groups
+                    model.group.group_table.c["created"]
+                    < (datetime.datetime.now()
+                       - datetime.timedelta(days=31 * modified_before_months))
+                    )
+            # member table with all active members
+            .filter(model.group.member_table.c["state"] == 'active')
+            # intersection of the members and package tables
+            .join(model.group.member_table,
+                  model.group.member_table.c["table_id"]
+                  == model.package.Package.id)
+            # intersection of the group table and the members table
+            .join(model.group.group_table,
+                  model.group.group_table.c["id"]
+                  == model.group.member_table.c["group_id"])
+            # we only need one
+            .limit(1)
+            )
+
+        if not query.count():
+            if group.is_organization:
+                print(f"Delete circle {group.id}")
+                purge_method = logic.action.delete.group_organization
+            else:
+                print(f"Delete collection {group.id}")
+                purge_method = logic.action.delete.group_purge
+
+            if not dry_run:
+                # The `group_purge` method makes sure that all the memberships
+                # (users) are deleted before removing the group.
+                purge_method(admin_context(), {"id": group.id})
 
 
 @click.command()
@@ -296,10 +351,10 @@ def list_zombie_users(last_activity_weeks=12):
         click.echo(user.name)
 
 
+@click.command()
 @click.option('--modified-days', default=-1,
               help='Only run for datasets modified within this number of days '
                    + 'in the past. Set to -1 to apply to all datasets.')
-@click.command()
 def run_jobs_dcor_schemas(modified_days=-1):
     """Set .rtdc metadata and SHA256 sums and for all resources
 
@@ -343,6 +398,7 @@ def run_jobs_dcor_schemas(modified_days=-1):
     click.echo("Done!")
 
 
+@click.command()
 @click.option('--recipient', type=str)
 @click.option('--subject', type=str, default="DCOR Email")
 @click.option('--file_body',
@@ -352,7 +408,6 @@ def run_jobs_dcor_schemas(modified_days=-1):
                               path_type=pathlib.Path),
               default=None,
               )
-@click.command()
 def send_mail(recipient, subject=None, file_body=None):
     """Send email to `recipient` with `subject` with content of `file_body`
 
@@ -375,6 +430,7 @@ def get_commands():
         dcor_move_dataset_to_circle,
         dcor_prune_draft_datasets,
         dcor_prune_orphaned_s3_artifacts,
+        dcor_purge_unused_collections_and_circles,
         list_circles,
         list_collections,
         list_group_resources,

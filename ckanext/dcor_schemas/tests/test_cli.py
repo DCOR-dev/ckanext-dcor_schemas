@@ -330,3 +330,114 @@ def test_dcor_prune_orphaned_s3_artifacts(cli):
     print(rid)
     print(ds_dict["id"])
     assert not s3.object_exists(bucket_name, object_name)
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dcor_purge_unused_collections_and_circles(cli):
+    user = factories.User()
+    context = {'user': user['id']}
+
+    circle_keep = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    circle_remove = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+
+    group_keep = factories.Group(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    group_remove = factories.Group(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+
+    # create a dataset
+    ds_dict, res_dict = make_dataset_via_s3(
+        create_context=context,
+        owner_org=circle_keep,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True,
+        private=False,
+        authors="Peter Pan")
+
+    # add the dataset to the group_keep
+    helpers.call_action("member_create",
+                        context,
+                        id=group_keep["id"],
+                        object=ds_dict["id"],
+                        object_type="package",
+                        capacity="member",
+                        )
+
+    # circle_remove and group_remove should still be there after this,
+    # since they were just created.
+    cli.invoke(ckan_cli,
+               ["dcor-purge-unused-collections-and_circles"])
+    assert helpers.call_action("group_show",
+                               context,
+                               id=group_keep["id"]
+                               )["id"] == group_keep["id"]
+    assert helpers.call_action("group_show",
+                               context,
+                               id=group_remove["id"]
+                               )["id"] == group_remove["id"]
+    assert helpers.call_action("organization_show",
+                               context,
+                               id=circle_keep["id"]
+                               )["id"] == circle_keep["id"]
+    assert helpers.call_action("organization_show",
+                               context,
+                               id=circle_remove["id"]
+                               )["id"] == circle_remove["id"]
+
+    # The same thing happens when we use --dry-run
+    cli.invoke(ckan_cli,
+               ["dcor-purge-unused-collections-and_circles",
+                "--modified-before-months", "0",
+                "--dry-run"])
+    assert helpers.call_action("group_show",
+                               context,
+                               id=group_keep["id"]
+                               )["id"] == group_keep["id"]
+    assert helpers.call_action("group_show",
+                               context,
+                               id=group_remove["id"]
+                               )["id"] == group_remove["id"]
+    assert helpers.call_action("organization_show",
+                               context,
+                               id=circle_keep["id"]
+                               )["id"] == circle_keep["id"]
+    assert helpers.call_action("organization_show",
+                               context,
+                               id=circle_remove["id"]
+                               )["id"] == circle_remove["id"]
+
+    # But if we actually remove things, only the *_keep stuff should stay
+    cli.invoke(ckan_cli,
+               ["dcor-purge-unused-collections-and_circles",
+                "--modified-before-months", "0"])
+    assert helpers.call_action("group_show",
+                               context,
+                               id=group_keep["id"]
+                               )["id"] == group_keep["id"]
+    assert helpers.call_action("organization_show",
+                               context,
+                               id=circle_keep["id"]
+                               )["id"] == circle_keep["id"]
+
+    with pytest.raises(logic.NotFound):
+        helpers.call_action("group_show",
+                            context,
+                            id=group_remove["id"]
+                            )
+
+    with pytest.raises(logic.NotFound):
+        helpers.call_action("organization_show",
+                            context,
+                            id=circle_remove["id"]
+                            )
