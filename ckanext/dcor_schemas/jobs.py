@@ -1,5 +1,7 @@
 import datetime
 import json
+import logging
+import time
 
 from ckan import logic
 import dclab
@@ -8,6 +10,9 @@ from dcor_shared import (
     rqjob_register, s3, s3cc, wait_for_resource,
 )
 from dcor_shared import RQJob  # noqa: F401
+
+
+logger = logging.getLogger(__name__)
 
 
 def admin_background_context():
@@ -70,16 +75,25 @@ def job_set_resource_metadata_base(resource):
     # Do not compare against `resource`, because this dictionary might
     # not be the one that we have in the database.
     resource_show = logic.get_action("resource_show")
-    res_dict_act = resource_show(context={'ignore_auth': True,
-                                          'user': 'default'},
-                                 data_dict={"id": resource['id']})
+    changes_required = False
 
-    for key in res_dict_base:
-        if res_dict_base[key] != res_dict_act.get(key):
-            changes_required = True
+    # be patient when showing the resource for the first time
+    for ii in range(5):
+        try:
+            res_dict_act = resource_show(context=admin_background_context(),
+                                         data_dict={"id": resource['id']})
+        except BaseException:
+            logger.error(f"Could not fetch resource dict for {resource['id']}")
+            time.sleep(0.5)
+        else:
+            for key in res_dict_base:
+                if res_dict_base[key] != res_dict_act.get(key):
+                    changes_required = True
+                    break
             break
     else:
-        changes_required = False
+        # Fall-back to applying the changes anyway
+        changes_required = True
 
     if changes_required:
         res_dict_base["last_modified"] = datetime.datetime.now(
