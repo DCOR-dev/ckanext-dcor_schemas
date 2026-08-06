@@ -515,7 +515,7 @@ def user_autocomplete(context, data_dict=None):
 
 @logic.auth_allow_anonymous_access
 def user_create(context, data_dict=None):
-    """Measure against automated registration from gmail addresses
+    """Measure against automated spam registration
 
     This function is the first escalation of many more possible
     ways to restrict user registration via bots, e.g.
@@ -526,7 +526,7 @@ def user_create(context, data_dict=None):
 
     Part of this (implementing as auth function) is actually
     security by obscurity. Anyone trying to register with a
-    gmail address will just get a "403 Forbidden".
+    spam address will just get a "403 Forbidden".
 
     Implementing this with IUserForm would be much better:
     https://github.com/ckan/ckan/issues/6070
@@ -580,8 +580,13 @@ def user_create(context, data_dict=None):
                 return {'success': False,
                         'msg': 'Invalid email address provided!'}
             domain = email.split("@")[1]
-            # this might be a little harsh
-            if domain in ["gmail.com", "mailto.plus"]:
+            if domain in [
+                # Don't display full domains in source code so this does not
+                # get picked up by search engines or spammers.
+                    ("gm" "ail" ".com"),
+                    ("mai" "lto" ".plus"),
+                    ("tres" "scribe" ".com"),
+            ]:
                 spam_score += 1
 
     if spam_score:
