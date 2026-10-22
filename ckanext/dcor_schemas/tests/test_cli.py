@@ -521,3 +521,89 @@ def test_dcor_purge_all_not_allowed(cli):
     assert user_state(sc["user_no_data"]["name"]) == "active"
     assert model.Package.get(sc["ds_other"]["id"]) is not None
     assert model.Group.get(sc["circle_other"]["id"]) is not None
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.ckan_config('ckanext.dcor_schemas.allow_purge_all', "true")
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dcor_purge_all_dataset_added_during_purge(cli):
+    """A dataset created while purging must not prevent purging its circle
+
+    This simulates e.g. a test suite that creates datasets on a
+    development instance while `dcor-purge-all` is running.
+    """
+    sc = make_purge_all_scenario()
+    context_active = {'ignore_auth': False,
+                      'user': sc["user_active"]['name'],
+                      'api_version': 3}
+    created = []
+    get_action_orig = logic.get_action
+
+    def get_action(name):
+        action = get_action_orig(name)
+        if name != "dataset_purge":
+            return action
+
+        def dataset_purge(context, data_dict):
+            result = action(context, data_dict)
+            if not created:
+                # Create a new dataset in a circle that is about to be
+                # purged, after the list of datasets to purge was compiled.
+                created.append(make_dataset_via_s3(
+                    create_context=context_active,
+                    owner_org=sc["circle_other"],
+                    activate=False))
+            return result
+        return dataset_purge
+
+    with mock.patch("ckanext.dcor_schemas.cli.logic.get_action",
+                    side_effect=get_action):
+        res = cli.invoke(ckan_cli,
+                         ["dcor-purge-all",
+                          "--keep-circle", sc["circle_keep"]["name"],
+                          "--yes"])
+    print(res.output)
+    assert created, "sanity check: the dataset was created during purging"
+    assert res.exit_code == 0
+    assert model.Package.get(created[0]["id"]) is None
+    assert model.Group.get(sc["circle_other"]["id"]) is None
+    assert model.Package.get(sc["ds_keep"]["id"]) is not None
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.ckan_config('ckanext.dcor_schemas.allow_purge_all', "true")
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dcor_purge_all_continue_on_error(cli):
+    """If one item cannot be purged, continue and exit with an error"""
+    sc = make_purge_all_scenario()
+    get_action_orig = logic.get_action
+
+    def get_action(name):
+        action = get_action_orig(name)
+        if name != "group_purge":
+            return action
+
+        def group_purge(context, data_dict):
+            if data_dict["id"] == sc["collection"]["id"]:
+                raise logic.ValidationError({"message": "simulated error"})
+            return action(context, data_dict)
+        return group_purge
+
+    with mock.patch("ckanext.dcor_schemas.cli.logic.get_action",
+                    side_effect=get_action):
+        res = cli.invoke(ckan_cli,
+                         ["dcor-purge-all",
+                          "--keep-circle", sc["circle_keep"]["name"],
+                          "--yes"])
+    print(res.output)
+    assert res.exit_code == 1
+    assert "Encountered 1 errors" in res.output
+    assert "simulated error" in res.output
+    assert f"purge collection {sc['collection']['id']}" in res.output
+    # the collection that failed is still there
+    assert model.Group.get(sc["collection"]["id"]) is not None
+    # everything else was purged nevertheless
+    assert model.Group.get(sc["collection_empty"]["id"]) is None
+    assert model.Group.get(sc["circle_other"]["id"]) is None
+    assert model.Package.get(sc["ds_other"]["id"]) is None
+    assert user_state(sc["user_no_data"]["name"]) == "deleted"
