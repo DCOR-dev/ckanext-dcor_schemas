@@ -146,6 +146,12 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         schema_group = key.ckanext.dcor_schemas
 
         declaration.declare_bool(
+            schema_group.allow_purge_all, False).set_description(
+            "allow the CLI command `dcor-purge-all`, which removes all users, "
+            "datasets, collections, and circles (development instances only)"
+        )
+
+        declaration.declare_bool(
             schema_group.allow_content_listing_for_anon, True).set_description(
             "allow anonymous users to list all circles, groups, tags"
         )

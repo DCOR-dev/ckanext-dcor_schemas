@@ -90,6 +90,9 @@ accordingly:
     circles, colletions, and other content.
   - the ``ckanext.dcor_schemas.allow_public_datasets`` boolean parameter
     can be used to disable the creation of public datasets (e.g. for DCOR-med).
+  - the ``ckanext.dcor_schemas.allow_purge_all`` boolean parameter
+    (default: false) must be set to true to allow the ``dcor-purge-all``
+    CLI command. Only set this for development instances (e.g. DCOR-dev).
   - the ``ckanext.dcor_schemas.json_resource_schema_dir`` parameter
     can be used to specify a directory containing .json files that
     define the supplementary resource schema. The default is
@@ -143,10 +146,14 @@ accordingly:
 
         ckan dcor-prune-orphaned-s3-artifacts --older-than-days 21 --dry-run
 
-  - CKAN command ``dcor-purge-unused-collections-and-circles`` for removing collections
-    and circles that are old and don't contain any datasets::
+  - CKAN command ``dcor-purge-all`` for resetting development instances
+    (e.g. DCOR-dev). It removes all users that are not sysadmins and that
+    either have no datasets or were not active for a given number of days,
+    and it purges all datasets, collections, and circles except for the
+    circles specified with ``--keep-circle``. This command only runs if
+    ``ckanext.dcor_schemas.allow_purge_all = true`` is set::
 
-        ckan dcor-purge-unused-collections-and-circles --modified-before-months 12 --dry-run
+        ckan dcor-purge-all --keep-circle figshare-import --user-inactive-days 7 --dry-run
 
   - CKAN command ``send_mail`` for sending emails using the CKAN email credentials
 
