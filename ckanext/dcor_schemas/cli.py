@@ -231,66 +231,108 @@ def dcor_prune_orphaned_s3_artifacts(older_than_days=21,
 
 
 @click.command()
-@click.option('--modified-before-months', default=24,
-              help='Only delete collections that were last modified before '
-                   'a given number of months (set to -1 to delete all)')
+@click.option('--keep-circle', multiple=True,
+              help='Name or ID of a circle that should be kept together '
+                   'with its datasets (may be specified multiple times)')
+@click.option('--user-inactive-days', default=7, type=int,
+              help='Remove users with datasets that were not active within '
+                   'this number of days (users without datasets are always '
+                   'removed)')
 @click.option('--dry-run', is_flag=True,
-              help='Do not actually delete anything')
-def dcor_purge_unused_collections_and_circles(
-        modified_before_months: int = 24,
-        dry_run: bool = False):
-    """Purge old collections and circles that don't contain any datasets"""
-    # Iterate over all collections
-    for group in model.Group.all():
-        # Check group children
-        if group.get_children_groups():
-            print(f"Ignoring group '{group.id}' with children")
+              help='Do not actually remove anything')
+@click.confirmation_option(
+    prompt="This removes all users, datasets, collections, and circles. "
+           "Are you certain?")
+@click.pass_context
+def dcor_purge_all(ctx,
+                   keep_circle: tuple[str] = (),
+                   user_inactive_days: int = 7,
+                   dry_run: bool = False):
+    """Purge users, datasets, collections, and circles
+
+    This command is meant for resetting development instances such as
+    DCOR-dev. It only runs if the configuration option
+    `ckanext.dcor_schemas.allow_purge_all` is set to true.
+
+    1. Remove all users that are not sysadmins and that either have
+       no datasets or that have datasets but were not active within
+       `--user-inactive-days` days. Users are evaluated before the
+       datasets are purged.
+    2. Purge all datasets (active, draft, and deleted), except for those
+       in the circles specified via `--keep-circle`.
+    3. Purge all collections.
+    4. Purge all circles, except for those specified via `--keep-circle`.
+    """
+    if not toolkit.asbool(get_ckan_config_option(
+            "ckanext.dcor_schemas.allow_purge_all")):
+        click.secho("Purging everything is not allowed on this instance. "
+                    "Set `ckanext.dcor_schemas.allow_purge_all = true` in "
+                    "the CKAN configuration (development instances only).",
+                    fg="red")
+        return sys.exit(1)
+
+    site_user = logic.get_action("get_site_user")({"ignore_auth": True}, {})
+    context = {"ignore_auth": True, "user": site_user["name"]}
+
+    # circles to keep
+    keep_ids = []
+    for name in keep_circle:
+        grp = model.Group.get(name)
+        if grp is None or not grp.is_organization:
+            click.secho(f"Circle '{name}' does not exist", fg="yellow")
+        else:
+            keep_ids.append(grp.id)
+
+    # 1. users
+    threshold = (datetime.datetime.utcnow()
+                 - datetime.timedelta(days=user_inactive_days))
+    user_names = []
+    for user in model.User.all():
+        if user.sysadmin or user.state == model.core.State.DELETED:
             continue
-
-        # Check group age
-        if group.created >= (
-                datetime.datetime.now()
-                - datetime.timedelta(days=31 * modified_before_months)):
-            # Group not old enough
-            continue
-
-        # Does this group contain any datasets?
-        query = (
-            model.meta.Session.query(model.package.Package)
-            # table with all active datasets
-            .filter(model.package.Package.state == model.core.State.ACTIVE)
-            # group table of the current group
-            .filter(model.group.group_table.c["id"] == group.id)
-            # member table with all active members
-            .filter(model.group.member_table.c["state"] == 'active')
-            # intersection of the members and package tables
-            .join(model.group.member_table,
-                  model.group.member_table.c["table_id"]
-                  == model.package.Package.id)
-            # intersection of the group table and the members table
-            .join(model.group.group_table,
-                  model.group.group_table.c["id"]
-                  == model.group.member_table.c["group_id"])
-            # we only need one
-            .limit(1)
-            )
-
-        if not query.count():
-            if group.is_organization:
-                print(f"Delete circle {group.id}")
-                purge_method = logic.action.delete.organization_purge
-            else:
-                print(f"Delete collection {group.id}")
-                purge_method = logic.action.delete.group_purge
-
+        has_datasets = user.number_created_packages(
+            include_private_and_draft=True) > 0
+        inactive = user.last_active is None or user.last_active < threshold
+        if not has_datasets or inactive:
+            user_names.append(user.name)
+    with ctx.meta["flask_app"].test_request_context():
+        for name in user_names:
+            click.echo(f"Remove user {name}")
             if not dry_run:
-                # The `group_purge` method makes sure that all the memberships
-                # (users) are deleted before removing the group.
-                purge_method({'ignore_auth': True,
-                              'user': 'default',
-                              'model': model},
-                             {"id": group.id}
-                             )
+                logic.get_action("user_delete")(dict(context), {"id": name})
+
+    # 2. datasets
+    dataset_ids = [ds.id for ds in model.Session.query(model.Package)
+                   if ds.owner_org not in keep_ids]
+    package_delete = logic.get_action("package_delete")
+    dataset_purge = logic.get_action("dataset_purge")
+    for ds_id in dataset_ids:
+        click.echo(f"Purge dataset {ds_id}")
+        if not dry_run:
+            if model.Package.get(ds_id).state != model.core.State.DELETED:
+                package_delete(dict(context), {"id": ds_id})
+            dataset_purge(dict(context), {"id": ds_id})
+
+    # 3. collections and 4. circles (including deleted ones)
+    groups = [(grp.id, grp.is_organization)
+              for grp in model.Session.query(model.Group)
+              if grp.id not in keep_ids]
+    for group_id, is_org in sorted(groups, key=lambda x: x[1]):
+        if is_org:
+            click.echo(f"Purge circle {group_id}")
+            purge_method = logic.get_action("organization_purge")
+        else:
+            click.echo(f"Purge collection {group_id}")
+            purge_method = logic.get_action("group_purge")
+        if not dry_run:
+            purge_method(dict(context), {"id": group_id})
+
+    click.secho(f"Users removed: {len(user_names)}, "
+                f"datasets purged: {len(dataset_ids)}, "
+                f"collections purged: {len([g for g in groups if not g[1]])}, "
+                f"circles purged: {len([g for g in groups if g[1]])}"
+                + (" (dry run)" if dry_run else ""))
+    click.secho("Done!")
 
 
 @click.command()
@@ -428,7 +470,7 @@ def get_commands():
         dcor_move_dataset_to_circle,
         dcor_prune_draft_datasets,
         dcor_prune_orphaned_s3_artifacts,
-        dcor_purge_unused_collections_and_circles,
+        dcor_purge_all,
         list_circles,
         list_collections,
         list_group_resources,

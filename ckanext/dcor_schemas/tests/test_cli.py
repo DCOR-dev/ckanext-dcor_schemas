@@ -1,3 +1,4 @@
+import datetime
 import pathlib
 from unittest import mock
 import uuid
@@ -349,119 +350,174 @@ def test_dcor_prune_orphaned_s3_artifacts(cli):
     assert not s3.object_exists(bucket_name, object_name)
 
 
-@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_dcor_purge_unused_collections_and_circles(cli):
-    user = factories.User()
-    user_obj = model.User.by_name(user["name"])
-    context = {'ignore_auth': False,
-               'auth_user_obj': user_obj,
-               'user': user['name'],
-               'api_version': 3}
-    circle_keep = factories.Organization(users=[{
-        'name': user['id'],
-        'capacity': 'admin'
-    }])
-    circle_remove = factories.Organization(users=[{
-        'name': user['id'],
-        'capacity': 'admin'
-    }])
+def set_last_active(user_name, days_ago):
+    """Set the time of the last activity of a user"""
+    user_obj = model.User.by_name(user_name)
+    user_obj.last_active = (datetime.datetime.utcnow()
+                            - datetime.timedelta(days=days_ago))
+    model.Session.commit()
 
-    group_keep = factories.Group(users=[{
-        'name': user['id'],
-        'capacity': 'admin'
-    }])
-    group_remove = factories.Group(users=[{
-        'name': user['id'],
-        'capacity': 'admin'
-    }])
 
-    # create a dataset
-    ds_dict, res_dict = make_dataset_via_s3(
-        create_context=context,
+def user_state(user_name):
+    return model.User.by_name(user_name).state
+
+
+def make_purge_all_scenario():
+    """Create users, datasets, collections, and circles for dcor-purge-all
+
+    Returns a dictionary with all relevant objects.
+    """
+    # users
+    user_active = factories.User()  # has datasets and was active recently
+    user_inactive = factories.User()  # has datasets, not active recently
+    user_no_data = factories.User()  # no datasets, but active recently
+    admin = factories.Sysadmin()
+    set_last_active(user_active["name"], days_ago=1)
+    set_last_active(user_inactive["name"], days_ago=10)
+    set_last_active(user_no_data["name"], days_ago=0)
+
+    context_active = {'ignore_auth': False,
+                      'user': user_active['name'],
+                      'api_version': 3}
+    context_inactive = {'ignore_auth': False,
+                        'user': user_inactive['name'],
+                        'api_version': 3}
+
+    # circles
+    circle_keep = factories.Organization(
+        name=f"figshare-import-{uuid.uuid4()}",
+        users=[{'name': user_inactive['id'], 'capacity': 'admin'}])
+    circle_other = factories.Organization(
+        users=[{'name': user_active['id'], 'capacity': 'admin'}])
+
+    # datasets
+    ds_keep, _ = make_dataset_via_s3(
+        create_context=context_inactive,
         owner_org=circle_keep,
         resource_path=data_path / "calibration_beads_47.rtdc",
         activate=True,
-        private=False,
-        authors="Peter Pan")
+        private=False)
+    ds_other, _ = make_dataset_via_s3(
+        create_context=context_active,
+        owner_org=circle_other,
+        resource_path=data_path / "calibration_beads_47.rtdc",
+        activate=True)
+    # without resource, only the dataset dictionary is returned
+    ds_draft = make_dataset_via_s3(
+        create_context=context_active,
+        owner_org=circle_other,
+        activate=False)
 
-    # add the dataset to the group_keep
+    # collection containing a dataset that is kept
+    collection = factories.Group(
+        users=[{'name': user_active['id'], 'capacity': 'admin'}])
     helpers.call_action("member_create",
-                        context,
-                        id=group_keep["id"],
-                        object=ds_dict["id"],
+                        context_active,
+                        id=collection["id"],
+                        object=ds_keep["id"],
                         object_type="package",
                         capacity="member",
                         )
+    # empty collection
+    collection_empty = factories.Group(
+        users=[{'name': user_no_data['id'], 'capacity': 'admin'}])
 
-    # circle_remove and group_remove should still be there after this,
-    # since they were just created.
+    return {
+        "user_active": user_active,
+        "user_inactive": user_inactive,
+        "user_no_data": user_no_data,
+        "admin": admin,
+        "circle_keep": circle_keep,
+        "circle_other": circle_other,
+        "ds_keep": ds_keep,
+        "ds_other": ds_other,
+        "ds_draft": ds_draft,
+        "collection": collection,
+        "collection_empty": collection_empty,
+    }
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.ckan_config('ckanext.dcor_schemas.allow_purge_all', "true")
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dcor_purge_all(cli):
+    sc = make_purge_all_scenario()
+
     res = cli.invoke(ckan_cli,
-                     ["dcor-purge-unused-collections-and-circles"])
+                     ["dcor-purge-all",
+                      "--keep-circle", sc["circle_keep"]["name"],
+                      "--yes"])
     print(res.output)
     assert res.exit_code == 0
-    assert helpers.call_action("group_show",
-                               context,
-                               id=group_keep["id"]
-                               )["id"] == group_keep["id"]
-    assert helpers.call_action("group_show",
-                               context,
-                               id=group_remove["id"]
-                               )["id"] == group_remove["id"]
-    assert helpers.call_action("organization_show",
-                               context,
-                               id=circle_keep["id"]
-                               )["id"] == circle_keep["id"]
-    assert helpers.call_action("organization_show",
-                               context,
-                               id=circle_remove["id"]
-                               )["id"] == circle_remove["id"]
 
-    # The same thing happens when we use --dry-run
-    res = cli.invoke(ckan_cli,
-                     ["dcor-purge-unused-collections-and-circles",
-                      "--modified-before-months", "0",
-                      "--dry-run"])
+    # users: only the admin and the recently active user with datasets
+    assert user_state(sc["admin"]["name"]) == "active"
+    assert user_state(sc["user_active"]["name"]) == "active"
+    assert user_state(sc["user_inactive"]["name"]) == "deleted"
+    assert user_state(sc["user_no_data"]["name"]) == "deleted"
+
+    # datasets: only the dataset in the kept circle
+    assert model.Package.get(sc["ds_keep"]["id"]) is not None
+    assert model.Package.get(sc["ds_other"]["id"]) is None
+    assert model.Package.get(sc["ds_draft"]["id"]) is None
+
+    # collections: all purged (also the one with a kept dataset)
+    assert model.Group.get(sc["collection"]["id"]) is None
+    assert model.Group.get(sc["collection_empty"]["id"]) is None
+
+    # circles: only the kept circle
+    assert model.Group.get(sc["circle_keep"]["id"]) is not None
+    assert model.Group.get(sc["circle_other"]["id"]) is None
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.ckan_config('ckanext.dcor_schemas.allow_purge_all', "true")
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dcor_purge_all_next_week(cli):
+    """Users with datasets are removed when they become inactive"""
+    sc = make_purge_all_scenario()
+    res = cli.invoke(ckan_cli, ["dcor-purge-all", "--yes"])
     assert res.exit_code == 0
-    assert helpers.call_action("group_show",
-                               context,
-                               id=group_keep["id"]
-                               )["id"] == group_keep["id"]
-    assert helpers.call_action("group_show",
-                               context,
-                               id=group_remove["id"]
-                               )["id"] == group_remove["id"]
-    assert helpers.call_action("organization_show",
-                               context,
-                               id=circle_keep["id"]
-                               )["id"] == circle_keep["id"]
-    assert helpers.call_action("organization_show",
-                               context,
-                               id=circle_remove["id"]
-                               )["id"] == circle_remove["id"]
-
-    # But if we actually remove things, only the *_keep stuff should stay
-    res = cli.invoke(ckan_cli,
-                     ["dcor-purge-unused-collections-and-circles",
-                      "--modified-before-months", "0"])
+    # without a kept circle, all datasets are gone
+    assert model.Package.get(sc["ds_keep"]["id"]) is None
+    assert model.Group.get(sc["circle_keep"]["id"]) is None
+    # The active user had datasets (when users were evaluated) and stays.
+    assert user_state(sc["user_active"]["name"]) == "active"
+    # In the next run, the active user does not have datasets anymore.
+    res = cli.invoke(ckan_cli, ["dcor-purge-all", "--yes"])
     assert res.exit_code == 0
-    assert helpers.call_action("group_show",
-                               context,
-                               id=group_keep["id"]
-                               )["id"] == group_keep["id"]
-    assert helpers.call_action("organization_show",
-                               context,
-                               id=circle_keep["id"]
-                               )["id"] == circle_keep["id"]
+    assert user_state(sc["user_active"]["name"]) == "deleted"
+    assert user_state(sc["admin"]["name"]) == "active"
 
-    with pytest.raises(logic.NotFound):
-        helpers.call_action("group_show",
-                            context,
-                            id=group_remove["id"]
-                            )
 
-    with pytest.raises(logic.NotFound):
-        helpers.call_action("organization_show",
-                            context,
-                            id=circle_remove["id"]
-                            )
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.ckan_config('ckanext.dcor_schemas.allow_purge_all', "true")
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.parametrize("args,user_input", [
+    [["--dry-run", "--yes"], None],  # dry run
+    [[], "n\n"],  # user does not confirm
+])
+def test_dcor_purge_all_nothing_removed(cli, args, user_input):
+    sc = make_purge_all_scenario()
+    res = cli.invoke(ckan_cli, ["dcor-purge-all"] + args, input=user_input)
+    print(res.output)
+    for key in ["user_active", "user_inactive", "user_no_data", "admin"]:
+        assert user_state(sc[key]["name"]) == "active"
+    for key in ["ds_keep", "ds_other", "ds_draft"]:
+        assert model.Package.get(sc[key]["id"]) is not None
+    for key in ["circle_keep", "circle_other", "collection",
+                "collection_empty"]:
+        assert model.Group.get(sc[key]["id"]) is not None
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_dcor_purge_all_not_allowed(cli):
+    """By default, dcor-purge-all must not do anything"""
+    sc = make_purge_all_scenario()
+    res = cli.invoke(ckan_cli, ["dcor-purge-all", "--yes"])
+    assert res.exit_code != 0
+    assert "not allowed" in res.output
+    assert user_state(sc["user_no_data"]["name"]) == "active"
+    assert model.Package.get(sc["ds_other"]["id"]) is not None
+    assert model.Group.get(sc["circle_other"]["id"]) is not None

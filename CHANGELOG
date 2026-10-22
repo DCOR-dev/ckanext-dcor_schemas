@@ -1,3 +1,7 @@
+1.2.0
+ - feat: implement CLI command `dcor-purge-all` for resetting development
+   instances (requires `ckanext.dcor_schemas.allow_purge_all = true`)
+ - BREAKING: remove CLI command `dcor-purge-unused-collections-and-circles`
 1.1.2
  - enh: update spam domains (user registration)
 1.1.1
