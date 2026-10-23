@@ -119,6 +119,9 @@ accordingly:
     current supplementary resource schema
   - ``supported_resource_suffixes`` returns a list of supported
     resource suffixes
+  - ``dcor_group_list_for_user`` returns the collections a user is a
+    member of in any capacity (member, editor, or admin); CKAN's
+    ``group_list_authz`` only returns collections the user may edit
 
 - Signals:
 

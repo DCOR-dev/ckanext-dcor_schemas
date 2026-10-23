@@ -1,4 +1,6 @@
 1.2.0
+ - feat: new API action `dcor_group_list_for_user` for listing the
+   collections a user is a member of (DCOR-dev/DCOR-Aid#108)
  - feat: implement CLI command `dcor-purge-all` for resetting development
    instances (requires `ckanext.dcor_schemas.allow_purge_all = true`)
  - fix: `dcor-purge-all` failed to purge circles to which datasets were
