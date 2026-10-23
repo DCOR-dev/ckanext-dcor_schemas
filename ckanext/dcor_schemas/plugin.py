@@ -68,6 +68,8 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
     # IActions
     def get_actions(self):
         return {
+            "dcor_group_list_for_user":
+                actions.get_group_list_for_user,
             "resource_upload_s3_urls":
                 actions.get_resource_upload_s3_urls,
             "resource_schema_supplements":
@@ -84,6 +86,7 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         #   anonymous access is allowed via the auth_allow_anonymous_access
         #   flag. So we just leave it at the defaults.
         return {
+            'dcor_group_list_for_user': dcor_auth.group_list_for_user,
             'bulk_update_delete': dcor_auth.deny,
             'bulk_update_private': dcor_auth.deny,
             'dataset_purge': dcor_auth.dataset_purge,

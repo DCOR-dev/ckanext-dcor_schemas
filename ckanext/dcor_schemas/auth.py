@@ -621,3 +621,22 @@ def user_show(context, data_dict):
 
     return {'success': False,
             'msg': "Users may only view their own details"}
+
+
+def group_list_for_user(context, data_dict):
+    """Users may list their own collections, sysadmins any user's"""
+    user = context.get("user")
+    if not user:
+        return {"success": False,
+                "msg": "You must be logged in to list your collections"}
+    target = (data_dict or {}).get("id")
+    if target:
+        target_obj = model.User.get(target)
+        user_obj = model.User.get(user)
+        if (target_obj is None or user_obj is None
+                or target_obj.id != user_obj.id):
+            if not authz.is_sysadmin(user):
+                return {"success": False,
+                        "msg": "Only sysadmins may list the collections "
+                               "of other users"}
+    return {"success": True}
