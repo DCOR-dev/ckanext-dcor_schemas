@@ -1,6 +1,10 @@
 1.2.0
  - feat: implement CLI command `dcor-purge-all` for resetting development
    instances (requires `ckanext.dcor_schemas.allow_purge_all = true`)
+ - fix: `dcor-purge-all` failed to purge circles to which datasets were
+   added while the command was running
+ - enh: `dcor-purge-all` continues when an item cannot be removed and
+   lists all errors at the end
  - BREAKING: remove CLI command `dcor-purge-unused-collections-and-circles`
 1.1.2
  - enh: update spam domains (user registration)

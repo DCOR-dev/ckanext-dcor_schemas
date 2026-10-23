@@ -262,6 +262,12 @@ def dcor_purge_all(ctx,
        in the circles specified via `--keep-circle`.
     3. Purge all collections.
     4. Purge all circles, except for those specified via `--keep-circle`.
+       Datasets that were added to a circle after step 2 (e.g. by a test
+       suite running at the same time) are purged before the circle.
+
+    If an item cannot be removed, the error is printed and the command
+    continues with the next item. In that case, the command exits with
+    a non-zero exit code after listing all errors.
     """
     if not toolkit.asbool(get_ckan_config_option(
             "ckanext.dcor_schemas.allow_purge_all")):
@@ -283,6 +289,36 @@ def dcor_purge_all(ctx,
         else:
             keep_ids.append(grp.id)
 
+    errors = []
+
+    def run_action(what, action_name, data_dict):
+        """Run a CKAN action and record errors instead of raising them"""
+        try:
+            logic.get_action(action_name)(dict(context), data_dict)
+        except Exception:
+            # Make sure the database session is usable for the next action.
+            model.Session.rollback()
+            errors.append(f"{what}: {traceback.format_exc(limit=1)}")
+            click.secho(f"Failed: {what}", fg="red")
+            return False
+        return True
+
+    def purge_dataset(ds_id):
+        """Delete and purge a dataset, returns True on success"""
+        click.echo(f"Purge dataset {ds_id}")
+        if dry_run:
+            return True
+        dataset = model.Package.get(ds_id)
+        if dataset is None:
+            # purged in the meantime
+            return True
+        if dataset.state != model.core.State.DELETED:
+            if not run_action(f"delete dataset {ds_id}",
+                              "package_delete", {"id": ds_id}):
+                return False
+        return run_action(f"purge dataset {ds_id}",
+                          "dataset_purge", {"id": ds_id})
+
     # 1. users
     threshold = (datetime.datetime.utcnow()
                  - datetime.timedelta(days=user_inactive_days))
@@ -295,43 +331,59 @@ def dcor_purge_all(ctx,
         inactive = user.last_active is None or user.last_active < threshold
         if not has_datasets or inactive:
             user_names.append(user.name)
+    num_users = 0
     with ctx.meta["flask_app"].test_request_context():
         for name in user_names:
             click.echo(f"Remove user {name}")
-            if not dry_run:
-                logic.get_action("user_delete")(dict(context), {"id": name})
+            if dry_run or run_action(f"remove user {name}",
+                                     "user_delete", {"id": name}):
+                num_users += 1
 
     # 2. datasets
     dataset_ids = [ds.id for ds in model.Session.query(model.Package)
                    if ds.owner_org not in keep_ids]
-    package_delete = logic.get_action("package_delete")
-    dataset_purge = logic.get_action("dataset_purge")
+    num_datasets = 0
     for ds_id in dataset_ids:
-        click.echo(f"Purge dataset {ds_id}")
-        if not dry_run:
-            if model.Package.get(ds_id).state != model.core.State.DELETED:
-                package_delete(dict(context), {"id": ds_id})
-            dataset_purge(dict(context), {"id": ds_id})
+        if purge_dataset(ds_id):
+            num_datasets += 1
 
     # 3. collections and 4. circles (including deleted ones)
     groups = [(grp.id, grp.is_organization)
               for grp in model.Session.query(model.Group)
               if grp.id not in keep_ids]
+    num_collections = 0
+    num_circles = 0
     for group_id, is_org in sorted(groups, key=lambda x: x[1]):
         if is_org:
+            # Datasets might have been added to the circle after step 2
+            # (e.g. by a test suite running at the same time). A circle
+            # cannot be purged while it contains datasets.
+            new_ids = [ds.id for ds in model.Session.query(model.Package)
+                       .filter(model.Package.owner_org == group_id)
+                       if ds.id not in dataset_ids]
+            for ds_id in new_ids:
+                if purge_dataset(ds_id):
+                    num_datasets += 1
             click.echo(f"Purge circle {group_id}")
-            purge_method = logic.get_action("organization_purge")
+            if dry_run or run_action(f"purge circle {group_id}",
+                                     "organization_purge", {"id": group_id}):
+                num_circles += 1
         else:
             click.echo(f"Purge collection {group_id}")
-            purge_method = logic.get_action("group_purge")
-        if not dry_run:
-            purge_method(dict(context), {"id": group_id})
+            if dry_run or run_action(f"purge collection {group_id}",
+                                     "group_purge", {"id": group_id}):
+                num_collections += 1
 
-    click.secho(f"Users removed: {len(user_names)}, "
-                f"datasets purged: {len(dataset_ids)}, "
-                f"collections purged: {len([g for g in groups if not g[1]])}, "
-                f"circles purged: {len([g for g in groups if g[1]])}"
+    click.secho(f"Users removed: {num_users}, "
+                f"datasets purged: {num_datasets}, "
+                f"collections purged: {num_collections}, "
+                f"circles purged: {num_circles}"
                 + (" (dry run)" if dry_run else ""))
+    if errors:
+        click.secho(f"Encountered {len(errors)} errors:", fg="red")
+        for error in errors:
+            click.secho(error, fg="red")
+        return sys.exit(1)
     click.secho("Done!")
 
 
