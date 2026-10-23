@@ -4,8 +4,8 @@ import functools
 import json
 import numbers
 import os
+from importlib import resources as importlib_resources
 import pathlib
-from pkg_resources import resource_listdir, resource_filename
 
 from ckan.common import config
 
@@ -185,10 +185,9 @@ def load_schema_supplements():
     # determine the directory from which to load json files
     jd = config.get("ckanext.dcor_schemas.json_resource_schema_dir", "package")
     if jd == "package":  # use package json files (in this directory here)
-        module = "ckanext.dcor_schemas"
-        submod = "resource_schema_supplements"
-        root = pathlib.Path(resource_filename(module, submod))
-        filelist = resource_listdir(module, submod)
+        root = pathlib.Path(str(importlib_resources.files(
+            "ckanext.dcor_schemas.resource_schema_supplements")))
+        filelist = os.listdir(root)
     else:  # use user-defined json files
         filelist = os.listdir(jd)
         root = pathlib.Path(jd)
