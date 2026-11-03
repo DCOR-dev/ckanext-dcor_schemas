@@ -1,4 +1,6 @@
 1.2.0
+ - fix: compatibility with setuptools>=82 (no `pkg_resources`),
+   which is shipped with CKAN 2.11.6
  - feat: new API action `dcor_group_list_for_user` for listing the
    collections a user is a member of (DCOR-dev/DCOR-Aid#108)
  - feat: implement CLI command `dcor-purge-all` for resetting development
