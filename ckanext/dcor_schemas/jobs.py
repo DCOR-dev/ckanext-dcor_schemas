@@ -16,8 +16,10 @@ logger = logging.getLogger(__name__)
 
 
 def admin_background_context():
+    """Context of the site user (sysadmin) for background jobs"""
+    site_user = logic.get_action("get_site_user")({"ignore_auth": True}, {})
     return {"ignore_auth": True,
-            "user": "default",
+            "user": site_user["name"],
             "is_background_job": True,
             }
 
