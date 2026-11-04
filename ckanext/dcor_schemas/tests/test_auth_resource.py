@@ -51,6 +51,38 @@ def test_resource_create_id_forbidden():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_resource_create_legacy_upload_forbidden():
+    """do not allow uploading resources via CKAN (only via S3)"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    create_context = {'ignore_auth': False,
+                      'user': user['name'], 'api_version': 3}
+    test_context = {'ignore_auth': False,
+                    'user': user['name'], 'model': model, 'api_version': 3}
+    ds_dict = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org,
+        activate=False)
+    path = data_path / "calibration_beads_47.rtdc"
+    with path.open('rb') as fd:
+        upload = cgi.FieldStorage()
+        upload.filename = path.name
+        upload.file = fd
+        with pytest.raises(logic.NotAuthorized,
+                           match="Resources must be uploaded to S3 first"):
+            helpers.call_auth("resource_create", test_context,
+                              package_id=ds_dict["id"],
+                              upload=upload,
+                              url="upload",
+                              name=path.name,
+                              )
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_resource_create_in_other_users_dataset():
     """User is not allowed to create a resource in another user's dataset"""
     user_a = factories.User()
