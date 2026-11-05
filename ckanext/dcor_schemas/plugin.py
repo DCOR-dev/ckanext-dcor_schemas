@@ -1,6 +1,5 @@
 import logging
 import mimetypes
-import pathlib
 import sys
 
 import ckan.lib.datapreview as datapreview
@@ -455,17 +454,6 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
 
     # IResourceController
     def before_resource_create(self, context, resource):
-        if "upload" in resource:
-            # set/override the filename
-            upload = resource["upload"]
-            if hasattr(upload, "filename"):
-                filename = upload.filename
-            elif hasattr(upload, "name"):
-                filename = pathlib.Path(upload.name).name
-            else:
-                raise ValueError(
-                    f"Could not determine filename for {resource}")
-            resource["name"] = filename
         resource.update(jobs.get_base_metadata(resource))
 
     def after_resource_create(self, context, resource):

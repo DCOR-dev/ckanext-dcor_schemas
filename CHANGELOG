@@ -2,6 +2,9 @@
  - BREAKING: reject resource uploads via CKAN (legacy uploads);
    resources must be uploaded to S3 first, because the job that moved
    legacy uploads to S3 was removed in ckanext-dcor_depot 1.1.0
+ - ref: remove setting the resource name from the file name of uploads
+   via CKAN
+ - tests: create resources via S3 instead of uploads via CKAN
 1.2.0
  - fix: compatibility with setuptools>=82 (no `pkg_resources`),
    which is shipped with CKAN 2.11.6
