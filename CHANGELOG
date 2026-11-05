@@ -10,6 +10,9 @@
  - fix: do not commit the database session when creating resource views
    in `after_dataset_update` (closed the nested transaction that
    CKAN 2.12 opens in `package_update`)
+ - fix: do not check the resources of datasets that are already active
+   in the `state` validator (CKAN 2.12 only passes modified resources
+   to validators, so updating an active dataset failed)
  - enh: hide the "Unpublish" button introduced in CKAN 2.12
    (changing a dataset from active to draft is not allowed)
  - setup: allow rq 2 (required by CKAN 2.12)

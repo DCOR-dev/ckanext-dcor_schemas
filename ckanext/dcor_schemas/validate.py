@@ -189,6 +189,14 @@ def dataset_state(key, data, errors, context):
     """If a dataset does not have any resources, it must be a draft"""
     data_dict = df.unflatten(data)
 
+    package = context.get("package")
+    if package is not None and package.state == "active":
+        # The dataset is already active and its resources were checked
+        # when it was activated (resources cannot be removed from active
+        # datasets). Note that CKAN 2.12 only passes the resources that
+        # changed to the validators.
+        return
+
     if data[key] == "active":
         if "resources" not in data_dict or len(data_dict["resources"]) == 0:
             # The user wants to activate the dataset, although it does not
