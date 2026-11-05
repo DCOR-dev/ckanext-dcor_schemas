@@ -1,4 +1,3 @@
-import cgi
 import pathlib
 import shutil
 import tempfile
@@ -41,19 +40,14 @@ def test_resource_create_configuration_metadata():
                       'api_version': 3}
     ds_dict = make_dataset_via_s3(activate=False)
     path = data_path / "calibration_beads_47.rtdc"
-    with path.open('rb') as fd:
-        upload = cgi.FieldStorage()
-        upload.filename = path.name
-        upload.file = fd
-        res = helpers.call_action("resource_create", create_context,
-                                  package_id=ds_dict["id"],
-                                  upload=upload,
-                                  url="upload",
-                                  name=path.name,
-                                  # We have to add them as kwargs dict
-                                  **{"dc:experiment:event count": "47",
-                                     "dc:experiment:time": "10:04:03"}
-                                  )
+    res = helpers.call_action("resource_create", create_context,
+                              package_id=ds_dict["id"],
+                              url="upload",
+                              name=path.name,
+                              # We have to add them as kwargs dict
+                              **{"dc:experiment:event count": "47",
+                                 "dc:experiment:time": "10:04:03"}
+                              )
 
     assert res["dc:experiment:event count"] == 47
     assert res["dc:experiment:time"] == "10:04:03"
@@ -69,19 +63,14 @@ def test_resource_create_configuration_metadata_invalid():
 
     ds_dict = make_dataset_via_s3(activate=False)
     path = data_path / "calibration_beads_47.rtdc"
-    with path.open('rb') as fd:
-        upload = cgi.FieldStorage()
-        upload.filename = path.name
-        upload.file = fd
-        with pytest.raises(logic.ValidationError):
-            helpers.call_action("resource_create", create_context,
-                                package_id=ds_dict["id"],
-                                upload=upload,
-                                url="upload",
-                                name=path.name,
-                                # We have to add them as kwargs dict
-                                **{"dc:experiment:event count": "peter"}
-                                )
+    with pytest.raises(logic.ValidationError):
+        helpers.call_action("resource_create", create_context,
+                            package_id=ds_dict["id"],
+                            url="upload",
+                            name=path.name,
+                            # We have to add them as kwargs dict
+                            **{"dc:experiment:event count": "peter"}
+                            )
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -148,16 +137,11 @@ def test_resource_create_package_id_missing():
                       'user': user['name'], 'api_version': 3}
 
     path = data_path / "calibration_beads_47.rtdc"
-    with path.open('rb') as fd:
-        upload = cgi.FieldStorage()
-        upload.filename = path.name
-        upload.file = fd
-        with pytest.raises(logic.ValidationError):
-            helpers.call_action("resource_create", create_context,
-                                upload=upload,
-                                url="upload",
-                                name=path.name,
-                                )
+    with pytest.raises(logic.ValidationError):
+        helpers.call_action("resource_create", create_context,
+                            url="upload",
+                            name=path.name,
+                            )
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')

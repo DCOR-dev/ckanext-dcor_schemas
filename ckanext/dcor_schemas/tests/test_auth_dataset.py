@@ -1,4 +1,3 @@
-import cgi
 import pathlib
 import uuid
 
@@ -36,19 +35,14 @@ def test_dataset_add_resources_only_to_drafts():
         activate=True)
     # assert: adding resources to active datasets forbidden
     path = data_path / "calibration_beads_47.rtdc"
-    with path.open('rb') as fd:
-        upload = cgi.FieldStorage()
-        upload.filename = path.name
-        upload.file = fd
-        with pytest.raises(
-                logic.NotAuthorized,
-                match="Editing resources for non-draft datasets not allowed"):
-            helpers.call_auth("resource_create", test_context,
-                              package_id=ds_dict["id"],
-                              upload=upload,
-                              url="upload",
-                              name=path.name,
-                              )
+    with pytest.raises(
+            logic.NotAuthorized,
+            match="Editing resources for non-draft datasets not allowed"):
+        helpers.call_auth("resource_create", test_context,
+                          package_id=ds_dict["id"],
+                          url="upload",
+                          name=path.name,
+                          )
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
