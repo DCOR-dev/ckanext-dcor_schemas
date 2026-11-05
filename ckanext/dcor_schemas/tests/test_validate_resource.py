@@ -219,6 +219,61 @@ def test_resource_create_same_name_forbidden():
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_resource_create_same_name_as_second_resource_forbidden():
+    """do not allow a new resource with the name of a later resource"""
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    create_context = {'ignore_auth': False,
+                      'user': user['name'],
+                      'api_version': 3}
+    ds_dict = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org,
+        activate=False)
+    path = data_path / "calibration_beads_47.rtdc"
+    create_resource_via_s3(create_context, ds_dict, path, "a.rtdc")
+    create_resource_via_s3(create_context, ds_dict, path, "b.rtdc")
+    with pytest.raises(logic.ValidationError):
+        create_resource_via_s3(create_context, ds_dict, path, "b.rtdc")
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+def test_resource_update_supplement_of_second_resource():
+    """updating a resource must not conflict with its own name
+
+    DCOR-Aid sets the supplementary resource metadata after the upload
+    with `package_revise`.
+    """
+    user = factories.User()
+    owner_org = factories.Organization(users=[{
+        'name': user['id'],
+        'capacity': 'admin'
+    }])
+    create_context = {'ignore_auth': False,
+                      'user': user['name'],
+                      'api_version': 3}
+    ds_dict = make_dataset_via_s3(
+        create_context=create_context,
+        owner_org=owner_org,
+        activate=False)
+    path = data_path / "calibration_beads_47.rtdc"
+    create_resource_via_s3(create_context, ds_dict, path, "a.rtdc")
+    res2 = create_resource_via_s3(create_context, ds_dict, path, "b.rtdc")
+    ds_dict = helpers.call_action(
+        "package_revise", create_context,
+        match={"id": ds_dict["id"]},
+        **{f"update__resources__{res2['id']}": {
+            "sp:general:sample type": "artificial"}})["package"]
+    assert ds_dict["resources"][1]["name"] == "b.rtdc"
+    assert ds_dict["resources"][1]["sp:general:sample type"] == "artificial"
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 def test_resource_create_weird_characters():
     """do not allow weird characters in resource names"""
     user = factories.User()
