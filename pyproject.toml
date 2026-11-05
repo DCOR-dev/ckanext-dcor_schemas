@@ -31,10 +31,9 @@ dependencies = [
     "dclab>=0.60.9",
     "dcor_shared>=0.10.0",
     "python-slugify",
-    # The default rq version in CKAN is 1.0. We want version 1.8 or
-    # above, since we have to specify multiple dependencies in the
-    # jobs.
-    "rq>=1.10,<2",
+    # We have to specify multiple dependencies in the jobs (rq>=1.10).
+    # CKAN 2.11 uses rq 1.16 and CKAN 2.12 uses rq 2.10.
+    "rq>=1.10,<3",
 ]
 dynamic = ["version"]
 

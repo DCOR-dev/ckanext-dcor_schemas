@@ -7,6 +7,7 @@ import ckan.logic as logic
 import ckan.model as model
 import ckan.tests.factories as factories
 import ckan.tests.helpers as helpers
+from ckan import plugins
 
 from dcor_shared.testing import (
     get_ckan_config_option,
@@ -168,3 +169,11 @@ def test_ipackagecontroller_after_dataset_update_make_private_public_on_s3(
     response = requests.get(res_dict["s3_url"])
     assert response.ok
     assert response.status_code == 200
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
+@pytest.mark.usefixtures('with_plugins')
+def test_resource_validation_dependencies():
+    """All resources must be validated when the dataset state changes"""
+    plugin = plugins.get_plugin("dcor_schemas")
+    assert plugin.resource_validation_dependencies("dataset") == ["state"]

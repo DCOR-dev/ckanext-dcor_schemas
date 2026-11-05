@@ -310,6 +310,12 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
         schema = self._modify_package_schema(schema)
         return schema
 
+    def resource_validation_dependencies(self, package_type):
+        # Since CKAN 2.12, only modified resources are validated during
+        # `package_update`. The `dcor_schemas_dataset_state` validator
+        # needs all resources when the dataset is activated.
+        return ["state"]
+
     def show_package_schema(self):
         schema = super(DCORDatasetFormPlugin, self).show_package_schema()
         # remove default fields

@@ -341,7 +341,7 @@ def resource_create_check(context, new_dict, ds_dict=None):
         # Double-check that the resource does not already exist
         model = context['model']
         session = context['session']
-        if session.query(model.Resource).get(rid):
+        if session.get(model.Resource, rid):
             return {'success': False,
                     'msg': f'Resource {rid} already exists!'}
         bucket_name = get_ckan_config_option(
