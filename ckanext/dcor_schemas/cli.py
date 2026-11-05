@@ -16,7 +16,9 @@ from . import jobs
 
 
 def admin_context():
-    return {'ignore_auth': True, 'user': 'default'}
+    """Context of the site user (sysadmin)"""
+    site_user = logic.get_action("get_site_user")({"ignore_auth": True}, {})
+    return {'ignore_auth': True, 'user': site_user["name"]}
 
 
 def iter_group_resources(group_id):
