@@ -546,6 +546,9 @@ def test_dataset_state_from_draft_to_active_without_rtdc_forbidden_control():
         dataset_id=ds_dict['id'],
     )
     # assert: *can* activate dataset *with* valid .rtdc file
+    # (Since CKAN 2.12, this only works because of
+    # `DCORDatasetFormPlugin.resource_validation_dependencies`, the
+    # resources are not modified here.)
     helpers.call_action("package_patch", test_context,
                         id=ds_dict["id"],
                         state="active")

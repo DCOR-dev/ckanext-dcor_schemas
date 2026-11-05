@@ -1,3 +1,13 @@
+1.3.1
+ - fix: validate all resources when the dataset state changes
+   (CKAN 2.12 only validates modified resources, so activating a
+   dataset would have failed)
+ - fix: hide the bulk "Make private" button also for CKAN 2.12
+   (`.btn-default` was renamed to `.btn-secondary`)
+ - enh: hide the "Unpublish" button introduced in CKAN 2.12
+   (changing a dataset from active to draft is not allowed)
+ - setup: allow rq 2 (required by CKAN 2.12)
+ - ref: use `Session.get` instead of the legacy `Query.get`
 1.3.0
  - BREAKING: reject resource uploads via CKAN (legacy uploads);
    resources must be uploaded to S3 first, because the job that moved

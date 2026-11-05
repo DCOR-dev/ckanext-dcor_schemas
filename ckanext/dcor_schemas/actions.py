@@ -39,7 +39,7 @@ def get_resource_upload_s3_urls(context, data_dict):
     session = context['session']
     for ii in range(20):
         rid = str(uuid.uuid4())
-        result = session.query(model.Resource).get(rid)
+        result = session.get(model.Resource, rid)
         if not result:
             break
     else:

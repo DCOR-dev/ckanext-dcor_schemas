@@ -18,6 +18,14 @@ Hide the "Delete" button in the bulk view for datasets (not authorized anyway)
 /*
 Hide the "Make private" button in the bulk view for datasets (not authorized anyway)
 */
-.btn-default[name="bulk_action.private"]{
+button[name="bulk_action.private"]{
+  display:none;
+}
+
+/*
+Hide the "Unpublish" button (CKAN 2.12) in the dataset form (changing
+the dataset state from active to draft is not authorized anyway)
+*/
+button[value="go-metadata-unpublish"]{
   display:none;
 }
