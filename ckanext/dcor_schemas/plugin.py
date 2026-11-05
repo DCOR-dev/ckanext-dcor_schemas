@@ -403,10 +403,15 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
                             res.update(resource)
                             resource = res
                             break
-                    # Run jobs after resource create
+                    # Run jobs after resource create. We are inside
+                    # `package_update` which commits the session after
+                    # this hook. Committing earlier (e.g. when creating
+                    # resource views) would close the nested transaction
+                    # that CKAN 2.12 opens in `package_update`.
                     for plugin in plugins.PluginImplementations(
                             plugins.IResourceController):
-                        plugin.after_resource_create(context, resource)
+                        plugin.after_resource_create(
+                            dict(context, defer_commit=True), resource)
 
             private = data_dict.get("private")
             if (private is not None and not private
@@ -472,8 +477,10 @@ class DCORDatasetFormPlugin(plugins.SingletonPlugin,
             jobs.RQJob.enqueue_all_jobs(resource, ckanext="dcor_schemas")
 
             # https://github.com/ckan/ckan/issues/7837
-            datapreview.add_views_to_resource(context={"ignore_auth": True},
-                                              resource_dict=resource)
+            datapreview.add_views_to_resource(
+                context={"ignore_auth": True,
+                         "defer_commit": bool(context.get("defer_commit"))},
+                resource_dict=resource)
 
     # ISignal
     def get_signal_subscriptions(self):
