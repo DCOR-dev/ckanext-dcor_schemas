@@ -221,10 +221,8 @@ def package_update(context, data_dict=None):
             if not aut["success"]:
                 return aut
         else:
-            # We are either creating a resource via an upload through
-            # CKAN or we are creating a resource and have already uploaded
-            # the file to S3 (we know `rid`). Both cases are covered in
-            # this method:
+            # We are creating a resource and have already uploaded
+            # the file to S3 (we know `rid`):
             aut = resource_create_check(context, new_res, ds_dict=ds_dict)
             if not aut["success"]:
                 return aut
@@ -370,17 +368,12 @@ def resource_create_check(context, new_dict, ds_dict=None):
             return {'success': False,
                     'msg': '"s3_available" must be set to True'}
     else:
-        # Legacy upload
-        allowed_keys = resource_editable_metadata().union(
-            # some of these are set by the uploader class
-            {"name", "package_id", "upload", "url", "url_type",
-             "last_modified", "mimetype", "size"})
-        if not set(new_dict.keys()).issubset(allowed_keys):
-            return {'success': False,
-                    'msg': f'For legacy resource uploads, you may only '
-                           f'specify the metadata {sorted(allowed_keys)}. "'
-                           f'Got the following metadata keys: '
-                           f' {sorted(new_dict.keys())}!'}
+        # Uploads through CKAN (legacy uploads) are not supported anymore,
+        # because resources are only ever stored on S3.
+        return {'success': False,
+                'msg': 'Resources must be uploaded to S3 first (e.g. using '
+                       'DCOR-Aid), and the resource "id" must be specified. '
+                       'Uploading resources via CKAN is not supported.'}
 
     return {'success': True}
 

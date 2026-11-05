@@ -15,7 +15,21 @@ from dcor_shared.testing import make_dataset_via_s3, synchronous_enqueue_job
 import h5py
 import numpy as np
 
+from .helper_methods import upload_resource_to_s3
+
 data_path = pathlib.Path(__file__).parent / "data"
+
+
+def create_resource_via_s3(context, ds_dict, path, name, **kwargs):
+    """Upload a file to S3 and add it to a dataset like DCOR-Aid does"""
+    rid = upload_resource_to_s3(path, ds_dict)
+    res_dict = {"id": rid, "name": name, "s3_available": True}
+    res_dict.update(kwargs)
+    ds_dict = helpers.call_action(
+        "package_revise", context,
+        match={"id": ds_dict["id"]},
+        update__resources__extend=[res_dict])["package"]
+    return ds_dict["resources"][-1]
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -89,19 +103,10 @@ def test_resource_create_configuration_supplement():
         owner_org=owner_org,
         activate=False)
     path = data_path / "calibration_beads_47.rtdc"
-    with path.open('rb') as fd:
-        upload = cgi.FieldStorage()
-        upload.filename = path.name
-        upload.file = fd
-        res = helpers.call_action("resource_create", create_context1,
-                                  package_id=ds_dict["id"],
-                                  upload=upload,
-                                  url="upload",
-                                  name=path.name,
-                                  # We have to add them as kwargs dict
-                                  **{"sp:general:sample type": "artificial",
-                                     "sp:experiment:average brightness": 2.1}
-                                  )
+    res = create_resource_via_s3(
+        create_context1, ds_dict, path, path.name,
+        **{"sp:general:sample type": "artificial",
+           "sp:experiment:average brightness": 2.1})
     assert res["sp:general:sample type"] == "artificial"
     assert res["sp:experiment:average brightness"] == 2.1
 
@@ -125,53 +130,11 @@ def test_resource_create_configuration_supplement_invalid_value():
         owner_org=owner_org,
         activate=False)
     path = data_path / "calibration_beads_47.rtdc"
-    with path.open('rb') as fd:
-        upload = cgi.FieldStorage()
-        upload.filename = path.name
-        upload.file = fd
-        with pytest.raises(logic.ValidationError):
-            helpers.call_action("resource_create", create_context1,
-                                package_id=ds_dict["id"],
-                                upload=upload,
-                                url="upload",
-                                name=path.name,
-                                # We have to add them as kwargs dict
-                                **{"sp:general:sample type": "primary cells",
-                                   "sp:cells:passage number": "peter"}
-                                )
-
-
-@pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-def test_resource_create_custom_upload_name_overridden():
-    """custom resource name is overridden during upload"""
-    user = factories.User()
-    owner_org = factories.Organization(users=[{
-        'name': user['id'],
-        'capacity': 'admin'
-    }])
-    # Note: `call_action` bypasses authorization!
-    # create 1st dataset
-    create_context1 = {'ignore_auth': False,
-                       'user': user['name'],
-                       'api_version': 3}
-    ds_dict = make_dataset_via_s3(
-        create_context=create_context1,
-        owner_org=owner_org,
-        activate=False)
-    path = data_path / "calibration_beads_47.rtdc"
-    # create the first resource
-    with path.open('rb') as fd:
-        upload = cgi.FieldStorage()
-        upload.filename = path.name
-        upload.file = fd
-        res = helpers.call_action("resource_create", create_context1,
-                                  package_id=ds_dict["id"],
-                                  upload=upload,
-                                  url="upload",
-                                  name=path.name + "something_else.rtdc",
-                                  )
-        assert res["name"] == path.name
+    with pytest.raises(logic.ValidationError):
+        create_resource_via_s3(
+            create_context1, ds_dict, path, path.name,
+            **{"sp:general:sample type": "primary cells",
+               "sp:cells:passage number": "peter"})
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -219,17 +182,9 @@ def test_resource_create_restrict_extensions():
     path = pathlib.Path(tdir) / "bad_extension.docx"
     path.write_text("lorem ipsum doesn't want Word in data repositories")
     # create the first resource
-    with path.open('rb') as fd:
-        upload = cgi.FieldStorage()
-        upload.filename = path.name
-        upload.file = fd
-        with pytest.raises(logic.ValidationError):
-            helpers.call_action("resource_create", create_context1,
-                                package_id=ds_dict["id"],
-                                upload=upload,
-                                url="upload",
-                                name=path.name,
-                                )
+    with pytest.raises(logic.ValidationError):
+        create_resource_via_s3(
+            create_context1, ds_dict, path, path.name)
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -252,30 +207,14 @@ def test_resource_create_same_name_forbidden():
         activate=False)
     path = data_path / "calibration_beads_47.rtdc"
     # create the first resource
-    with path.open('rb') as fd:
-        upload = cgi.FieldStorage()
-        upload.filename = path.name
-        upload.file = fd
-        helpers.call_action("resource_create", create_context1,
-                            package_id=ds_dict["id"],
-                            upload=upload,
-                            url="upload",
-                            name=path.name,
-                            )
+    create_resource_via_s3(
+        create_context1, ds_dict, path, path.name)
     # attempt creation of second resource with same name
     create_context2 = {'ignore_auth': False,
                        'user': user['name'], 'api_version': 3}
-    with path.open('rb') as fd:
-        upload = cgi.FieldStorage()
-        upload.filename = path.name
-        upload.file = fd
-        with pytest.raises(logic.ValidationError):
-            helpers.call_action("resource_create", create_context2,
-                                package_id=ds_dict["id"],
-                                upload=upload,
-                                url="upload",
-                                name=path.name,
-                                )
+    with pytest.raises(logic.ValidationError):
+        create_resource_via_s3(
+            create_context2, ds_dict, path, path.name)
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -300,17 +239,9 @@ def test_resource_create_weird_characters():
     path2 = pathlib.Path(tdir) / "µæsdqow.rtdc"
     shutil.copy2(path, path2)
     # create the first resource
-    with path2.open('rb') as fd:
-        upload = cgi.FieldStorage()
-        upload.filename = path2.name
-        upload.file = fd
-        with pytest.raises(logic.ValidationError):
-            helpers.call_action("resource_create", create_context1,
-                                package_id=ds_dict["id"],
-                                upload=upload,
-                                url="upload",
-                                name=path2.name,
-                                )
+    with pytest.raises(logic.ValidationError):
+        create_resource_via_s3(
+            create_context1, ds_dict, path2, path2.name)
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas dc_serve dc_view')

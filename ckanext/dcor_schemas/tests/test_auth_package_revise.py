@@ -11,6 +11,8 @@ from ckan import model
 
 from dcor_shared.testing import make_dataset_via_s3
 
+from .helper_methods import upload_resource_to_s3
+
 data_path = pathlib.Path(__file__).parent / "data"
 
 
@@ -37,8 +39,10 @@ def test_dataset_add_resources_only_to_drafts_package_revise(
         activate=True)
     # assert: adding resources to active datasets forbidden
     resources = copy.deepcopy(ds_dict["resources"])
+    rid = upload_resource_to_s3(data_path / "calibration_beads_47.rtdc",
+                                ds_dict)
     resources.append({"name": "peter.rtdc",
-                      "url": "upload",
+                      "id": rid,
                       "package_id": ds_dict["id"]})
     with pytest.raises(
             logic.NotAuthorized,
@@ -74,8 +78,10 @@ def test_dataset_add_resources_only_to_drafts_package_revise_control(
         activate=False)
     # assert: adding resources to draft datasets allowed
     resources = copy.deepcopy(ds_dict["resources"])
+    rid = upload_resource_to_s3(data_path / "calibration_beads_47.rtdc",
+                                ds_dict)
     resources.append({"name": "peter.rtdc",
-                      "url": "upload",
+                      "id": rid,
                       "sp:chip:channel width": 21.0,  # this must be supported
                       "package_id": ds_dict["id"]})
     helpers.call_auth(
