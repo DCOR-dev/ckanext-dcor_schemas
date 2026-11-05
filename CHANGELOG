@@ -4,6 +4,9 @@
    dataset would have failed)
  - fix: hide the bulk "Make private" button also for CKAN 2.12
    (`.btn-default` was renamed to `.btn-secondary`)
+ - fix: resource name uniqueness check compared resource positions,
+   which CKAN 2.12 no longer passes reliably to validators (now
+   compares resource IDs)
  - enh: hide the "Unpublish" button introduced in CKAN 2.12
    (changing a dataset from active to draft is not allowed)
  - setup: allow rq 2 (required by CKAN 2.12)

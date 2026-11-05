@@ -308,18 +308,16 @@ def resource_name(key, data, errors, context):
     if package:
         package_id = package.id
     else:
-        package_id = data.get(key[:-1] + ('id',))
+        package_id = data.get(('id',))
     pkg_dict = logic.get_action('package_show')(
         dict(context, return_type='dict'),
         {'id': package_id})
 
-    ress = pkg_dict.get("resources", [])
-    if ress:
-        # check name
-        for item in ress:
-            # Since this function is called for each and every
-            # resource all the time, we have to make sure that
-            # the positions are not matching.
-            if key[1] != item["position"] and item["name"] == name:
-                raise toolkit.Invalid(
-                    "Resource with name '{}' already exists!".format(name))
+    # Identify the resource by its ID and not by its position, because
+    # CKAN 2.12 only validates the resources that changed (the position
+    # in `key` is then the index in the list of changed resources).
+    resource_id = data.get(key[:-1] + ('id',))
+    for item in pkg_dict.get("resources", []):
+        if item["name"] == name and item["id"] != resource_id:
+            raise toolkit.Invalid(
+                "Resource with name '{}' already exists!".format(name))
