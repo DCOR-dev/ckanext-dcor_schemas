@@ -8,6 +8,7 @@
    (changing a dataset from active to draft is not allowed)
  - setup: allow rq 2 (required by CKAN 2.12)
  - ref: use `Session.get` instead of the legacy `Query.get`
+ - tests: use Redis 7 in CI (CKAN 2.12 requires Redis >= 6)
 1.3.0
  - BREAKING: reject resource uploads via CKAN (legacy uploads);
    resources must be uploaded to S3 first, because the job that moved
