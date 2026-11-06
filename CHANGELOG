@@ -4,11 +4,25 @@
    dataset would have failed)
  - fix: hide the bulk "Make private" button also for CKAN 2.12
    (`.btn-default` was renamed to `.btn-secondary`)
+ - fix: resource name uniqueness check compared resource positions,
+   which CKAN 2.12 no longer passes reliably to validators (now
+   compares resource IDs)
+ - fix: do not commit the database session when creating resource views
+   in `after_dataset_update` (closed the nested transaction that
+   CKAN 2.12 opens in `package_update`)
+ - fix: do not check the resources of datasets that are already active
+   in the `state` validator (CKAN 2.12 only passes modified resources
+   to validators, so updating an active dataset failed)
+ - fix: update the search index in `dcor-move-dataset-to-circle` after
+   changing the circle (CKAN 2.12 does not update the index
+   automatically, so the dataset was moved back to the old circle)
  - enh: hide the "Unpublish" button introduced in CKAN 2.12
    (changing a dataset from active to draft is not allowed)
  - setup: allow rq 2 (required by CKAN 2.12)
  - ref: use `Session.get` instead of the legacy `Query.get`
  - tests: use Redis 7 in CI (CKAN 2.12 requires Redis >= 6)
+ - tests: remove dummy `cgi.FieldStorage` uploads (`cgi` was removed
+   in Python 3.13, which CKAN 2.12 supports)
 1.3.0
  - BREAKING: reject resource uploads via CKAN (legacy uploads);
    resources must be uploaded to S3 first, because the job that moved

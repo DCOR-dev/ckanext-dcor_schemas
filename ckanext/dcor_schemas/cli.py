@@ -6,6 +6,7 @@ import traceback
 
 from ckan import logic
 from ckan.lib import mailer
+from ckan.lib.search import rebuild as rebuild_search_index
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
 import click
@@ -107,6 +108,10 @@ def dcor_move_dataset_to_circle(dataset, circle):
                           "organization_id": cr_new["id"]
                           }
     )
+    # Since CKAN 2.12, the search index is not updated automatically
+    # anymore when the database is modified. Without this, `package_show`
+    # would return the old "owner_org" from the search index.
+    rebuild_search_index(ds_dict["id"])
     print("...updated owner_org")
 
     # Update the "s3_url" for all resources

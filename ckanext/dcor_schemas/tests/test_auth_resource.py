@@ -1,4 +1,3 @@
-import cgi
 import pathlib
 import uuid
 
@@ -35,18 +34,13 @@ def test_resource_create_id_forbidden():
         owner_org=owner_org,
         activate=False)
     path = data_path / "calibration_beads_47.rtdc"
-    with path.open('rb') as fd:
-        upload = cgi.FieldStorage()
-        upload.filename = path.name
-        upload.file = fd
-        with pytest.raises(logic.NotAuthorized):
-            helpers.call_auth("resource_create", test_context,
-                              package_id=ds_dict["id"],
-                              upload=upload,
-                              url="upload",
-                              name=path.name,
-                              id=str(uuid.uuid4()),
-                              )
+    with pytest.raises(logic.NotAuthorized):
+        helpers.call_auth("resource_create", test_context,
+                          package_id=ds_dict["id"],
+                          url="upload",
+                          name=path.name,
+                          id=str(uuid.uuid4()),
+                          )
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
@@ -67,18 +61,13 @@ def test_resource_create_legacy_upload_forbidden():
         owner_org=owner_org,
         activate=False)
     path = data_path / "calibration_beads_47.rtdc"
-    with path.open('rb') as fd:
-        upload = cgi.FieldStorage()
-        upload.filename = path.name
-        upload.file = fd
-        with pytest.raises(logic.NotAuthorized,
-                           match="Resources must be uploaded to S3 first"):
-            helpers.call_auth("resource_create", test_context,
-                              package_id=ds_dict["id"],
-                              upload=upload,
-                              url="upload",
-                              name=path.name,
-                              )
+    with pytest.raises(logic.NotAuthorized,
+                       match="Resources must be uploaded to S3 first"):
+        helpers.call_auth("resource_create", test_context,
+                          package_id=ds_dict["id"],
+                          url="upload",
+                          name=path.name,
+                          )
 
 
 @pytest.mark.ckan_config('ckan.plugins', 'dcor_schemas')
